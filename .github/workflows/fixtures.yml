@@ -36,3 +36,5 @@ jobs:
         run: node --test tests/fixture-integrity.test.mjs
       - name: Audit M2 source snapshots and independent vectors without production code
         run: node --test tests/m2-fixture-audit.test.mjs
+      - name: Audit JWKS sources, algorithm snapshots, and approved policy fixtures
+        run: node --test tests/jwks-fixture-audit.test.mjs
