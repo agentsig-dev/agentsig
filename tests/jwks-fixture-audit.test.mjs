@@ -159,3 +159,107 @@ test("Cloudflare excerpt has no JWK alg/kid; response signature metadata is sepa
         assert.equal(example.expected.load, "accepted");
     }
 });
+
+test("WG discovery excerpt pins kid and algorithm rules without adding usage requirements", () => {
+    const source = readFileSync(resolve(root,
+        "tests/fixtures/m2/sources/wg-protocol-00.txt"));
+    assert.equal(hash(source),
+        "3021fd94cdffdb2eb030dec68b1a5c968f2348502dd94c481e2085ec7ddd90a0");
+    const text = source.toString("utf8");
+    const start = text.indexOf("\n5.5.  Key Distribution and Discovery\n");
+    const end = text.indexOf("\n5.5.2.  Key Rotation\n", start);
+    assert(start >= 0 && end > start);
+    const excerpt = read("wg-discovery-format-excerpt.txt").toString("utf8");
+    assert.equal(excerpt, text.slice(start + 1, end));
+    const prose = excerpt.replace(/\s+/g, " ");
+    assert(prose.includes("JWK MAY carry a kid. In this case, it MUST be set to the thumbprint"));
+    assert(prose.includes("The alg parameter is restricted to algorithms registered in the HTTP Signature Algorithms"));
+    assert(!excerpt.includes("key_ops"));
+    // The only use field is in an example, not an additional normative rule.
+    assert.equal((excerpt.match(/"use"/g) ?? []).length, 1);
+    assert(excerpt.includes('"use": "sig"'));
+});
+
+test("approved usage matrix distinguishes Ed25519 from other OKP curves", () => {
+    const metadata = json("metadata-cases.json");
+    assert.equal(metadata.cases.length, 54);
+    const cases = new Map(metadata.cases.map((entry) => [entry.id, entry]));
+    assert.equal(cases.size, 54);
+    const ed448 = json("ed448-public-material.json");
+    assert.equal(ed448.key.crv, "Ed448");
+    assert.equal(Buffer.from(ed448.key.x, "base64url").length, 57);
+    assert.equal(createPublicKey({ key: ed448.key, format: "jwk" }).asymmetricKeyType, "ed448");
+    assert.equal(independentThumbprint(ed448.key), ed448.thumbprint);
+    assert(!Object.hasOwn(ed448.key, "d"));
+
+    for (const format of ["jwks", "wg-directory-00"]) {
+        for (const name of [
+            "use-sig", "verify-only", "sign-and-verify",
+            "verify-and-sign", "consistent-use-ops",
+        ]) {
+            assert.equal(cases.get(`${format}-${name}`).expected.load, "accepted");
+        }
+        for (const name of [
+            "use-enc", "use-extension", "use-not-string", "ops-not-array",
+            "ops-nonstring", "ops-duplicate", "ops-empty", "ops-sign-only",
+            "ops-unrelated", "ops-extension", "use-ops-conflict",
+            "missing-kid-diagnostic", "wrong-kid-type-diagnostic",
+        ]) {
+            assert.equal(cases.get(`${format}-${name}`).expected.code, "invalid-jwks");
+        }
+        for (const [name, expectedMaterial] of [
+            ["x25519", material.x25519], ["ed448", ed448],
+        ]) {
+            const entry = cases.get(`${format}-${name}-enc-skipped`);
+            assert.equal(entry.expected.load, "accepted");
+            assert.equal(entry.expected.skippedCount, 1);
+            const key = entry.jwks.keys[1];
+            assert.equal(key.kty, "OKP");
+            assert.equal(key.crv, expectedMaterial.key.crv);
+            assert.equal(key.use, "enc");
+            assert.equal(independentThumbprint(key), expectedMaterial.thumbprint);
+            assert.deepEqual(entry.expected.skipped, [{
+                kid: key.kid, thumbprint: expectedMaterial.thumbprint,
+                requestCode: "unsupported-algorithm",
+            }]);
+            for (const suffix of ["bad-use-type", "duplicate-ops", "conflicting-ops"]) {
+                assert.equal(cases.get(`${format}-${name}-${suffix}`).expected.code, "invalid-jwks");
+            }
+        }
+    }
+
+    for (const entry of metadata.cases.filter((item) => item.expected.load === "accepted")) {
+        const edKeys = entry.jwks.keys.filter((key) => key.crv === "Ed25519");
+        assert.deepEqual(edKeys.map(independentThumbprint), entry.expected.selectableThumbprints);
+        for (const key of entry.jwks.keys) {
+            assert.equal(createPublicKey({ key, format: "jwk" }).type, "public");
+            if (entry.format === "wg-directory-00" && Object.hasOwn(key, "kid")) {
+                assert.equal(key.kid, independentThumbprint(key));
+            }
+        }
+    }
+});
+
+test("rejection fixtures locate the key and require safe actionable diagnostics", () => {
+    const metadata = json("metadata-cases.json");
+    for (const entry of metadata.cases.filter((item) => item.expected.load === "rejected")) {
+        assert.equal(entry.expected.code, "invalid-jwks");
+        const diagnostic = entry.expected.diagnostic;
+        assert.equal(diagnostic.keyIndex, 1);
+        const key = entry.jwks.keys[diagnostic.keyIndex];
+        assert.equal(diagnostic.kid, typeof key.kid === "string" ? key.kid : null);
+        assert.equal(typeof diagnostic.rule, "string");
+        assert(diagnostic.rule.length > 0);
+        assert(!diagnostic.rule.includes(key.x));
+    }
+    const escaped = metadata.cases.find((entry) => entry.id === "jwks-escaped-kid-diagnostic");
+    assert(escaped.expected.diagnostic.kid.includes("\n"));
+    assert(escaped.expected.diagnostic.kid.includes("\u001b"));
+    const mismatch = metadata.cases.find((entry) =>
+        entry.id === "wg-directory-00-kid-mismatch-diagnostic");
+    assert.notEqual(mismatch.jwks.keys[1].kid, independentThumbprint(mismatch.jwks.keys[1]));
+    assert.equal(mismatch.expected.diagnostic.rule, "kid must equal the RFC 7638 thumbprint");
+    // Diagnostic text is not an extension of the frozen result-code catalog.
+    assert.equal(metadata.policy.catalog,
+        "Unchanged; diagnostic rule descriptions are not new result codes");
+});

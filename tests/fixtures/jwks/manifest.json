@@ -77,6 +77,36 @@
       "source": {
         "license": "MIT for agentsig-authored case metadata; source-derived key material retains source notices"
       }
+    },
+    {
+      "path": "wg-discovery-format-excerpt.txt",
+      "bytes": 4526,
+      "sha256": "278801b10a8f0cf4c92e0f46b0a8aded95eda359f19fc8425d2ce6c26a13f522",
+      "source": {
+        "path": "tests/fixtures/m2/sources/wg-protocol-00.txt",
+        "sections": [
+          "5.5",
+          "5.5.1"
+        ],
+        "transformation": "Exact section excerpt, including page breaks; no wording changes",
+        "license": "Original IETF Trust notices in full source; see related IETF notice"
+      }
+    },
+    {
+      "path": "ed448-public-material.json",
+      "bytes": 422,
+      "sha256": "996ed1ff553cb0184d26aa962656f5d67fa61398ca4cb4311402d546877772f3",
+      "source": {
+        "license": "MIT; agentsig-authored deterministic test material"
+      }
+    },
+    {
+      "path": "metadata-cases.json",
+      "bytes": 42004,
+      "sha256": "9bf4b1518b5ae9eb36daa9ce5152f7f17fec814348f9c1c878315e19e853bc9f",
+      "source": {
+        "license": "MIT for policy metadata; source-derived keys retain original notices"
+      }
     }
   ],
   "relatedNotices": [

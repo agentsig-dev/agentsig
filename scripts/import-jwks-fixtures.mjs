@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { createHash, createPublicKey } from "node:crypto";
+import { createHash, createPrivateKey, createPublicKey } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -154,6 +154,109 @@ json("load-cases.json", {
     },
     cases,
 }, { license: "MIT for agentsig-authored case metadata; source-derived key material retains source notices" });
+const originalCaseCount = cases.length;
+cases.length = 0;
+
+// Preserve the exact WG sections, not a rewritten summary of their requirements.
+const wgPath = "tests/fixtures/m2/sources/wg-protocol-00.txt";
+const wgBytes = readFileSync(resolve(root, wgPath));
+assert.equal(hash(wgBytes), "3021fd94cdffdb2eb030dec68b1a5c968f2348502dd94c481e2085ec7ddd90a0");
+const wg = wgBytes.toString("utf8");
+const wgStart = wg.indexOf("\n5.5.  Key Distribution and Discovery\n");
+const wgEnd = wg.indexOf("\n5.5.2.  Key Rotation\n", wgStart);
+assert(wgStart >= 0 && wgEnd > wgStart);
+put("wg-discovery-format-excerpt.txt", wg.slice(wgStart + 1, wgEnd), {
+    path: wgPath, sections: ["5.5", "5.5.1"],
+    transformation: "Exact section excerpt, including page breaks; no wording changes",
+    license: "Original IETF Trust notices in full source; see related IETF notice",
+});
+
+// Public test material only. Deterministic independent Node derivation; this
+// does not implement or test Ed448 request signing/verification in agentsig.
+const ed448Seed = createHash("sha512")
+    .update("agentsig JWKS Ed448 PUBLIC TEST KEY 2026-09-18").digest().subarray(0, 57);
+const ed448 = createPublicKey(createPrivateKey({
+    key: Buffer.concat([Buffer.from("3047020100300506032b6571043b0439", "hex"), ed448Seed]),
+    format: "der", type: "pkcs8",
+})).export({ format: "jwk" });
+json("ed448-public-material.json", {
+    key: ed448, thumbprint: thumbprint(ed448),
+    derivation: "First 57 bytes of SHA-512(UTF-8 label), Ed448 PKCS8 seed, Node public export",
+    label: "agentsig JWKS Ed448 PUBLIC TEST KEY 2026-09-18",
+    warning: "PUBLIC TEST KEY, never use in production",
+}, { license: "MIT; agentsig-authored deterministic test material" });
+
+function metadataRejected(id, format, key, rule) {
+    // Index 1 proves diagnostics locate the failing entry rather than always 0.
+    rejected(`${format}-${id}`, format, [ed, key]);
+    cases.at(-1).expected.diagnostic = {
+        keyIndex: 1, kid: typeof key.kid === "string" ? key.kid : null, rule,
+    };
+}
+for (const format of ["jwks", "wg-directory-00"]) {
+    const kid = format === "jwks" ? "operator-label" : thumbprint(ed);
+    for (const [name, metadata] of [
+        ["use-sig", { use: "sig" }],
+        ["verify-only", { key_ops: ["verify"] }],
+        ["sign-and-verify", { key_ops: ["sign", "verify"] }],
+        ["verify-and-sign", { key_ops: ["verify", "sign"] }],
+        ["consistent-use-ops", { use: "sig", key_ops: ["verify"] }],
+    ]) {
+        accepted(`${format}-${name}`, format, [{ ...ed, kid, ...metadata }], [ed]);
+    }
+    for (const [name, metadata, rule] of [
+        ["use-enc", { use: "enc" }, "Ed25519 use must be sig"],
+        ["use-extension", { use: "custom" }, "Ed25519 use must be sig"],
+        ["use-not-string", { use: 42 }, "use must be a string"],
+        ["ops-not-array", { key_ops: "verify" }, "key_ops must be an array of strings"],
+        ["ops-nonstring", { key_ops: ["verify", 42] }, "key_ops must be an array of strings"],
+        ["ops-duplicate", { key_ops: ["verify", "verify"] }, "key_ops must not contain duplicates"],
+        ["ops-empty", { key_ops: [] }, "Ed25519 key_ops must include verify and only sign/verify"],
+        ["ops-sign-only", { key_ops: ["sign"] }, "Ed25519 key_ops must include verify and only sign/verify"],
+        ["ops-unrelated", { key_ops: ["verify", "encrypt"] }, "Ed25519 key_ops must include verify and only sign/verify"],
+        ["ops-extension", { key_ops: ["verify", "custom"] }, "Ed25519 key_ops must include verify and only sign/verify"],
+        ["use-ops-conflict", { use: "sig", key_ops: ["encrypt"] }, "use and key_ops must be consistent"],
+    ]) {
+        metadataRejected(name, format, { ...ed, kid, ...metadata }, rule);
+    }
+    // Same kty as Ed25519; curve, not OKP alone, determines policy applicability.
+    for (const [name, material] of [["x25519", x25519], ["ed448", ed448]]) {
+        const key = {
+            ...material, use: "enc",
+            kid: format === "jwks" ? `unsupported-${name}` : thumbprint(material),
+        };
+        accepted(`${format}-${name}-enc-skipped`, format, [ed, key], [ed], [key]);
+        metadataRejected(`${name}-bad-use-type`, format, { ...key, use: 42 },
+            "use must be a string");
+        metadataRejected(`${name}-duplicate-ops`, format,
+            { ...key, key_ops: ["deriveKey", "deriveKey"] }, "key_ops must not contain duplicates");
+        metadataRejected(`${name}-conflicting-ops`, format,
+            { ...key, key_ops: ["verify"] }, "use and key_ops must be consistent");
+    }
+    metadataRejected("missing-kid-diagnostic", format, { ...ed, use: "enc" },
+        "Ed25519 use must be sig");
+    metadataRejected("wrong-kid-type-diagnostic", format, { ...ed, kid: 42 },
+        "kid must be a string");
+}
+metadataRejected("escaped-kid-diagnostic", "jwks",
+    { ...ed, kid: "operator\\label\n\u001b[31m", use: "enc" }, "Ed25519 use must be sig");
+metadataRejected("kid-mismatch-diagnostic", "wg-directory-00",
+    { ...ed, kid: "operator-label" }, "kid must equal the RFC 7638 thumbprint");
+
+json("metadata-cases.json", {
+    status: "approved-policy-pre-loader-implementation-fixtures",
+    references: ["RFC 7517 sections 4.2, 4.3, 4.5", "WG-00 sections 5.5, 5.5.1"],
+    policy: {
+        ed25519: "After structural validation, apply A only to crv Ed25519, not all OKP",
+        otherCurves: "Valid unsupported keys are reported and skipped, including use enc",
+        formats: "A is identical in both formats; WG adds no use/key_ops rule",
+        kid: "jwks permits arbitrary string labels; wg-directory-00 requires matching thumbprint",
+        diagnostic: "invalid-jwks message includes zero-based index, string kid when present, and violated rule",
+        diagnosticSafety: "Escape control characters in kid; do not include key bytes, private material or backend errors",
+        catalog: "Unchanged; diagnostic rule descriptions are not new result codes",
+    },
+    cases,
+}, { license: "MIT for policy metadata; source-derived keys retain original notices" });
 writeFileSync(resolve(root, output, "manifest.json"), JSON.stringify({
     formatVersion: 1, files,
     relatedNotices: [
@@ -161,4 +264,4 @@ writeFileSync(resolve(root, output, "manifest.json"), JSON.stringify({
         "tests/fixtures/m2/sources/cloudflare-LICENSE.txt",
     ],
 }, null, 2) + "\n");
-console.log(`Pinned ${files.length} JWKS source/data files and ${cases.length} load cases; no loader used.`);
+console.log(`Pinned ${files.length} files, ${originalCaseCount} load cases and ${cases.length} metadata cases; no loader used.`);

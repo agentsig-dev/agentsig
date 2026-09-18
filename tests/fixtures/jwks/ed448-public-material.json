@@ -1,0 +1,11 @@
+{
+  "key": {
+    "crv": "Ed448",
+    "x": "9ifR4ap7FgzzT0wxRDnnYaaCiSToc4_RP290Wr3F_nybeuv4V8rq88SfJwjDI5FvwqxAluEvN-gA",
+    "kty": "OKP"
+  },
+  "thumbprint": "UOpsX-PpgoLVh-8rprwAalSIpKL6fSy1_Ob6jaHxQ2A",
+  "derivation": "First 57 bytes of SHA-512(UTF-8 label), Ed448 PKCS8 seed, Node public export",
+  "label": "agentsig JWKS Ed448 PUBLIC TEST KEY 2026-09-18",
+  "warning": "PUBLIC TEST KEY, never use in production"
+}

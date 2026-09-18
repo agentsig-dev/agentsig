@@ -1,0 +1,1623 @@
+{
+  "status": "approved-policy-pre-loader-implementation-fixtures",
+  "references": [
+    "RFC 7517 sections 4.2, 4.3, 4.5",
+    "WG-00 sections 5.5, 5.5.1"
+  ],
+  "policy": {
+    "ed25519": "After structural validation, apply A only to crv Ed25519, not all OKP",
+    "otherCurves": "Valid unsupported keys are reported and skipped, including use enc",
+    "formats": "A is identical in both formats; WG adds no use/key_ops rule",
+    "kid": "jwks permits arbitrary string labels; wg-directory-00 requires matching thumbprint",
+    "diagnostic": "invalid-jwks message includes zero-based index, string kid when present, and violated rule",
+    "diagnosticSafety": "Escape control characters in kid; do not include key bytes, private material or backend errors",
+    "catalog": "Unchanged; diagnostic rule descriptions are not new result codes"
+  },
+  "cases": [
+    {
+      "id": "jwks-use-sig",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "operator-label",
+            "use": "sig"
+          }
+        ]
+      },
+      "expected": {
+        "load": "accepted",
+        "selectableThumbprints": [
+          "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84"
+        ],
+        "skippedCount": 0,
+        "skipped": []
+      }
+    },
+    {
+      "id": "jwks-verify-only",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "operator-label",
+            "key_ops": [
+              "verify"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "load": "accepted",
+        "selectableThumbprints": [
+          "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84"
+        ],
+        "skippedCount": 0,
+        "skipped": []
+      }
+    },
+    {
+      "id": "jwks-sign-and-verify",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "operator-label",
+            "key_ops": [
+              "sign",
+              "verify"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "load": "accepted",
+        "selectableThumbprints": [
+          "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84"
+        ],
+        "skippedCount": 0,
+        "skipped": []
+      }
+    },
+    {
+      "id": "jwks-verify-and-sign",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "operator-label",
+            "key_ops": [
+              "verify",
+              "sign"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "load": "accepted",
+        "selectableThumbprints": [
+          "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84"
+        ],
+        "skippedCount": 0,
+        "skipped": []
+      }
+    },
+    {
+      "id": "jwks-consistent-use-ops",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "operator-label",
+            "use": "sig",
+            "key_ops": [
+              "verify"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "load": "accepted",
+        "selectableThumbprints": [
+          "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84"
+        ],
+        "skippedCount": 0,
+        "skipped": []
+      }
+    },
+    {
+      "id": "jwks-use-enc",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "operator-label",
+            "use": "enc"
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "operator-label",
+          "rule": "Ed25519 use must be sig"
+        }
+      }
+    },
+    {
+      "id": "jwks-use-extension",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "operator-label",
+            "use": "custom"
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "operator-label",
+          "rule": "Ed25519 use must be sig"
+        }
+      }
+    },
+    {
+      "id": "jwks-use-not-string",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "operator-label",
+            "use": 42
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "operator-label",
+          "rule": "use must be a string"
+        }
+      }
+    },
+    {
+      "id": "jwks-ops-not-array",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "operator-label",
+            "key_ops": "verify"
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "operator-label",
+          "rule": "key_ops must be an array of strings"
+        }
+      }
+    },
+    {
+      "id": "jwks-ops-nonstring",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "operator-label",
+            "key_ops": [
+              "verify",
+              42
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "operator-label",
+          "rule": "key_ops must be an array of strings"
+        }
+      }
+    },
+    {
+      "id": "jwks-ops-duplicate",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "operator-label",
+            "key_ops": [
+              "verify",
+              "verify"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "operator-label",
+          "rule": "key_ops must not contain duplicates"
+        }
+      }
+    },
+    {
+      "id": "jwks-ops-empty",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "operator-label",
+            "key_ops": []
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "operator-label",
+          "rule": "Ed25519 key_ops must include verify and only sign/verify"
+        }
+      }
+    },
+    {
+      "id": "jwks-ops-sign-only",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "operator-label",
+            "key_ops": [
+              "sign"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "operator-label",
+          "rule": "Ed25519 key_ops must include verify and only sign/verify"
+        }
+      }
+    },
+    {
+      "id": "jwks-ops-unrelated",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "operator-label",
+            "key_ops": [
+              "verify",
+              "encrypt"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "operator-label",
+          "rule": "Ed25519 key_ops must include verify and only sign/verify"
+        }
+      }
+    },
+    {
+      "id": "jwks-ops-extension",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "operator-label",
+            "key_ops": [
+              "verify",
+              "custom"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "operator-label",
+          "rule": "Ed25519 key_ops must include verify and only sign/verify"
+        }
+      }
+    },
+    {
+      "id": "jwks-use-ops-conflict",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "operator-label",
+            "use": "sig",
+            "key_ops": [
+              "encrypt"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "operator-label",
+          "rule": "use and key_ops must be consistent"
+        }
+      }
+    },
+    {
+      "id": "jwks-x25519-enc-skipped",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "kty": "OKP",
+            "crv": "X25519",
+            "x": "3p7bfXt9wbTTW2HC7OQ1Nz-DQ8hbeGdNrfx-FG-IK08",
+            "use": "enc",
+            "kid": "unsupported-x25519"
+          }
+        ]
+      },
+      "expected": {
+        "load": "accepted",
+        "selectableThumbprints": [
+          "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84"
+        ],
+        "skippedCount": 1,
+        "skipped": [
+          {
+            "kid": "unsupported-x25519",
+            "thumbprint": "giQqigT_IKcuzHl0FVJ3k5ts3_TWNAxvsC08UZsfcM8",
+            "requestCode": "unsupported-algorithm"
+          }
+        ]
+      }
+    },
+    {
+      "id": "jwks-x25519-bad-use-type",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "kty": "OKP",
+            "crv": "X25519",
+            "x": "3p7bfXt9wbTTW2HC7OQ1Nz-DQ8hbeGdNrfx-FG-IK08",
+            "use": 42,
+            "kid": "unsupported-x25519"
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "unsupported-x25519",
+          "rule": "use must be a string"
+        }
+      }
+    },
+    {
+      "id": "jwks-x25519-duplicate-ops",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "kty": "OKP",
+            "crv": "X25519",
+            "x": "3p7bfXt9wbTTW2HC7OQ1Nz-DQ8hbeGdNrfx-FG-IK08",
+            "use": "enc",
+            "kid": "unsupported-x25519",
+            "key_ops": [
+              "deriveKey",
+              "deriveKey"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "unsupported-x25519",
+          "rule": "key_ops must not contain duplicates"
+        }
+      }
+    },
+    {
+      "id": "jwks-x25519-conflicting-ops",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "kty": "OKP",
+            "crv": "X25519",
+            "x": "3p7bfXt9wbTTW2HC7OQ1Nz-DQ8hbeGdNrfx-FG-IK08",
+            "use": "enc",
+            "kid": "unsupported-x25519",
+            "key_ops": [
+              "verify"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "unsupported-x25519",
+          "rule": "use and key_ops must be consistent"
+        }
+      }
+    },
+    {
+      "id": "jwks-ed448-enc-skipped",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed448",
+            "x": "9ifR4ap7FgzzT0wxRDnnYaaCiSToc4_RP290Wr3F_nybeuv4V8rq88SfJwjDI5FvwqxAluEvN-gA",
+            "kty": "OKP",
+            "use": "enc",
+            "kid": "unsupported-ed448"
+          }
+        ]
+      },
+      "expected": {
+        "load": "accepted",
+        "selectableThumbprints": [
+          "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84"
+        ],
+        "skippedCount": 1,
+        "skipped": [
+          {
+            "kid": "unsupported-ed448",
+            "thumbprint": "UOpsX-PpgoLVh-8rprwAalSIpKL6fSy1_Ob6jaHxQ2A",
+            "requestCode": "unsupported-algorithm"
+          }
+        ]
+      }
+    },
+    {
+      "id": "jwks-ed448-bad-use-type",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed448",
+            "x": "9ifR4ap7FgzzT0wxRDnnYaaCiSToc4_RP290Wr3F_nybeuv4V8rq88SfJwjDI5FvwqxAluEvN-gA",
+            "kty": "OKP",
+            "use": 42,
+            "kid": "unsupported-ed448"
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "unsupported-ed448",
+          "rule": "use must be a string"
+        }
+      }
+    },
+    {
+      "id": "jwks-ed448-duplicate-ops",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed448",
+            "x": "9ifR4ap7FgzzT0wxRDnnYaaCiSToc4_RP290Wr3F_nybeuv4V8rq88SfJwjDI5FvwqxAluEvN-gA",
+            "kty": "OKP",
+            "use": "enc",
+            "kid": "unsupported-ed448",
+            "key_ops": [
+              "deriveKey",
+              "deriveKey"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "unsupported-ed448",
+          "rule": "key_ops must not contain duplicates"
+        }
+      }
+    },
+    {
+      "id": "jwks-ed448-conflicting-ops",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed448",
+            "x": "9ifR4ap7FgzzT0wxRDnnYaaCiSToc4_RP290Wr3F_nybeuv4V8rq88SfJwjDI5FvwqxAluEvN-gA",
+            "kty": "OKP",
+            "use": "enc",
+            "kid": "unsupported-ed448",
+            "key_ops": [
+              "verify"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "unsupported-ed448",
+          "rule": "use and key_ops must be consistent"
+        }
+      }
+    },
+    {
+      "id": "jwks-missing-kid-diagnostic",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "use": "enc"
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": null,
+          "rule": "Ed25519 use must be sig"
+        }
+      }
+    },
+    {
+      "id": "jwks-wrong-kid-type-diagnostic",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": 42
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": null,
+          "rule": "kid must be a string"
+        }
+      }
+    },
+    {
+      "id": "wg-directory-00-use-sig",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+            "use": "sig"
+          }
+        ]
+      },
+      "expected": {
+        "load": "accepted",
+        "selectableThumbprints": [
+          "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84"
+        ],
+        "skippedCount": 0,
+        "skipped": []
+      }
+    },
+    {
+      "id": "wg-directory-00-verify-only",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+            "key_ops": [
+              "verify"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "load": "accepted",
+        "selectableThumbprints": [
+          "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84"
+        ],
+        "skippedCount": 0,
+        "skipped": []
+      }
+    },
+    {
+      "id": "wg-directory-00-sign-and-verify",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+            "key_ops": [
+              "sign",
+              "verify"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "load": "accepted",
+        "selectableThumbprints": [
+          "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84"
+        ],
+        "skippedCount": 0,
+        "skipped": []
+      }
+    },
+    {
+      "id": "wg-directory-00-verify-and-sign",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+            "key_ops": [
+              "verify",
+              "sign"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "load": "accepted",
+        "selectableThumbprints": [
+          "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84"
+        ],
+        "skippedCount": 0,
+        "skipped": []
+      }
+    },
+    {
+      "id": "wg-directory-00-consistent-use-ops",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+            "use": "sig",
+            "key_ops": [
+              "verify"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "load": "accepted",
+        "selectableThumbprints": [
+          "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84"
+        ],
+        "skippedCount": 0,
+        "skipped": []
+      }
+    },
+    {
+      "id": "wg-directory-00-use-enc",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+            "use": "enc"
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+          "rule": "Ed25519 use must be sig"
+        }
+      }
+    },
+    {
+      "id": "wg-directory-00-use-extension",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+            "use": "custom"
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+          "rule": "Ed25519 use must be sig"
+        }
+      }
+    },
+    {
+      "id": "wg-directory-00-use-not-string",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+            "use": 42
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+          "rule": "use must be a string"
+        }
+      }
+    },
+    {
+      "id": "wg-directory-00-ops-not-array",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+            "key_ops": "verify"
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+          "rule": "key_ops must be an array of strings"
+        }
+      }
+    },
+    {
+      "id": "wg-directory-00-ops-nonstring",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+            "key_ops": [
+              "verify",
+              42
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+          "rule": "key_ops must be an array of strings"
+        }
+      }
+    },
+    {
+      "id": "wg-directory-00-ops-duplicate",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+            "key_ops": [
+              "verify",
+              "verify"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+          "rule": "key_ops must not contain duplicates"
+        }
+      }
+    },
+    {
+      "id": "wg-directory-00-ops-empty",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+            "key_ops": []
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+          "rule": "Ed25519 key_ops must include verify and only sign/verify"
+        }
+      }
+    },
+    {
+      "id": "wg-directory-00-ops-sign-only",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+            "key_ops": [
+              "sign"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+          "rule": "Ed25519 key_ops must include verify and only sign/verify"
+        }
+      }
+    },
+    {
+      "id": "wg-directory-00-ops-unrelated",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+            "key_ops": [
+              "verify",
+              "encrypt"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+          "rule": "Ed25519 key_ops must include verify and only sign/verify"
+        }
+      }
+    },
+    {
+      "id": "wg-directory-00-ops-extension",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+            "key_ops": [
+              "verify",
+              "custom"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+          "rule": "Ed25519 key_ops must include verify and only sign/verify"
+        }
+      }
+    },
+    {
+      "id": "wg-directory-00-use-ops-conflict",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+            "use": "sig",
+            "key_ops": [
+              "encrypt"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+          "rule": "use and key_ops must be consistent"
+        }
+      }
+    },
+    {
+      "id": "wg-directory-00-x25519-enc-skipped",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "kty": "OKP",
+            "crv": "X25519",
+            "x": "3p7bfXt9wbTTW2HC7OQ1Nz-DQ8hbeGdNrfx-FG-IK08",
+            "use": "enc",
+            "kid": "giQqigT_IKcuzHl0FVJ3k5ts3_TWNAxvsC08UZsfcM8"
+          }
+        ]
+      },
+      "expected": {
+        "load": "accepted",
+        "selectableThumbprints": [
+          "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84"
+        ],
+        "skippedCount": 1,
+        "skipped": [
+          {
+            "kid": "giQqigT_IKcuzHl0FVJ3k5ts3_TWNAxvsC08UZsfcM8",
+            "thumbprint": "giQqigT_IKcuzHl0FVJ3k5ts3_TWNAxvsC08UZsfcM8",
+            "requestCode": "unsupported-algorithm"
+          }
+        ]
+      }
+    },
+    {
+      "id": "wg-directory-00-x25519-bad-use-type",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "kty": "OKP",
+            "crv": "X25519",
+            "x": "3p7bfXt9wbTTW2HC7OQ1Nz-DQ8hbeGdNrfx-FG-IK08",
+            "use": 42,
+            "kid": "giQqigT_IKcuzHl0FVJ3k5ts3_TWNAxvsC08UZsfcM8"
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "giQqigT_IKcuzHl0FVJ3k5ts3_TWNAxvsC08UZsfcM8",
+          "rule": "use must be a string"
+        }
+      }
+    },
+    {
+      "id": "wg-directory-00-x25519-duplicate-ops",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "kty": "OKP",
+            "crv": "X25519",
+            "x": "3p7bfXt9wbTTW2HC7OQ1Nz-DQ8hbeGdNrfx-FG-IK08",
+            "use": "enc",
+            "kid": "giQqigT_IKcuzHl0FVJ3k5ts3_TWNAxvsC08UZsfcM8",
+            "key_ops": [
+              "deriveKey",
+              "deriveKey"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "giQqigT_IKcuzHl0FVJ3k5ts3_TWNAxvsC08UZsfcM8",
+          "rule": "key_ops must not contain duplicates"
+        }
+      }
+    },
+    {
+      "id": "wg-directory-00-x25519-conflicting-ops",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "kty": "OKP",
+            "crv": "X25519",
+            "x": "3p7bfXt9wbTTW2HC7OQ1Nz-DQ8hbeGdNrfx-FG-IK08",
+            "use": "enc",
+            "kid": "giQqigT_IKcuzHl0FVJ3k5ts3_TWNAxvsC08UZsfcM8",
+            "key_ops": [
+              "verify"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "giQqigT_IKcuzHl0FVJ3k5ts3_TWNAxvsC08UZsfcM8",
+          "rule": "use and key_ops must be consistent"
+        }
+      }
+    },
+    {
+      "id": "wg-directory-00-ed448-enc-skipped",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed448",
+            "x": "9ifR4ap7FgzzT0wxRDnnYaaCiSToc4_RP290Wr3F_nybeuv4V8rq88SfJwjDI5FvwqxAluEvN-gA",
+            "kty": "OKP",
+            "use": "enc",
+            "kid": "UOpsX-PpgoLVh-8rprwAalSIpKL6fSy1_Ob6jaHxQ2A"
+          }
+        ]
+      },
+      "expected": {
+        "load": "accepted",
+        "selectableThumbprints": [
+          "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84"
+        ],
+        "skippedCount": 1,
+        "skipped": [
+          {
+            "kid": "UOpsX-PpgoLVh-8rprwAalSIpKL6fSy1_Ob6jaHxQ2A",
+            "thumbprint": "UOpsX-PpgoLVh-8rprwAalSIpKL6fSy1_Ob6jaHxQ2A",
+            "requestCode": "unsupported-algorithm"
+          }
+        ]
+      }
+    },
+    {
+      "id": "wg-directory-00-ed448-bad-use-type",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed448",
+            "x": "9ifR4ap7FgzzT0wxRDnnYaaCiSToc4_RP290Wr3F_nybeuv4V8rq88SfJwjDI5FvwqxAluEvN-gA",
+            "kty": "OKP",
+            "use": 42,
+            "kid": "UOpsX-PpgoLVh-8rprwAalSIpKL6fSy1_Ob6jaHxQ2A"
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "UOpsX-PpgoLVh-8rprwAalSIpKL6fSy1_Ob6jaHxQ2A",
+          "rule": "use must be a string"
+        }
+      }
+    },
+    {
+      "id": "wg-directory-00-ed448-duplicate-ops",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed448",
+            "x": "9ifR4ap7FgzzT0wxRDnnYaaCiSToc4_RP290Wr3F_nybeuv4V8rq88SfJwjDI5FvwqxAluEvN-gA",
+            "kty": "OKP",
+            "use": "enc",
+            "kid": "UOpsX-PpgoLVh-8rprwAalSIpKL6fSy1_Ob6jaHxQ2A",
+            "key_ops": [
+              "deriveKey",
+              "deriveKey"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "UOpsX-PpgoLVh-8rprwAalSIpKL6fSy1_Ob6jaHxQ2A",
+          "rule": "key_ops must not contain duplicates"
+        }
+      }
+    },
+    {
+      "id": "wg-directory-00-ed448-conflicting-ops",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed448",
+            "x": "9ifR4ap7FgzzT0wxRDnnYaaCiSToc4_RP290Wr3F_nybeuv4V8rq88SfJwjDI5FvwqxAluEvN-gA",
+            "kty": "OKP",
+            "use": "enc",
+            "kid": "UOpsX-PpgoLVh-8rprwAalSIpKL6fSy1_Ob6jaHxQ2A",
+            "key_ops": [
+              "verify"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "UOpsX-PpgoLVh-8rprwAalSIpKL6fSy1_Ob6jaHxQ2A",
+          "rule": "use and key_ops must be consistent"
+        }
+      }
+    },
+    {
+      "id": "wg-directory-00-missing-kid-diagnostic",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "use": "enc"
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": null,
+          "rule": "Ed25519 use must be sig"
+        }
+      }
+    },
+    {
+      "id": "wg-directory-00-wrong-kid-type-diagnostic",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": 42
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": null,
+          "rule": "kid must be a string"
+        }
+      }
+    },
+    {
+      "id": "jwks-escaped-kid-diagnostic",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "operator\\label\n\u001b[31m",
+            "use": "enc"
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "operator\\label\n\u001b[31m",
+          "rule": "Ed25519 use must be sig"
+        }
+      }
+    },
+    {
+      "id": "wg-directory-00-kid-mismatch-diagnostic",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "operator-label"
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks",
+        "diagnostic": {
+          "keyIndex": 1,
+          "kid": "operator-label",
+          "rule": "kid must equal the RFC 7638 thumbprint"
+        }
+      }
+    }
+  ]
+}
