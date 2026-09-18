@@ -109,6 +109,31 @@ for (const [id, next, expectedBytes] of [
     });
 }
 
+test("WG E.2.1 is a crypto-valid agent-label-mismatch negative fixture", () => {
+    const policy = json("policy-cases.json");
+    const negative = policy.negativeVectorCases.find(
+        (entry) => entry.id === "wg-E.2.1-agent-label-mismatch",
+    );
+    assert(negative);
+    const section = text(negative.sectionFile);
+    const label = section.match(/\nSignature-Input: ([a-z0-9-]+)=/)?.[1];
+    const agentMember = section.match(/\nSignature-Agent: ([a-z0-9-]+)=/)?.[1];
+    assert.equal(label, "sig2");
+    assert.equal(agentMember, "agent2");
+    assert.notEqual(label, agentMember);
+    assert.equal(negative.signatureLabel, label);
+    assert.equal(negative.agentMemberKey, agentMember);
+    assert.match(text(negative.baseFile), /"signature-agent";key="agent2"/);
+    assert.equal(verify(null, read(negative.baseFile),
+        createPublicKey(read(negative.publicKeyFile)), read(negative.signatureFile)), true);
+    assert.equal(negative.expectedCryptoValid, true);
+    assert.equal(negative.expectedStatus, "invalid");
+    assert.equal(negative.expectedCode, "agent-label-mismatch");
+    assert.equal(negative.stage, "agent-label-binding-only");
+    assert.equal(negative.fullVerifierFirstErrorAsserted, false);
+    assert.equal(negative.sourceBytesModified, false);
+});
+
 test("WG directory vector inventory preserves its response body/digest without adding M2 body support", () => {
     const section = publishedSection("E.2.3", "Appendix F.");
     const bodyBlock = section.match(/^   (\{"keys":[\s\S]*?)\n\n/m);
@@ -194,14 +219,25 @@ test("policy data has a closed catalog and internally consistent approved defaul
     const publicCodes = ["unsigned", "verified", "invalid", "unverified"]
         .flatMap((status) => catalog[status]);
     assert.equal(new Set(publicCodes).size, publicCodes.length);
+    assert.deepEqual(["unsigned", "verified", "invalid", "unverified"]
+        .map((status) => catalog[status].length), [2, 2, 20, 11]);
+    assert.deepEqual(catalog.unsigned, ["no-signature", "no-web-bot-auth-candidate"]);
     assert(catalog.invalid.includes("ambiguous-signatures"));
+    assert(catalog.invalid.includes("agent-binding-mismatch"));
+    assert(catalog.invalid.includes("algorithm-mismatch"));
+    assert(catalog.unverified.includes("unsupported-algorithm"));
     assert(catalog.unverified.includes("per-key-quota-exceeded"));
+    assert(!publicCodes.includes("aggregate-policy-required"));
+    assert(catalog.configurationErrors.includes("invalid-candidate-policy"));
     assert(!catalog.unverified.includes("replay-store-full"));
     const allCodes = new Set(Object.values(catalog).flat());
     function check(value) {
         if (!value || typeof value !== "object") return;
         for (const [key, child] of Object.entries(value)) {
             if (key === "expectedCode" || key === "expectedStoreOutcome") assert(allCodes.has(child), child);
+            else if (key === "expectedStoreOutcomes") {
+                for (const outcome of child) assert(catalog.storeOutcomes.includes(outcome), outcome);
+            }
             else check(child);
         }
     }
@@ -217,6 +253,31 @@ test("policy data has a closed catalog and internally consistent approved defaul
     assert.deepEqual(ambiguous.expectedResultLabels, ["a", "b"]);
     assert.equal(ambiguous.evaluateEveryCandidate, true);
     assert.equal(ambiguous.expectedCode, "ambiguous-signatures");
+    assert.equal(ambiguous.expectedConsumeCalls, 0);
+    assert.equal(ambiguous.publicPreReplayVerifiedAllowed, false);
+    assert.equal(policy.candidateCases.find((entry) => entry.id === "no-matching-tag")
+        .expectedStatus, "unsigned");
+    const contract = policy.approvedCandidateAndStoreContract;
+    assert.equal(contract.defaultAmbiguous.consumeNonces, false);
+    assert.equal(contract.explicitMultiple.defaultAggregate, "all");
+    assert.deepEqual(contract.explicitMultiple.allowedAggregates, ["all", "any"]);
+    assert.equal(contract.explicitMultiple.earlySuccess, false);
+    assert.equal(contract.sharedConsumption.atomicCallsPerGroup, 1);
+    assert.equal(contract.sharedConsumption.shareAcrossSeparateRequests, false);
+    assert.equal(contract.quota.boundary, "whole store instance across all scopes");
+    assert.deepEqual(contract.storeDecisionOrder,
+        ["expire-records", "replay", "per-key-quota", "global-capacity"]);
+    assert.equal(contract.internalType, "CandidateEvaluation");
+    assert.deepEqual(contract.externalStates, ["unsigned", "verified", "invalid", "unverified"]);
+    const classifications = new Map(policy.classificationCases.map((entry) => [entry.id, entry]));
+    assert.equal(classifications.get("known-declared-algorithm-contradicts-key").expectedCode,
+        "algorithm-mismatch");
+    assert.equal(classifications.get("unsupported-known-algorithm-without-selected-key-contradiction")
+        .expectedCode, "unsupported-algorithm");
+    assert.equal(classifications.get("existing-key-binding-disagrees").expectedCode,
+        "agent-binding-mismatch");
+    assert.equal(classifications.get("binding-required-but-not-configured").expectedCode,
+        "agent-binding-missing");
 });
 
 for (const autocrlf of ["true", "input", "false"]) {

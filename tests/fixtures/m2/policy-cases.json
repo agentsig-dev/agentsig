@@ -20,7 +20,8 @@
     },
     "codeCatalog": {
         "unsigned": [
-            "no-signature"
+            "no-signature",
+            "no-web-bot-auth-candidate"
         ],
         "verified": [
             "nonce-consumed",
@@ -32,6 +33,7 @@
             "ambiguous-signatures",
             "ambiguous-profile",
             "agent-label-mismatch",
+            "agent-binding-mismatch",
             "missing-required-parameter",
             "invalid-parameter",
             "invalid-time-range",
@@ -48,8 +50,8 @@
             "replay-detected"
         ],
         "unverified": [
-            "no-web-bot-auth-candidate",
             "unsupported-profile",
+            "unsupported-algorithm",
             "unsupported-discovery-type",
             "profile-disallowed",
             "unknown-key",
@@ -58,8 +60,7 @@
             "replay-store-unavailable",
             "per-key-quota-exceeded",
             "clock-unavailable",
-            "test-key-disallowed",
-            "aggregate-policy-required"
+            "test-key-disallowed"
         ],
         "configurationErrors": [
             "invalid-jwks",
@@ -85,7 +86,13 @@
         "No matching tag is distinct from no Signature/Signature-Input headers.",
         "Configuration errors are thrown during setup; they are not evidence of a hostile request.",
         "Candidate results retain labels for correlation, never for candidate selection.",
-        "Test-key handling, discovery-type support and aggregate-policy mechanics remain subject to explicit approval."
+        "No matching tag maps to unsigned only after successful signature-header parsing; malformed headers never become unsigned.",
+        "Explicit multiple-candidate mode defaults to all; any requires explicit selection. An invalid aggregate option is invalid-candidate-policy, not an HTTP verification result.",
+        "CandidateEvaluation is internal only. External VerificationResult states remain unsigned, verified, invalid and unverified.",
+        "algorithm-mismatch means a known declared algorithm contradicts selected trusted key material. This invalid result takes precedence over unsupported-algorithm when the contradiction is established.",
+        "unsupported-algorithm means the algorithm is unsupported and no selected-key contradiction has been established; it is not signature-mismatch.",
+        "agent-binding-missing means a required local binding is absent. agent-binding-mismatch means a binding exists for the selected key but the signed agent URL disagrees. Plain thumbprint mode does not require a binding.",
+        "Test-key handling, discovery-type support, clock anomalies and secondary resource budgets still require approval."
     ],
     "timeContract": {
         "status": "boundary-details-proposed",
@@ -173,9 +180,11 @@
         {
             "id": "identity-check-failure-never-consumes",
             "signatureValid": true,
+            "explicitBindingExists": true,
             "explicitBindingMatches": false,
             "expectedConsumeCalls": 0,
-            "expectedCode": "agent-binding-missing"
+            "expectedStatus": "invalid",
+            "expectedCode": "agent-binding-mismatch"
         },
         {
             "id": "concurrent-identical-valid-request",
@@ -270,7 +279,10 @@
             "automaticFirstSuccessAcceptance": false,
             "expectedStatus": "invalid",
             "expectedCode": "ambiguous-signatures",
-            "nonceConsumption": "pending-explicit-side-effect-contract"
+            "nonceConsumption": "none",
+            "expectedConsumeCalls": 0,
+            "candidateEvaluationType": "internal-only",
+            "publicPreReplayVerifiedAllowed": false
         },
         {
             "id": "explicit-multiple-evaluate-every-candidate",
@@ -284,7 +296,9 @@
                 "b"
             ],
             "automaticFirstSuccessAcceptance": false,
-            "topLevelVerifiedRequiresExplicitPolicy": true
+            "topLevelVerifiedRequiresExplicitPolicy": true,
+            "defaultAggregateRule": "all",
+            "explicitAlternativeAggregateRule": "any"
         },
         {
             "id": "no-matching-tag",
@@ -294,7 +308,7 @@
                     "tag": "other-protocol"
                 }
             ],
-            "expectedStatus": "unverified",
+            "expectedStatus": "unsigned",
             "expectedCode": "no-web-bot-auth-candidate"
         }
     ],
@@ -316,11 +330,175 @@
             "networkProofClaimed": false
         }
     ],
+    "approvedCandidateAndStoreContract": {
+        "defaultAmbiguous": {
+            "evaluateAllCandidates": true,
+            "evaluationIncludes": [
+                "cryptography",
+                "identity",
+                "time"
+            ],
+            "consumeNonces": false,
+            "expectedStatus": "invalid",
+            "expectedCode": "ambiguous-signatures"
+        },
+        "explicitMultiple": {
+            "defaultAggregate": "all",
+            "allowedAggregates": [
+                "all",
+                "any"
+            ],
+            "evaluateAllCandidates": true,
+            "earlySuccess": false
+        },
+        "sharedConsumption": {
+            "boundary": "single verification invocation",
+            "groupBy": [
+                "configured-scope",
+                "verified-key-thumbprint",
+                "nonce"
+            ],
+            "eligibleCandidatesOnly": true,
+            "atomicCallsPerGroup": 1,
+            "shareAcrossSeparateRequests": false
+        },
+        "quota": {
+            "groupBy": "verified-key-thumbprint",
+            "boundary": "whole store instance across all scopes",
+            "defaultMaxPerKey": 1000
+        },
+        "storeDecisionOrder": [
+            "expire-records",
+            "replay",
+            "per-key-quota",
+            "global-capacity"
+        ],
+        "internalType": "CandidateEvaluation",
+        "externalStates": [
+            "unsigned",
+            "verified",
+            "invalid",
+            "unverified"
+        ]
+    },
+    "classificationCases": [
+        {
+            "id": "binding-required-but-not-configured",
+            "bindingRequired": true,
+            "explicitBindingExists": false,
+            "expectedStatus": "unverified",
+            "expectedCode": "agent-binding-missing"
+        },
+        {
+            "id": "existing-key-binding-disagrees",
+            "bindingRequired": true,
+            "explicitBindingExists": true,
+            "registeredAgent": "https://registered.example",
+            "signedAgent": "https://different.example",
+            "expectedStatus": "invalid",
+            "expectedCode": "agent-binding-mismatch"
+        },
+        {
+            "id": "known-declared-algorithm-contradicts-key",
+            "declaredHttpAlgorithm": "rsa-pss-sha512",
+            "selectedTrustedKeyType": "Ed25519",
+            "expectedStatus": "invalid",
+            "expectedCode": "algorithm-mismatch"
+        },
+        {
+            "id": "unsupported-known-algorithm-without-selected-key-contradiction",
+            "declaredHttpAlgorithm": "rsa-pss-sha512",
+            "selectedTrustedKeyType": null,
+            "expectedStatus": "unverified",
+            "expectedCode": "unsupported-algorithm"
+        },
+        {
+            "id": "unknown-http-algorithm-token",
+            "declaredHttpAlgorithm": "unknown-test-algorithm",
+            "expectedStatus": "unverified",
+            "expectedCode": "unsupported-algorithm"
+        },
+        {
+            "id": "invalid-aggregate-option",
+            "candidatePolicy": "explicit-multiple",
+            "aggregateRule": "first-passing",
+            "expectedCode": "invalid-candidate-policy",
+            "errorBoundary": "configuration-not-request-result"
+        }
+    ],
+    "negativeVectorCases": [
+        {
+            "id": "wg-E.2.1-agent-label-mismatch",
+            "profile": "ietf-wg-protocol-00",
+            "stage": "agent-label-binding-only",
+            "sourceSection": "E.2.1",
+            "sectionFile": "published/wg-E.2.1/section.txt",
+            "baseFile": "published/wg-E.2.1/base.txt",
+            "signatureFile": "published/wg-E.2.1/signature.bin",
+            "publicKeyFile": "published/rfc9421-public.pem",
+            "signatureLabel": "sig2",
+            "agentMemberKey": "agent2",
+            "expectedCryptoValid": true,
+            "expectedStatus": "invalid",
+            "expectedCode": "agent-label-mismatch",
+            "sourceBytesModified": false,
+            "fullVerifierFirstErrorAsserted": false,
+            "otherPolicyFailures": [
+                "insufficient-coverage",
+                "lifetime-exceeded"
+            ]
+        }
+    ],
+    "approvedScenarioCases": [
+        {
+            "id": "shared-nonce-within-one-request",
+            "eligibleCandidateLabels": [
+                "a",
+                "b"
+            ],
+            "sameScopeKeyNonce": true,
+            "verificationInvocations": 1,
+            "expectedAtomicConsumeCalls": 1,
+            "expectedSharedOutcome": "accepted"
+        },
+        {
+            "id": "separate-requests-never-share-acceptance",
+            "sameScopeKeyNonce": true,
+            "verificationInvocations": 2,
+            "expectedStoreOutcomes": [
+                "accepted",
+                "replayed"
+            ]
+        },
+        {
+            "id": "quota-spans-scopes",
+            "keyLiveEntriesByScope": {
+                "scope-a": 600,
+                "scope-b": 400
+            },
+            "incomingScope": "scope-c",
+            "maxPerKey": 1000,
+            "globalCapacityAvailable": true,
+            "expectedStoreOutcome": "per-key-quota-exceeded"
+        },
+        {
+            "id": "replay-before-quota-and-full",
+            "nonceAlreadyPresent": true,
+            "perKeyQuotaExceeded": true,
+            "globalCapacityFull": true,
+            "expectedStoreOutcome": "replayed"
+        },
+        {
+            "id": "quota-before-full",
+            "nonceAlreadyPresent": false,
+            "perKeyQuotaExceeded": true,
+            "globalCapacityFull": true,
+            "expectedStoreOutcome": "per-key-quota-exceeded"
+        }
+    ],
     "pendingDecisions": [
-        "Default ambiguous case evaluates every candidate; nonce consumption and pre-replay candidate result representation still need approval.",
-        "Explicit-multiple aggregation and nonce consumption ordering, including same-key same-nonce candidates.",
-        "Per-key quota scope across configured trust domains; replay-vs-quota-vs-global-full precedence.",
-        "Exact clock rollback/jump handling and thresholds.",
-        "Discovery types, test-key policy and secondary resource budgets not explicitly approved."
+        "Exact clock rollback/jump handling, recovery and thresholds.",
+        "Discovery types, test-key policy and secondary resource budgets.",
+        "Final approval and freeze of the corrected closed code catalog before production implementation."
     ]
 }

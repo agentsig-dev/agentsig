@@ -107,10 +107,10 @@ imza kabul edilmez. Tüketilmiş nonce geri alınmaz: erişilebilirlik pahasına
 replay güvenliği korunur.
 
 Saat geri giderse daha önce temizlenen nonce yeniden geçerli olmamalıdır.
-Öneri: enjekte edilebilir duvar ve monoton saat; süreçte doğrulama zamanı
-geriye yürütülmez ve temizleme aynı zaman politikasıyla yapılır. Büyük saat
-sıçraması/clock rollback açık saat-hatası sonucu verir; kayıtlar topluca silinmez.
-Alternatif: daha katı şekilde her geri gidişte doğrulamayı durdurmak.
+Duvar/monoton saat karşılaştırması, önerilen 30 saniyelik ayrı sapma eşiği,
+toparlanma ve daha katı alternatif [karar tablosunda](m2-fixture-review.md)
+açıklanır; bu saat-anomalisi politikası henüz onaylanmadı.
+İmza toleransı ile saat sağlığı eşiği aynı yapılandırma alanı değildir.
 Kesin sapma eşiği ve süre aritmetiği fixture'ları koddan önce onaylanacaktır.
 Depo kaybı veya süreç yeniden başlatma sonrası bellek içi replay geçmişinin
 korunmadığı açıkça belgelenir; süreçler arası garanti verilmez.
@@ -128,6 +128,10 @@ Depo anahtarı scope + thumbprint + nonce üçlüsünün çakışmasız/uzunluk 
 kodlanmasıyla türetilir. Profil ve imza etiketi anahtara katılmaz; bunları
 değiştirerek tekrar kontrolünden kaçış sağlanamaz. Aynı güven alanındaki
 doğrulayıcılar aynı depo örneğini kullanmalıdır.
+Onaylanan kota, depo genelinde doğrulanmış thumbprint başınadır; scope/profil/label
+kotayı bölmez. Atomik karar sırası: süresi dolan kayıtları temizle → replay →
+anahtar kotası → toplam kapasite. Aynı doğrulama çağrısında uygun adayların aynı
+scope/anahtar/nonce üçlüsü tek tüketim sonucunu paylaşır; bağımsız istekler paylaşmaz.
 
 Sıra: sınırlı ayrıştırma → profil/kapsam → yerel anahtar seçimi →
 kriptografi → son zaman kontrolü → atomik nonce tüketimi → zaman yeniden kontrolü.
@@ -163,6 +167,17 @@ Kod kataloğu başarı, geçersiz girdi, tamamlanamayan doğrulama, yapılandır
 ve depo işlemi sonuçlarını ayrı kapalı kümeler olarak tanımlar.
 Toplam doluluk replay-store-unavailable; anahtar kotası per-key-quota-exceeded;
 varsayılan çoklu aday reddi ambiguous-signatures olarak raporlanır.
+Eşleşen tag bulunmaması unsigned / no-web-bot-auth-candidate olarak sınıflanır;
+öncesindeki ayrıştırma hataları unsigned'a çevrilmez.
+Açık eşleme var ama URL uyuşmuyorsa invalid / agent-binding-mismatch;
+gereken eşleme yoksa unverified / agent-binding-missing.
+Bilinen algoritma ile seçilmiş anahtar çelişkisi invalid / algorithm-mismatch;
+böyle bir çelişki belirlenmeden desteklenmeyen algoritma unverified /
+unsupported-algorithm olur. Algoritma alanı yanlış türdeyse invalid-parameter'dır.
+aggregate-policy-required kaldırıldı; hatalı toplu kural yapılandırması
+invalid-candidate-policy olur. Açık çoklu-aday modunda kural verilmezse all seçilir.
+Dış VerificationResult yalnızca unsigned / verified / invalid / unverified kalır;
+tüketim öncesi CandidateEvaluation yalnızca iç tiptir.
 
 Yanlış yerel JWKS, limit veya saat yapılandırması oluşturma aşamasında tipli
 yapılandırma hatasıdır; saldırganın imzası bozukmuş gibi raporlanmaz.
@@ -175,10 +190,13 @@ girdisi değildir. Tek aday değerlendirilir. Çoklu adayların tamamı değerle
 ve etiket başına sonuç dizisi döner. Varsayılan tam olarak bir aday ister;
 fazlasında üst düzey invalid / ambiguous-signatures döner.
 Üst düzey verified yalnızca açık çoklu-aday politikası izin verirse mümkündür.
+Açık modda all varsayılan, any bilinçli seçimdir; her iki durumda tüm adaylar
+değerlendirilir ve erken başarı yoktur. Varsayılan exactly-one çoklu-aday reddinde
+nonce tüketilmez; bütün adaylara ait kripto/kimlik/zaman değerlendirmesi iç tipte
+yapılır ve tam replay başarısı olarak dışa sızdırılmaz.
 “İlk geçen kazanır”, adayları sessizce düşürme ve etiket allowlist'i yoktur.
 M1 tüm-çiftler ayrıştırıcısı bozuk bir çiftte tüm çağrıyı reddeder; bu mevcut sınır
-ayrıca korunur. Çoklu-aday değerlendirmesinin nonce yan etkisi, aynı nonce'a
-sahip adayların sırası ve birleştirme kuralı uygulama onayında kesinleştirilmelidir.
+ayrıca korunur. Onaylanan altı davranış politika fixture'ında kaydedilmiştir.
 
 ## 8. Onay bekleyen güvenlik seçenekleri
 
@@ -188,8 +206,8 @@ sahip adayların sırası ve birleştirme kuralı uygulama onayında kesinleşti
 | İmzalama ve doğrulama kapsamı | **Onaylandı:** method + target-uri + profilin ajan bileşeni | Protokol minimumundan daha sıkı M2 politikasıdır |
 | Gövde | **Onaylandı:** content-digest M2 kapsamında yok | Dizin yanıt vektörünü arşivlemek gövde doğrulama özelliği eklemez |
 | Zaman ve TTL | **Onaylandı:** 60/300/300/30 ve korumacı saklama | Kesin sınır eşitsizlikleri ve saat anomalileri fixture onayında netleşir |
-| Kapasite | **Onaylandı:** 10.000 toplam; maxPerKey 1.000; yaşayan kayıt atılmaz | Kota kapsamı ve ret önceliği fixture onayında netleşir |
-| Çoklu imza | **Onaylandı:** tag ile seçim, her adaya sonuç, varsayılan exactly-one | Nonce tüketim yan etkisi ve açık aggregate politikası onay bekliyor |
+| Kapasite | **Onaylandı:** 10.000 toplam; depo genelinde thumbprint başına maxPerKey 1.000; yaşayan kayıt atılmaz | Temizleme → replay → anahtar kotası → toplam kapasite |
+| Çoklu imza | **Onaylandı:** tag ile seçim, her adaya sonuç, varsayılan exactly-one; belirsizlik reddinde tüketim yok | Açık modda all varsayılan / any açık seçim; aynı çağrıda aynı nonce grubu tek tüketim |
 | Bilinen test anahtarları | Normal doğrulayıcıda reddet; testte açık izin | Tümüyle uygulamaya bırakmak yanlışlıkla üretim kullanımı riskini artırır |
 | Keşif türleri | M2 directory biçimi; diğerleri destek-dışı | Tamamen yerel jwks_uri/cimd eşleme desteğiyle test kapsamı artar |
 
@@ -232,5 +250,10 @@ bağımsız doğrulandı. E.2.1'deki sig2/agent2 farkı değiştirilmedi; kripto
 geçerlilik ile profil/M2 politika kabulü ayrı kaydedildi. Cloudflare kaynak commit'i
 acfb1f2270b9473ae65a15674995e0b2f3b6ab0c olarak sabitlendi.
 Ağ katmanının SSRF, DNS rebinding, HTTP cache ve otomatik rotasyon kararları
-sonraki kilometre taşına ertelendi. Üretim koduna geçmeden fixture raporu ve kod
-kataloğu için tekrar onay alınacak.
+sonraki kilometre taşına ertelendi. E.2.1 özgün baytları korunarak etiket bağlama
+aşamasının agent-label-mismatch negatif fixture'ı olarak kullanılır; diğer
+kapsam/zaman ihlalleri nedeniyle tam doğrulayıcının ilk hatası varsayılmaz.
+[WG rapor taslağı](wg-e2-1-report-draft.md) kullanıcı tarafından gönderilmek üzere
+hazırdır; gönderilmemiştir.
+Üretim koduna geçmeden düzeltilmiş katalog ve kalan dört güvenlik seçeneği için
+tekrar onay alınacak. Katalog henüz dondurulmadı.

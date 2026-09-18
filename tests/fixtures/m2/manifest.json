@@ -125,8 +125,8 @@
     },
     {
       "path": "policy-cases.json",
-      "bytes": 11286,
-      "sha256": "dfb3237684d691aef5264df6e15dfd6fe80c0aef97faeb280f27814f653eb43c",
+      "bytes": 18084,
+      "sha256": "ab4052ee1b085c30cb1b905c5db1a632563d3d10fc7b63f58e035f28a3fbd4c3",
       "provenance": {
         "source": "agentsig independently authored test data",
         "license": "MIT",
