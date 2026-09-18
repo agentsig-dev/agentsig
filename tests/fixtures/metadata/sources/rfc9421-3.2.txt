@@ -1,0 +1,176 @@
+3.2.  Verifying a Signature
+
+   Verification of an HTTP message signature is a process that takes as
+   its input the signature context (including the target message,
+   particularly its Signature and Signature-Input fields) and the
+   requirements for the application.  The output of the verification is
+   either a positive verification or an error.
+
+   In order to verify a signature, a verifier MUST apply the following
+   algorithm:
+
+   1.  Parse the Signature and Signature-Input fields as described in
+       Sections 4.1 and 4.2, and extract the signatures to be verified
+       and their labels.
+
+       1.1.  If there is more than one signature value present,
+             determine which signature should be processed for this
+             message based on the policy and configuration of the
+             verifier.  If an applicable signature is not found, produce
+             an error.
+
+       1.2.  If the chosen Signature field value does not have a
+             corresponding Signature-Input field value (i.e., one with
+             the same label), produce an error.
+
+   2.  Parse the values of the chosen Signature-Input field as a
+       parameterized Inner List to get the ordered list of covered
+       components and the signature parameters for the signature to be
+       verified.
+
+   3.  Parse the value of the corresponding Signature field to get the
+       byte array value of the signature to be verified.
+
+   4.  Examine the signature parameters to confirm that the signature
+       meets the requirements described in this document, as well as any
+       additional requirements defined by the application such as which
+       message components are required to be covered by the signature
+       (Section 3.2.1).
+
+   5.  Determine the verification key material for this signature.  If
+       the key material is known through external means such as static
+       configuration or external protocol negotiation, the verifier will
+       use the applicable technique to obtain the key material from this
+       external knowledge.  If the key is identified in the signature
+       parameters, the verifier will dereference the key identifier to
+       appropriate key material to use with the signature.  The verifier
+       has to determine the trustworthiness of the key material for the
+       context in which the signature is presented.  If a key is
+       identified that the verifier does not know or trust for this
+       request or that does not match something preconfigured, the
+       verification MUST fail.
+
+   6.  Determine the algorithm to apply for verification:
+
+       6.1.  Start with the set of allowable algorithms known to the
+             application.  If any of the following steps select an
+             algorithm that is not in this set, the signature validation
+             fails.
+
+       6.2.  If the algorithm is known through external means such as
+             static configuration or external protocol negotiation, the
+             verifier will use that algorithm.
+
+       6.3.  If the algorithm can be determined from the keying
+             material, such as through an algorithm field on the key
+             value itself, the verifier will use that algorithm.
+
+       6.4.  If the algorithm is explicitly stated in the signature
+             parameters using a value from the "HTTP Signature
+             Algorithms" registry, the verifier will use the referenced
+             algorithm.
+
+       6.5.  If the algorithm is specified in more than one location
+             (e.g., a combination of static configuration, the algorithm
+             signature parameter, and the key material itself), the
+             resolved algorithms MUST be the same.  If the algorithms
+             are not the same, the verifier MUST fail the verification.
+
+   7.  Use the received HTTP message and the parsed signature parameters
+       to recreate the signature base, using the algorithm defined in
+       Section 2.5.  The value of the @signature-params input is the
+       value of the Signature-Input field for this signature serialized
+       according to the rules described in Section 2.3.  Note that this
+       does not include the signature's label from the Signature-Input
+       field.
+
+   8.  If the key material is appropriate for the algorithm, apply the
+       appropriate HTTP_VERIFY cryptographic verification algorithm to
+       the signature, recalculated signature base, key material, and
+       signature value.  The HTTP_VERIFY primitive and several concrete
+       algorithms are defined in Section 3.3.
+
+   9.  The results of the verification algorithm function are the final
+       results of the cryptographic verification function.
+
+   If any of the above steps fail or produce an error, the signature
+   validation fails.
+
+   For example, verifying the signature with the label sig1 of the
+   following message with the test-key-rsa-pss key (see Appendix B.1.2)
+   and the RSASSA-PSS algorithm described in Section 3.3.1:
+
+   NOTE: '\' line wrapping per RFC 8792
+
+   POST /foo?param=Value&Pet=dog HTTP/1.1
+   Host: example.com
+   Date: Tue, 20 Apr 2021 02:07:55 GMT
+   Content-Type: application/json
+   Content-Digest: sha-512=:WZDPaVn/7XgHaAy8pmojAkGWoRx2UFChF41A2svX+T\
+     aPm+AbwAgBWnrIiYllu7BNNyealdVLvRwEmTHWXvJwew==:
+   Content-Length: 18
+   Signature-Input: sig1=("@method" "@authority" "@path" \
+     "content-digest" "content-length" "content-type")\
+     ;created=1618884473;keyid="test-key-rsa-pss"
+   Signature: sig1=:HIbjHC5rS0BYaa9v4QfD4193TORw7u9edguPh0AW3dMq9WImrl\
+     FrCGUDih47vAxi4L2YRZ3XMJc1uOKk/J0ZmZ+wcta4nKIgBkKq0rM9hs3CQyxXGxH\
+     LMCy8uqK488o+9jrptQ+xFPHK7a9sRL1IXNaagCNN3ZxJsYapFj+JXbmaI5rtAdSf\
+     SvzPuBCh+ARHBmWuNo1UzVVdHXrl8ePL4cccqlazIJdC4QEjrF+Sn4IxBQzTZsL9y\
+     9TP5FsZYzHvDqbInkTNigBcE9cKOYNFCn4D/WM7F6TNuZO9EgtzepLWcjTymlHzK7\
+     aXq6Am6sfOrpIC49yXjj3ae6HRalVc/g==:
+
+   {"hello": "world"}
+
+   With the additional requirements that at least the method, authority,
+   path, content-digest, content-length, and content-type entries be
+   signed, and that the signature creation timestamp be recent enough at
+   the time of verification, the verification passes.
+
+3.2.1.  Enforcing Application Requirements
+
+   The verification requirements specified in this document are intended
+   as a baseline set of restrictions that are generally applicable to
+   all use cases.  Applications using HTTP message signatures MAY impose
+   requirements above and beyond those specified by this document, as
+   appropriate for their use case.
+
+   Some non-normative examples of additional requirements an application
+   might define are:
+
+   *  Requiring a specific set of header fields to be signed (e.g.,
+      Authorization, Content-Digest).
+
+   *  Enforcing a maximum signature age from the time of the created
+      timestamp.
+
+   *  Rejecting signatures past the expiration time in the expires
+      timestamp.  Note that the expiration time is a hint from the
+      signer and that a verifier can always reject a signature ahead of
+      its expiration time.
+
+   *  Prohibiting certain signature metadata parameters, such as runtime
+      algorithm signaling with the alg parameter when the algorithm is
+      determined from the key information.
+
+   *  Ensuring successful dereferencing of the keyid parameter to valid
+      and appropriate key material.
+
+   *  Prohibiting the use of certain algorithms or mandating the use of
+      a specific algorithm.
+
+   *  Requiring keys to be of a certain size (e.g., 2048 bits vs. 1024
+      bits).
+
+   *  Enforcing uniqueness of the nonce parameter.
+
+   *  Requiring an application-specific value for the tag parameter.
+
+   Application-specific requirements are expected and encouraged.  When
+   an application defines additional requirements, it MUST enforce them
+   during the signature verification process, and signature verification
+   MUST fail if the signature does not conform to the application's
+   requirements.
+
+   Applications MUST enforce the requirements defined in this document.
+   Regardless of use case, applications MUST NOT accept signatures that
+   do not conform to these requirements.

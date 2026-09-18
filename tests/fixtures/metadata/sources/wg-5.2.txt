@@ -1,0 +1,71 @@
+5.2.  Generating HTTP Message Signature
+
+   [HTTP-MESSAGE-SIGNATURES] defines components to be signed.
+
+   Agents MUST include at least one of the following components:
+
+   @authority  as defined in Section 2.2.3 of [HTTP-MESSAGE-SIGNATURES]
+
+   @target-uri  as defined in Section 2.2.2 of [HTTP-MESSAGE-SIGNATURES]
+
+   Agents MUST include the following @signature-params as defined in
+   Section 2.3 of [HTTP-MESSAGE-SIGNATURES]
+
+   created  as defined in Section 2.3 of [HTTP-MESSAGE-SIGNATURES]
+
+   expires  as defined in Section 2.3 of [HTTP-MESSAGE-SIGNATURES]
+
+   keyid  MUST be a base64url JWK SHA-256 Thumbprint as defined in
+      Section 3.2 of [JWK-THUMBPRINT] for RSA and EC, and in
+      Appendix A.3 of [JWK-OKP] for ed25519.
+
+   tag  MUST be web-bot-auth
+
+   The signing key is available to the agent at request time.
+   Algorithms should be registered with IANA as part of HTTP Message
+   Signatures Algorithm registry.
+
+   The creation of the signature is defined in Section 3.1 of
+   [HTTP-MESSAGE-SIGNATURES].
+
+   It is RECOMMENDED that expiry be no more than 24 hours.
+
+   The components above bind the signature to an authority, not to a
+   request.  A signature covering @authority alone verifies against any
+   method, path, or body sent to that authority until it expires, so
+   anyone who observes one request can reuse it against the same origin
+   until then. expires bounds how long that lasts; the covered
+   components bound what it reaches.  Appendix C.7 covers what that
+   costs on the wire.
+
+
+
+
+Meunier & Major           Expires 5 March 2027                 [Page 10]
+
+Internet-Draft      HTTP Message Signatures for Bots      September 2026
+
+
+   Agents that want to narrow the scope of their signature SHOULD also
+   cover the following components.  A signer that omits them remains
+   conformant.
+
+   @method  narrows the signature to one method.  Defined in
+      Section 2.2.1 of [HTTP-MESSAGE-SIGNATURES]
+
+   @path  narrows the signature to one resource.  Appendix D.2 shows it
+      in use.  Defined in Section 2.2.6 of [HTTP-MESSAGE-SIGNATURES].
+
+   @target-uri  narrows the signature to one resource, including the
+      query string.  The signature is invalidated by intermediary
+      reordering, which might happen for caching purposes for instance.
+      Defined in Section 2.2.2 of [HTTP-MESSAGE-SIGNATURES].
+
+   @query-param  narrows the signature to individual query parameters.
+      This is a more robust alternative to cover query parameters.
+      Defined in Section 2.2.8 of [HTTP-MESSAGE-SIGNATURES].
+
+   No component covers the body.  An Agent that needs one MUST send and
+   cover Content-Digest [DIGEST-FIELDS].  This document does not require
+   it.  Most automated traffic is GET, and a mandatory digest would
+   force every Agent to buffer request bodies it would otherwise stream.

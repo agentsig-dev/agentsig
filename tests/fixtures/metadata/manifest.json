@@ -1,0 +1,72 @@
+{
+  "formatVersion": 1,
+  "approvedOn": "2026-09-18",
+  "relatedNotices": [
+    "tests/fixtures/m2/sources/IETF-NOTICE.txt",
+    "tests/fixtures/m2/sources/cloudflare-LICENSE.txt"
+  ],
+  "files": [
+    {
+      "path": "sources/rfc9421-3.2.txt",
+      "bytes": 8172,
+      "sha256": "86f26787efce8d6970d1736c45abbf39c07af04107cf86defbc8d2577fc0f5bf",
+      "source": {
+        "path": "tests/fixtures/sources/rfc9421.txt",
+        "sha256": "612655786bf4293bfc486e4177571467fbb3de6e6f0eea90cb74c346a34fdf3c",
+        "start": "3.2.  Verifying a Signature\n",
+        "endExclusive": "3.3.  Signature Algorithms\n",
+        "transformation": "Exact excerpt; no whitespace or wording normalization",
+        "license": "Original IETF Trust notices retained in full source; related notice in manifest"
+      }
+    },
+    {
+      "path": "sources/rfc9421-2.3.txt",
+      "bytes": 4474,
+      "sha256": "33bd9104d9767596fd05c20581365f1a9abdb32faa773435a10fdd4a570f567c",
+      "source": {
+        "path": "tests/fixtures/sources/rfc9421.txt",
+        "sha256": "612655786bf4293bfc486e4177571467fbb3de6e6f0eea90cb74c346a34fdf3c",
+        "start": "2.3.  Signature Parameters\n",
+        "endExclusive": "2.4.  Signing Request Components",
+        "transformation": "Exact excerpt; no whitespace or wording normalization",
+        "license": "Original IETF Trust notices retained in full source; related notice in manifest"
+      }
+    },
+    {
+      "path": "sources/wg-5.2.txt",
+      "bytes": 2844,
+      "sha256": "b9e7fcc67bfa37a065e9dc78214de6a41d57de22cee16a0fccdff73fce12c3ae",
+      "source": {
+        "path": "tests/fixtures/m2/sources/wg-protocol-00.txt",
+        "sha256": "3021fd94cdffdb2eb030dec68b1a5c968f2348502dd94c481e2085ec7ddd90a0",
+        "start": "5.2.  Generating HTTP Message Signature\n",
+        "endExclusive": "5.2.1.  Signature-Agent\n",
+        "transformation": "Exact excerpt; no whitespace or wording normalization",
+        "license": "Original IETF Trust notices retained in full source; related notice in manifest"
+      }
+    },
+    {
+      "path": "sources/cloudflare-4.2.mdx",
+      "bytes": 199,
+      "sha256": "cc88d9e3b700276cd778f3088d5f92c25d192611e7a8c252f3dd78a84744b764",
+      "source": {
+        "path": "tests/fixtures/m2/sources/cloudflare-2026-07-01.mdx",
+        "sha256": "c4aeeef723df97b020ecc4d9e680b77b5bfb6c214a6443b0fb7f00efd7e422f7",
+        "start": "### 4.2. Calculate the JWK thumbprint\n",
+        "endExclusive": "### 4.3. Construct the required headers\n",
+        "transformation": "Exact excerpt; no whitespace or wording normalization",
+        "license": "CC-BY-4.0; Cloudflare and contributors"
+      }
+    },
+    {
+      "path": "cases.json",
+      "bytes": 23836,
+      "sha256": "e0fed9281442ad4b7a1ef839b24bc3c52b68cc872477d72a9905ed81e855ecd6",
+      "source": {
+        "author": "agentsig",
+        "license": "MIT",
+        "kind": "independently authored expectations"
+      }
+    }
+  ]
+}

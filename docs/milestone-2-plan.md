@@ -1,8 +1,13 @@
 # M2 — çevrimdışı Web Bot Auth profil katmanı
 
-Durum: **kaynak ve fixture hazırlığı onaylandı ve tamamlandı; üretim uygulaması için yeniden onay bekleniyor**. Tarih: 2026-09-18.
-Son kararlar ve tam kod kataloğu: [M2 fixture teslimatı](m2-fixture-review.md).
-Bu belge kod veya tamamlanmış uyumluluk iddiası değildir.
+Durum: **M2 uygulaması onaylandı; çevrimdışı doğrulayıcı entegrasyonu sürüyor**. Tarih: 2026-09-18.
+Doğrulama kataloğu sürüm 1 olarak dondurulmuştur; kod değişikliği ayrı onay ve sürüm notu gerektirir.
+Bu belgenin aşağıdaki öneri/alternatif bölümleri tarihsel tasarım kaydıdır; eski
+“onay bekliyor” ifadeleri güncel uygulama engeli değildir. Güncel onaylı davranışlar:
+[JWKS yükleme](jwks-loading.md), [profil kimliği](profile-identity-policy.md),
+[imzalayan](profile-signing.md), [saat/replay bağlamı](security-context.md).
+Tam doğrulayıcı, profil dışa aktarımları ve verified round-trip henüz tamamlanmadı.
+Bu belge tamamlanmış uyumluluk veya uzak CI başarısı iddiası değildir.
 Depo: https://github.com/agentsig-dev/agentsig — npm kapsamı @agentsig.
 
 ## 1. Kapsam
@@ -173,7 +178,31 @@ Açık eşleme var ama URL uyuşmuyorsa invalid / agent-binding-mismatch;
 gereken eşleme yoksa unverified / agent-binding-missing.
 Bilinen algoritma ile seçilmiş anahtar çelişkisi invalid / algorithm-mismatch;
 böyle bir çelişki belirlenmeden desteklenmeyen algoritma unverified /
-unsupported-algorithm olur. Algoritma alanı yanlış türdeyse invalid-parameter'dır.
+unsupported-algorithm olur. **Düzeltme — onaylı metadata sınıflandırması:**
+yanlış SF metadata türü, M1 tüm-çiftler ayrıştırma sınırında bütün istek için
+malformed-signature olur; aday bazında invalid-parameter olarak raporlanmaz.
+
+| Katman | Geçen örnek | Ret |
+| --- | --- | --- |
+| Tel biçimi / SF türü | Algoritma String olarak verilmiş | Yanlış tür: bütün istek için malformed-signature |
+| Zorunlu metadata | Oluşturma, sona erme ve anahtar kimliği mevcut | Eksik alan: missing-required-parameter |
+| Profil anahtar kimliği biçimi | Padding'siz kanonik base64url, çözülmüş 32 bayt | Geçersiz gösterim: invalid-parameter; teşhis ihlal edilen kuralı belirtir |
+| Yerel anahtar araması | Yeniden hesaplanan thumbprint ile anahtar bulunmuş | Geçerli fakat bulunamayan kimlik: unknown-key |
+| Seçilmiş anahtar bağlaması | Seçilmiş açık anahtarın yeniden hesaplanan thumbprint'i eşleşmiş | Gerçek çelişki: key-id-mismatch; olağan yükleyici yolunda beklenmeyen savunma kontrolü |
+
+Beş katmanın her iki profil için pozitif/negatif örnekleri
+[metadata fixture'larında](../tests/fixtures/metadata/cases.json) sabittir.
+Eksik veya farklı protokol tag'i aday oluşturmaz. Nonce için onaylı
+nonce-required / nonce-invalid ayrımı korunur.
+
+Thumbprint zorunluluğu genel RFC 9421 anahtar kimliği sözdiziminden değil,
+[WG §5.2](../tests/fixtures/metadata/sources/wg-5.2.txt) ve
+[Cloudflare §4.2](../tests/fixtures/metadata/sources/cloudflare-4.2.mdx)
+profil kurallarından gelir. [RFC 9421 §3.2](../tests/fixtures/metadata/sources/rfc9421-3.2.txt)
+adım 1–3 ayrıştırmayı gerektirir ve adımların başarısızlığında ilgili imza
+doğrulamasını başarısız sayar. Herhangi bir bozuk çift nedeniyle bütün isteği
+reddetmek, korunan yerel M1 tüm-çiftler sözleşmesidir; RFC'nin tüm ilgisiz
+imzaları koşulsuz reddetmeyi emrettiği iddia edilmez.
 aggregate-policy-required kaldırıldı; hatalı toplu kural yapılandırması
 invalid-candidate-policy olur. Açık çoklu-aday modunda kural verilmezse all seçilir.
 Dış VerificationResult yalnızca unsigned / verified / invalid / unverified kalır;
@@ -242,7 +271,7 @@ base64url/çakışan kid; URL iddiasının kendiliğinden doğrulanmış kimliğ
 İşlem sırasında ağ çağrısı olmadığını kanıtlayan testler ve bilinmeyen anahtarda
 fetch'e düşülmediği kontrolü bulunur.
 
-## 10. Bu turda yapılmayanlar
+## 10. Tarihsel kaynak/fixture teslimatı kaydı
 
 M2 kaynak snapshot'ları ve bağımsız fixture'lar hazırlandı; API uygulaması,
 zaman kontrolü ve replay deposu eklenmedi. WG-00 Ek E.2'nin üç Ed25519 vektörü
@@ -255,5 +284,8 @@ aşamasının agent-label-mismatch negatif fixture'ı olarak kullanılır; diğe
 kapsam/zaman ihlalleri nedeniyle tam doğrulayıcının ilk hatası varsayılmaz.
 [WG rapor taslağı](wg-e2-1-report-draft.md) kullanıcı tarafından gönderilmek üzere
 hazırdır; gönderilmemiştir.
-Üretim koduna geçmeden düzeltilmiş katalog ve kalan dört güvenlik seçeneği için
-tekrar onay alınacak. Katalog henüz dondurulmadı.
+Bu tarihsel teslimatı izleyen onayda katalog ve güvenlik seçenekleri
+donduruldu; profil yardımcıları, imzalayan, saat/sıfırlama koordinatörü ve
+bellek deposu uygulandı. Güncel kapsam için belgenin başındaki durum notu geçerlidir.
+Metadata fixture denetiminin geçmesi, henüz tamamlanmamış doğrulayıcının
+aynı senaryoları geçtiği anlamına gelmez. Push ve yayın kullanıcıya aittir.
