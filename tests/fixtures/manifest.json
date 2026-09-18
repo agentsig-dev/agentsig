@@ -1,0 +1,417 @@
+{
+  "formatVersion": 1,
+  "retrievedOn": "2026-09-18",
+  "warning": "Published test private key: NEVER use in production.",
+  "upstream": {
+    "repository": "https://github.com/httpwg/structured-field-tests",
+    "commit": "00462dd7938b43bf596cb2af6a373d9c928a6cbe",
+    "licensePath": "packages/structured-fields/test/fixtures/httpwg/LICENSE.md"
+  },
+  "rfcSources": [
+    {
+      "number": 9421,
+      "sha256": "612655786bf4293bfc486e4177571467fbb3de6e6f0eea90cb74c346a34fdf3c"
+    },
+    {
+      "number": 9651,
+      "sha256": "fe27f2ec8819911afbe4bd11f6fcb947580da4c49e5423a1fff960e252ced26d"
+    }
+  ],
+  "files": [
+    {
+      "path": "packages/core/test/fixtures/rfc9421/ed25519-private.jwk.json",
+      "bytes": 176,
+      "sha256": "556b3869b9fa4f6067c0a7f3de3f6f2564f0d003df7d13536d9b562eb6b1f29c",
+      "source": {
+        "rfc": 9421,
+        "section": "B.1.4",
+        "url": "https://www.rfc-editor.org/rfc/rfc9421.html#appendix-B.1.4",
+        "transformation": "Remove publication indentation; append final LF"
+      }
+    },
+    {
+      "path": "packages/core/test/fixtures/rfc9421/ed25519-private.pem",
+      "bytes": 119,
+      "sha256": "35d48f52783dd06aecdee406f5b36c485d38ca9ade4002a2e7498df0369c9694",
+      "source": {
+        "rfc": 9421,
+        "section": "B.1.4",
+        "url": "https://www.rfc-editor.org/rfc/rfc9421.html#appendix-B.1.4",
+        "transformation": "Remove publication indentation; append PEM final LF"
+      }
+    },
+    {
+      "path": "packages/core/test/fixtures/rfc9421/ed25519-public.pem",
+      "bytes": 113,
+      "sha256": "22ce02aa18eb1ee5f39482d0f57a6ba56f4d549f81db547f3bea2863207c8a01",
+      "source": {
+        "rfc": 9421,
+        "section": "B.1.4",
+        "url": "https://www.rfc-editor.org/rfc/rfc9421.html#appendix-B.1.4",
+        "transformation": "Remove publication indentation; append PEM final LF"
+      }
+    },
+    {
+      "path": "packages/core/test/fixtures/rfc9421/request-head.txt",
+      "bytes": 257,
+      "sha256": "37f569729e5b1574a97a16fb3c69c8ca78dae3135207f27537d678c3bdd57295",
+      "source": {
+        "rfc": 9421,
+        "section": "B.2",
+        "url": "https://www.rfc-editor.org/rfc/rfc9421.html#appendix-B.2",
+        "transformation": "LF textual request-head representation; not HTTP wire CRLF; body excluded"
+      }
+    },
+    {
+      "path": "packages/core/test/fixtures/rfc9421/signature-base.txt",
+      "bytes": 284,
+      "sha256": "e6402577f54303accfda63dfbde1a7b8c5e5e6f3f7898637b7d78dc07ee1896a",
+      "source": {
+        "rfc": 9421,
+        "section": "B.2.6",
+        "url": "https://www.rfc-editor.org/rfc/rfc9421.html#appendix-B.2.6",
+        "transformation": "Remove publication indentation and RFC 8792 wrapping; no final LF"
+      }
+    },
+    {
+      "path": "packages/core/test/fixtures/rfc9421/signature-headers.txt",
+      "bytes": 250,
+      "sha256": "23e0ede22bb6417e9bc85877ac5ff7e6949d4d255447b05f3140b7b805eef28a",
+      "source": {
+        "rfc": 9421,
+        "section": "B.2.6",
+        "url": "https://www.rfc-editor.org/rfc/rfc9421.html#appendix-B.2.6",
+        "transformation": "Remove publication indentation and RFC 8792 wrapping; no final LF"
+      }
+    },
+    {
+      "path": "packages/core/test/fixtures/rfc9421/signature.bin",
+      "bytes": 64,
+      "sha256": "edfd6ad11a953a33df4b04c00236e0a370823ff19f652c5260555a23d287b1d1",
+      "source": {
+        "rfc": 9421,
+        "section": "B.2.6",
+        "url": "https://www.rfc-editor.org/rfc/rfc9421.html#appendix-B.2.6",
+        "transformation": "Decode the published Signature byte sequence; do not regenerate"
+      }
+    },
+    {
+      "path": "packages/structured-fields/test/fixtures/httpwg/binary.json",
+      "bytes": 3005,
+      "sha256": "653da96a89c829c7c8f18ce05c315a9b622e1b7c9f140a52d23c02163fbed4ab",
+      "source": {
+        "repository": "https://github.com/httpwg/structured-field-tests",
+        "commit": "00462dd7938b43bf596cb2af6a373d9c928a6cbe",
+        "path": "binary.json"
+      }
+    },
+    {
+      "path": "packages/structured-fields/test/fixtures/httpwg/boolean.json",
+      "bytes": 1574,
+      "sha256": "0413a8dd07dae5a794e9c968cce11dd913d448892a6ff0b102c6530fa4b9446f",
+      "source": {
+        "repository": "https://github.com/httpwg/structured-field-tests",
+        "commit": "00462dd7938b43bf596cb2af6a373d9c928a6cbe",
+        "path": "boolean.json"
+      }
+    },
+    {
+      "path": "packages/structured-fields/test/fixtures/httpwg/date.json",
+      "bytes": 3009,
+      "sha256": "187b13bc54e017a26a18fe0270792fc2b9a3819faac3cfbc7490c38d8a7653b3",
+      "source": {
+        "repository": "https://github.com/httpwg/structured-field-tests",
+        "commit": "00462dd7938b43bf596cb2af6a373d9c928a6cbe",
+        "path": "date.json"
+      }
+    },
+    {
+      "path": "packages/structured-fields/test/fixtures/httpwg/dictionary.json",
+      "bytes": 4924,
+      "sha256": "3e7626a312b6463bbbf6d4cface0492e8880029b33bbdcf0c5691c137862059a",
+      "source": {
+        "repository": "https://github.com/httpwg/structured-field-tests",
+        "commit": "00462dd7938b43bf596cb2af6a373d9c928a6cbe",
+        "path": "dictionary.json"
+      }
+    },
+    {
+      "path": "packages/structured-fields/test/fixtures/httpwg/display-string.json",
+      "bytes": 4047,
+      "sha256": "c1fc712bfdba7b0bcdf8d3c62a3f9f4aff2fbd33931b6eeb8c9d68d6beb3cded",
+      "source": {
+        "repository": "https://github.com/httpwg/structured-field-tests",
+        "commit": "00462dd7938b43bf596cb2af6a373d9c928a6cbe",
+        "path": "display-string.json"
+      }
+    },
+    {
+      "path": "packages/structured-fields/test/fixtures/httpwg/examples.json",
+      "bytes": 6084,
+      "sha256": "f180e525adcb8bf0199e6fdae3e915e030aef28529de138ad2967d2115fd6835",
+      "source": {
+        "repository": "https://github.com/httpwg/structured-field-tests",
+        "commit": "00462dd7938b43bf596cb2af6a373d9c928a6cbe",
+        "path": "examples.json"
+      }
+    },
+    {
+      "path": "packages/structured-fields/test/fixtures/httpwg/item.json",
+      "bytes": 735,
+      "sha256": "6104e2be2fdc269071973a577ae5460e55c25e40ee138a064a3dabcacf9d99a0",
+      "source": {
+        "repository": "https://github.com/httpwg/structured-field-tests",
+        "commit": "00462dd7938b43bf596cb2af6a373d9c928a6cbe",
+        "path": "item.json"
+      }
+    },
+    {
+      "path": "packages/structured-fields/test/fixtures/httpwg/key-generated.json",
+      "bytes": 149773,
+      "sha256": "7cf177687eadfa15e8aafe158788348e067dbadc675987823a2a08a414ebeafc",
+      "source": {
+        "repository": "https://github.com/httpwg/structured-field-tests",
+        "commit": "00462dd7938b43bf596cb2af6a373d9c928a6cbe",
+        "path": "key-generated.json"
+      }
+    },
+    {
+      "path": "packages/structured-fields/test/fixtures/httpwg/large-generated.json",
+      "bytes": 727664,
+      "sha256": "ade790e9425083bb8e8f5082a6c0b7565877feefdd59d37ed76b4dbfab14d3c4",
+      "source": {
+        "repository": "https://github.com/httpwg/structured-field-tests",
+        "commit": "00462dd7938b43bf596cb2af6a373d9c928a6cbe",
+        "path": "large-generated.json"
+      }
+    },
+    {
+      "path": "packages/structured-fields/test/fixtures/httpwg/LICENSE.md",
+      "bytes": 1561,
+      "sha256": "db59c2f3609ac3b183fc0c5c7d71da6212b6c86c10cb7715e30d6b876c3a587d",
+      "source": {
+        "repository": "https://github.com/httpwg/structured-field-tests",
+        "commit": "00462dd7938b43bf596cb2af6a373d9c928a6cbe",
+        "path": "LICENSE.md"
+      }
+    },
+    {
+      "path": "packages/structured-fields/test/fixtures/httpwg/list.json",
+      "bytes": 1750,
+      "sha256": "d8d21cac1f5814363a5cfe56b1bd80963bce36cacbb0c1a59d59c14ae7622ba7",
+      "source": {
+        "repository": "https://github.com/httpwg/structured-field-tests",
+        "commit": "00462dd7938b43bf596cb2af6a373d9c928a6cbe",
+        "path": "list.json"
+      }
+    },
+    {
+      "path": "packages/structured-fields/test/fixtures/httpwg/listlist.json",
+      "bytes": 1969,
+      "sha256": "82b961c02b55753d122a8f72bffde93d178575f03a43154818afb73091f688cf",
+      "source": {
+        "repository": "https://github.com/httpwg/structured-field-tests",
+        "commit": "00462dd7938b43bf596cb2af6a373d9c928a6cbe",
+        "path": "listlist.json"
+      }
+    },
+    {
+      "path": "packages/structured-fields/test/fixtures/httpwg/number-generated.json",
+      "bytes": 46235,
+      "sha256": "32b672b3cc61bc0b26d9d7da4b2d86508e05bab029bfce43a65afc8fd355c922",
+      "source": {
+        "repository": "https://github.com/httpwg/structured-field-tests",
+        "commit": "00462dd7938b43bf596cb2af6a373d9c928a6cbe",
+        "path": "number-generated.json"
+      }
+    },
+    {
+      "path": "packages/structured-fields/test/fixtures/httpwg/number.json",
+      "bytes": 6108,
+      "sha256": "fe5cab144d9cd76ba465ed6222eea68e19d7d8679c0e1499ca7f9c7af34f420d",
+      "source": {
+        "repository": "https://github.com/httpwg/structured-field-tests",
+        "commit": "00462dd7938b43bf596cb2af6a373d9c928a6cbe",
+        "path": "number.json"
+      }
+    },
+    {
+      "path": "packages/structured-fields/test/fixtures/httpwg/param-dict.json",
+      "bytes": 3457,
+      "sha256": "3dcc8fc0977072d542e34f13dcfe5fe22e520a5abc2220f86ffcbbcc8b409bdb",
+      "source": {
+        "repository": "https://github.com/httpwg/structured-field-tests",
+        "commit": "00462dd7938b43bf596cb2af6a373d9c928a6cbe",
+        "path": "param-dict.json"
+      }
+    },
+    {
+      "path": "packages/structured-fields/test/fixtures/httpwg/param-list.json",
+      "bytes": 4814,
+      "sha256": "232e87b307051619055262cd6ac550790961db11ed1f58d8139186b872afca17",
+      "source": {
+        "repository": "https://github.com/httpwg/structured-field-tests",
+        "commit": "00462dd7938b43bf596cb2af6a373d9c928a6cbe",
+        "path": "param-list.json"
+      }
+    },
+    {
+      "path": "packages/structured-fields/test/fixtures/httpwg/param-listlist.json",
+      "bytes": 1022,
+      "sha256": "fde5860376f2be0d2d497fb2e2c5a36ee2bdace0ecfc511ba474ec14e6852321",
+      "source": {
+        "repository": "https://github.com/httpwg/structured-field-tests",
+        "commit": "00462dd7938b43bf596cb2af6a373d9c928a6cbe",
+        "path": "param-listlist.json"
+      }
+    },
+    {
+      "path": "packages/structured-fields/test/fixtures/httpwg/README.md",
+      "bytes": 3714,
+      "sha256": "be31e988a443ec39d1eed21e152b49766726d94c31b454855eb3bfbc0f503e35",
+      "source": {
+        "repository": "https://github.com/httpwg/structured-field-tests",
+        "commit": "00462dd7938b43bf596cb2af6a373d9c928a6cbe",
+        "path": "README.md"
+      }
+    },
+    {
+      "path": "packages/structured-fields/test/fixtures/httpwg/schema/expected.schema.json",
+      "bytes": 3279,
+      "sha256": "0aad1b9863c709db5548c4bd36e1571e3e5ab8975865bd249f579c857ca3f2e8",
+      "source": {
+        "repository": "https://github.com/httpwg/structured-field-tests",
+        "commit": "00462dd7938b43bf596cb2af6a373d9c928a6cbe",
+        "path": "schema/expected.schema.json"
+      }
+    },
+    {
+      "path": "packages/structured-fields/test/fixtures/httpwg/schema/package.json",
+      "bytes": 495,
+      "sha256": "e18468ae174cde97678f6b0ad92fb8866082203754c7b9b98c7e45e6ccafda74",
+      "source": {
+        "repository": "https://github.com/httpwg/structured-field-tests",
+        "commit": "00462dd7938b43bf596cb2af6a373d9c928a6cbe",
+        "path": "schema/package.json"
+      }
+    },
+    {
+      "path": "packages/structured-fields/test/fixtures/httpwg/schema/parse.schema.json",
+      "bytes": 1186,
+      "sha256": "698d3a3940f98837bce45cc0c1c6c184b4b256a859f03d941f7b88f0011bb65b",
+      "source": {
+        "repository": "https://github.com/httpwg/structured-field-tests",
+        "commit": "00462dd7938b43bf596cb2af6a373d9c928a6cbe",
+        "path": "schema/parse.schema.json"
+      }
+    },
+    {
+      "path": "packages/structured-fields/test/fixtures/httpwg/schema/serialize.schema.json",
+      "bytes": 879,
+      "sha256": "91a04307dac0d4e5e66f22a0a435ee2a3f1b7f5e954e407ee622eee05556307e",
+      "source": {
+        "repository": "https://github.com/httpwg/structured-field-tests",
+        "commit": "00462dd7938b43bf596cb2af6a373d9c928a6cbe",
+        "path": "schema/serialize.schema.json"
+      }
+    },
+    {
+      "path": "packages/structured-fields/test/fixtures/httpwg/serialisation-tests/key-generated.json",
+      "bytes": 141470,
+      "sha256": "a1719ac20a72a3ea062a3d1f4c3e3e7858420af80f15f009f7f1b30d0ace1dab",
+      "source": {
+        "repository": "https://github.com/httpwg/structured-field-tests",
+        "commit": "00462dd7938b43bf596cb2af6a373d9c928a6cbe",
+        "path": "serialisation-tests/key-generated.json"
+      }
+    },
+    {
+      "path": "packages/structured-fields/test/fixtures/httpwg/serialisation-tests/number.json",
+      "bytes": 1530,
+      "sha256": "f73b5239a7e84cfcc19e29c01dbae85da0a4c6b3273018cc92a19c1fc632b4a1",
+      "source": {
+        "repository": "https://github.com/httpwg/structured-field-tests",
+        "commit": "00462dd7938b43bf596cb2af6a373d9c928a6cbe",
+        "path": "serialisation-tests/number.json"
+      }
+    },
+    {
+      "path": "packages/structured-fields/test/fixtures/httpwg/serialisation-tests/string-generated.json",
+      "bytes": 6285,
+      "sha256": "035b53c08a706ce401a3b0e0ebc13bf6090edefc14747089f13bf6ad66e6d822",
+      "source": {
+        "repository": "https://github.com/httpwg/structured-field-tests",
+        "commit": "00462dd7938b43bf596cb2af6a373d9c928a6cbe",
+        "path": "serialisation-tests/string-generated.json"
+      }
+    },
+    {
+      "path": "packages/structured-fields/test/fixtures/httpwg/serialisation-tests/token-generated.json",
+      "bytes": 33433,
+      "sha256": "1f4db75952490df9b7ef17f71f745275482f3cb36e34527c3c1ca434f7e3d868",
+      "source": {
+        "repository": "https://github.com/httpwg/structured-field-tests",
+        "commit": "00462dd7938b43bf596cb2af6a373d9c928a6cbe",
+        "path": "serialisation-tests/token-generated.json"
+      }
+    },
+    {
+      "path": "packages/structured-fields/test/fixtures/httpwg/string-generated.json",
+      "bytes": 44542,
+      "sha256": "99c4d3dac05e0452a0b8bee2b6b1d78898cfb6ccda2cc34aa6d1fcf1dfd2864a",
+      "source": {
+        "repository": "https://github.com/httpwg/structured-field-tests",
+        "commit": "00462dd7938b43bf596cb2af6a373d9c928a6cbe",
+        "path": "string-generated.json"
+      }
+    },
+    {
+      "path": "packages/structured-fields/test/fixtures/httpwg/string.json",
+      "bytes": 2556,
+      "sha256": "247080f284048c5931c49e6b63064fd3caa49e737b565084b5efa3ccace33137",
+      "source": {
+        "repository": "https://github.com/httpwg/structured-field-tests",
+        "commit": "00462dd7938b43bf596cb2af6a373d9c928a6cbe",
+        "path": "string.json"
+      }
+    },
+    {
+      "path": "packages/structured-fields/test/fixtures/httpwg/token-generated.json",
+      "bytes": 54972,
+      "sha256": "33f8cb0f15958126f682608efb99eea8214ce92a04d5fb56999c3c5f01046439",
+      "source": {
+        "repository": "https://github.com/httpwg/structured-field-tests",
+        "commit": "00462dd7938b43bf596cb2af6a373d9c928a6cbe",
+        "path": "token-generated.json"
+      }
+    },
+    {
+      "path": "packages/structured-fields/test/fixtures/httpwg/token.json",
+      "bytes": 1125,
+      "sha256": "9fd251e8ac0cb3ef71533b6063affb09c6faef1cdefa9568ce8c94a0041381ef",
+      "source": {
+        "repository": "https://github.com/httpwg/structured-field-tests",
+        "commit": "00462dd7938b43bf596cb2af6a373d9c928a6cbe",
+        "path": "token.json"
+      }
+    },
+    {
+      "path": "tests/fixtures/sources/rfc9421.txt",
+      "bytes": 241160,
+      "sha256": "612655786bf4293bfc486e4177571467fbb3de6e6f0eea90cb74c346a34fdf3c",
+      "source": {
+        "url": "https://www.rfc-editor.org/rfc/rfc9421.txt",
+        "sha256": "612655786bf4293bfc486e4177571467fbb3de6e6f0eea90cb74c346a34fdf3c"
+      }
+    },
+    {
+      "path": "tests/fixtures/sources/rfc9651.txt",
+      "bytes": 74086,
+      "sha256": "fe27f2ec8819911afbe4bd11f6fcb947580da4c49e5423a1fff960e252ced26d",
+      "source": {
+        "url": "https://www.rfc-editor.org/rfc/rfc9651.txt",
+        "sha256": "fe27f2ec8819911afbe4bd11f6fcb947580da4c49e5423a1fff960e252ced26d"
+      }
+    }
+  ]
+}
