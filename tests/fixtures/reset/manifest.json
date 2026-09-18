@@ -16,13 +16,18 @@
   "files": [
     {
       "path": "contract.json",
-      "bytes": 3406,
-      "sha256": "bdf7b53640562f22004e572e146e9d457323b68c8721e77a33063613442c16b8"
+      "bytes": 4604,
+      "sha256": "f70e7943eab6d555369902c4a2ecca147207678c14f64d8c0ee6df139052a542"
     },
     {
       "path": "cases.json",
       "bytes": 9109,
       "sha256": "3168ab23f1c94b760e327ff75c71319eda5a87034339c8d1332515cd919a7bf9"
+    },
+    {
+      "path": "observer-cases.json",
+      "bytes": 7730,
+      "sha256": "264fa96ec263acd348d18defd4b96c27d3d592c8a78b4c201c1854deffba91a8"
     }
   ]
 }

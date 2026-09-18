@@ -23,10 +23,10 @@ const unavailable = { status: "unverified", reason: "clock-unavailable" };
 
 test("reset manifest pins all expectations and their approved source contracts", () => {
     assert.deepEqual(readdirSync(directory).sort(), [
-        "cases.json", "contract.json", "manifest.json",
+        "cases.json", "contract.json", "manifest.json", "observer-cases.json",
     ]);
     assert.deepEqual(manifest.files.map((entry) => entry.path).sort(), [
-        "cases.json", "contract.json",
+        "cases.json", "contract.json", "observer-cases.json",
     ]);
     for (const entry of manifest.files) {
         const bytes = read(entry.path);
@@ -166,4 +166,94 @@ test("reset event fixtures expose only approved metadata and honest cleanup coun
     }
     assert.deepEqual(cases.get("unhealthy-memory-reset").expected.healthTransitions, ["healthy"]);
     assert(contract.events.partialCounts.includes("unknown cleanup counts must be null"));
+});
+
+test("observer contract pins one synchronous immutable hook and content-free failure accounting", () => {
+    const observer = contract.observer;
+    assert.equal(observer.count, 1);
+    assert.equal(observer.configuredAtCreationOnly, true);
+    assert.equal(observer.replaceable, false);
+    assert.equal(observer.synchronous, true);
+    assert(observer.delivery.includes("exactly once per event"));
+    assert(observer.delivery.includes("before returning"));
+    assert(observer.reentrancyScope.includes("synchronous call stack"));
+    assert(observer.reentrancyScope.includes("no guard retained across an await"));
+    assert(observer.guardCleanup.includes("try/finally"));
+    assert.deepEqual(observer.reentrantVerification, unavailable);
+    assert.equal(observer.reentrantReset, "reset-in-progress");
+    assert.equal(observer.reentrantRejectionsEmitEvents, false);
+    assert.equal(observer.failedResetsEmitEvents, true);
+    assert.deepEqual(observer.failures, {
+        swallowAllThrownValues: true,
+        retainRawValue: false,
+        logRawValue: false,
+        secondaryErrorHook: false,
+        changeCompletedOutcome: false,
+        counter: "Read-only context observerErrorCount; increment once per throwing delivery.",
+    });
+    assert(observer.warning.includes("defer heavy work"));
+    assert(observer.deferredLogging.includes("handle asynchronous failures outside the hook"));
+});
+
+test("observer fixtures cover arbitrary throws, stack-local reentry and subsequent recovery", () => {
+    const matrix = json("observer-cases.json");
+    assert.equal(matrix.cases.length, 14);
+    const entries = new Map(matrix.cases.map((entry) => [entry.id, entry]));
+    assert.equal(entries.size, 14);
+    for (const kind of ["error", "string", "null", "undefined", "object"]) {
+        const entry = entries.get(`throw-${kind}-then-normal-verification`);
+        assert.equal(entry.observerAction.thrownKind, kind);
+        assert.deepEqual(entry.expected, {
+            observerCalls: 1, observerErrorCount: 1,
+            resetOutcome: "success",
+            guardActiveAfterDelivery: false,
+            nextNormalVerificationMayProceed: true,
+            retainedRawFailures: 0, rawFailureLogCalls: 0, secondaryHookCalls: 0,
+        });
+    }
+    const reentry = entries.get("synchronous-reentry-rejected-without-recursive-events").expected;
+    assert.deepEqual(reentry.verification, unavailable);
+    assert.equal(reentry.resetCode, "reset-in-progress");
+    assert.equal(reentry.observerCalls, 1);
+    assert.equal(reentry.observerErrorCount, 0);
+    assert.equal(reentry.nestedEvents, 0);
+    assert.equal(reentry.nestedStoreCalls, 0);
+    assert.equal(reentry.outerResetOutcome, "success");
+    assert.equal(reentry.guardActiveAfterDelivery, false);
+    const deferred = entries.get("deferred-call-does-not-inherit-observer-guard").expected;
+    assert.equal(deferred.deferredCallMayProceed, true);
+    assert.equal(deferred.guardActiveAfterDelivery, false);
+    const committed = entries.get("observer-sees-finalized-reset-state").expected;
+    assert.deepEqual(committed.state, {
+        activeEpoch: 8, records: 0, quotaCounters: 0, resetInProgress: false,
+    });
+    assert.equal(committed.deliveredBeforeCallerCompletion, true);
+    assert.deepEqual(committed.event, cases.get("healthy-memory-reset").expected.event);
+});
+
+test("failed reset events are delivered once except observer-originated reentry", () => {
+    const entries = new Map(json("observer-cases.json").cases.map((entry) => [entry.id, entry]));
+    for (const code of codes) {
+        const entry = entries.get(`failed-reset-event-${code}`);
+        assert.equal(entry.operatorCode, code);
+        assert.equal(entry.expected.matchingResetEvents, 1);
+        assert.equal(entry.expected.matchingObserverCalls, 1);
+        assert.equal(entry.expected.eventOutcome, code);
+        assert.equal(entry.expected.deliveredBeforeCallerCompletion, true);
+        if (code === "reset-in-progress") {
+            assert.equal(entry.trigger, "separate-concurrent-reset-caller");
+        }
+    }
+    const retry = entries.get("throwing-observer-preserves-failed-reset-and-retry").expected;
+    assert.deepEqual(retry.resetOutcomes, ["reset-failed", "success"]);
+    assert.equal(retry.matchingResetEvents, 2);
+    assert.equal(retry.matchingObserverCalls, 2);
+    assert.equal(retry.observerErrorCount, 1);
+    assert.equal(retry.busyAfterFailure, false);
+    assert.equal(retry.verificationOpenAfterFailure, false);
+    assert.equal(retry.verificationOpenAfterRetry, true);
+    assert.equal(retry.guardActiveAfterDelivery, false);
+    const health = entries.get("health-events-are-transition-only").expected;
+    assert.deepEqual(health.healthTransitions, ["unhealthy", "healthy"]);
+    assert.equal(health.observerCalls, 2);
 });

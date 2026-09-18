@@ -67,6 +67,29 @@ json("contract.json", {
         partialCounts: "Report actual known counts; unknown cleanup counts must be null, not invented zero.",
         healthEvents: "Entry/exit transitions only, not repeated same-state samples.",
     },
+    observer: {
+        count: 1,
+        configuredAtCreationOnly: true,
+        replaceable: false,
+        synchronous: true,
+        delivery: "After the event's state transition is finalized, before returning to its caller, exactly once per event.",
+        reentrancyScope: "Only the observer's synchronous call stack; no guard retained across an await or deferred task.",
+        guardCleanup: "try/finally, including when the observer throws any value.",
+        reentrantVerification: { status: "unverified", reason: "clock-unavailable" },
+        reentrantReset: "reset-in-progress",
+        reentrantRejectionsEmitEvents: false,
+        failures: {
+            swallowAllThrownValues: true,
+            retainRawValue: false,
+            logRawValue: false,
+            secondaryErrorHook: false,
+            changeCompletedOutcome: false,
+            counter: "Read-only context observerErrorCount; increment once per throwing delivery.",
+        },
+        failedResetsEmitEvents: true,
+        deferredLogging: "Application responsibility; enqueue sanitized event data and handle asynchronous failures outside the hook.",
+        warning: "Synchronous observers delay the caller, including reset; defer heavy work.",
+    },
     independentPendingOperation: [
         "A consume dispatched before reset may complete; no distributed cancellation is claimed.",
         "Local old-epoch work cannot dispatch a new consume or return verified after invalidation.",
@@ -199,6 +222,95 @@ json("cases.json", {
         },
     ],
 });
+json("observer-cases.json", {
+    stage: "pre-implementation-observer-and-context-contract",
+    notes: [
+        "No simulated observer implementation is used to derive expectations.",
+        "Deferred verification occurs after the reset completes and the synchronous observer returns.",
+        "A nested reset attempt from the observer is reentrancy, not a second event-producing reset.",
+        "The reset-in-progress failure from a separate concurrent caller still emits its own event.",
+        "Health transition events and reset completion events are distinct; each is delivered once.",
+    ],
+    cases: [
+        ...["error", "string", "null", "undefined", "object"].map((kind) => ({
+            id: `throw-${kind}-then-normal-verification`,
+            trigger: "successful-healthy-memory-reset",
+            observerAction: { kind: "throw", thrownKind: kind },
+            expected: {
+                observerCalls: 1, observerErrorCount: 1,
+                resetOutcome: "success",
+                guardActiveAfterDelivery: false,
+                nextNormalVerificationMayProceed: true,
+                retainedRawFailures: 0, rawFailureLogCalls: 0, secondaryHookCalls: 0,
+            },
+        })),
+        {
+            id: "synchronous-reentry-rejected-without-recursive-events",
+            trigger: "successful-healthy-memory-reset",
+            observerAction: { kind: "attempt-verification-and-reset", catchesRejections: true },
+            expected: {
+                observerCalls: 1, observerErrorCount: 0,
+                verification: { status: "unverified", reason: "clock-unavailable" },
+                resetCode: "reset-in-progress",
+                nestedEvents: 0, nestedStoreCalls: 0,
+                outerResetOutcome: "success", guardActiveAfterDelivery: false,
+            },
+        },
+        {
+            id: "deferred-call-does-not-inherit-observer-guard",
+            trigger: "successful-healthy-memory-reset",
+            observerAction: { kind: "schedule-verification-after-caller-completion" },
+            expected: {
+                observerCalls: 1, observerErrorCount: 0,
+                deferredCallMayProceed: true, guardActiveAfterDelivery: false,
+            },
+        },
+        {
+            id: "observer-sees-finalized-reset-state",
+            trigger: "successful-healthy-memory-reset",
+            observerAction: { kind: "inspect-state" },
+            expected: {
+                observerCalls: 1, observerErrorCount: 0,
+                state: { activeEpoch: 8, records: 0, quotaCounters: 0, resetInProgress: false },
+                event: successEvent("process-clock"),
+                deliveredBeforeCallerCompletion: true,
+            },
+        },
+        ...codes.map((code) => ({
+            id: `failed-reset-event-${code}`,
+            trigger: code === "reset-in-progress"
+                ? "separate-concurrent-reset-caller" : "failed-reset",
+            operatorCode: code,
+            observerAction: { kind: "record-event" },
+            expected: {
+                matchingResetEvents: 1, matchingObserverCalls: 1,
+                eventOutcome: code, observerErrorCount: 0,
+                deliveredBeforeCallerCompletion: true,
+            },
+        })),
+        {
+            id: "throwing-observer-preserves-failed-reset-and-retry",
+            trigger: "failed-clear-then-successful-retry",
+            observerAction: { kind: "throw-on-first-reset-event-only" },
+            expected: {
+                resetOutcomes: ["reset-failed", "success"],
+                matchingResetEvents: 2, matchingObserverCalls: 2,
+                observerErrorCount: 1,
+                busyAfterFailure: false, verificationOpenAfterFailure: false,
+                verificationOpenAfterRetry: true, guardActiveAfterDelivery: false,
+            },
+        },
+        {
+            id: "health-events-are-transition-only",
+            trigger: "healthy-unhealthy-unhealthy-healthy-healthy-samples",
+            observerAction: { kind: "record-event" },
+            expected: {
+                healthTransitions: ["unhealthy", "healthy"],
+                observerCalls: 2, observerErrorCount: 0,
+            },
+        },
+    ],
+});
 const sources = [
     "tests/fixtures/m2/boundary-cases.json",
     "tests/fixtures/m2/policy-cases.json",
@@ -211,4 +323,4 @@ writeFileSync(resolve(destination, "manifest.json"), JSON.stringify({
     license: "MIT; agentsig-authored expectations based on approved local policy.",
     files,
 }, null, 2) + "\n");
-console.log(`Pinned ${files.length} reset data files, 4 operator codes and 9 scenarios; no implementation used.`);
+console.log(`Pinned ${files.length} reset data files, 4 operator codes, 9 reset and 14 observer scenarios; no implementation used.`);

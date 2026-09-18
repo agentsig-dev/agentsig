@@ -80,6 +80,32 @@
     "partialCounts": "Report actual known counts; unknown cleanup counts must be null, not invented zero.",
     "healthEvents": "Entry/exit transitions only, not repeated same-state samples."
   },
+  "observer": {
+    "count": 1,
+    "configuredAtCreationOnly": true,
+    "replaceable": false,
+    "synchronous": true,
+    "delivery": "After the event's state transition is finalized, before returning to its caller, exactly once per event.",
+    "reentrancyScope": "Only the observer's synchronous call stack; no guard retained across an await or deferred task.",
+    "guardCleanup": "try/finally, including when the observer throws any value.",
+    "reentrantVerification": {
+      "status": "unverified",
+      "reason": "clock-unavailable"
+    },
+    "reentrantReset": "reset-in-progress",
+    "reentrantRejectionsEmitEvents": false,
+    "failures": {
+      "swallowAllThrownValues": true,
+      "retainRawValue": false,
+      "logRawValue": false,
+      "secondaryErrorHook": false,
+      "changeCompletedOutcome": false,
+      "counter": "Read-only context observerErrorCount; increment once per throwing delivery."
+    },
+    "failedResetsEmitEvents": true,
+    "deferredLogging": "Application responsibility; enqueue sanitized event data and handle asynchronous failures outside the hook.",
+    "warning": "Synchronous observers delay the caller, including reset; defer heavy work."
+  },
   "independentPendingOperation": [
     "A consume dispatched before reset may complete; no distributed cancellation is claimed.",
     "Local old-epoch work cannot dispatch a new consume or return verified after invalidation.",

@@ -1,0 +1,259 @@
+{
+  "stage": "pre-implementation-observer-and-context-contract",
+  "notes": [
+    "No simulated observer implementation is used to derive expectations.",
+    "Deferred verification occurs after the reset completes and the synchronous observer returns.",
+    "A nested reset attempt from the observer is reentrancy, not a second event-producing reset.",
+    "The reset-in-progress failure from a separate concurrent caller still emits its own event.",
+    "Health transition events and reset completion events are distinct; each is delivered once."
+  ],
+  "cases": [
+    {
+      "id": "throw-error-then-normal-verification",
+      "trigger": "successful-healthy-memory-reset",
+      "observerAction": {
+        "kind": "throw",
+        "thrownKind": "error"
+      },
+      "expected": {
+        "observerCalls": 1,
+        "observerErrorCount": 1,
+        "resetOutcome": "success",
+        "guardActiveAfterDelivery": false,
+        "nextNormalVerificationMayProceed": true,
+        "retainedRawFailures": 0,
+        "rawFailureLogCalls": 0,
+        "secondaryHookCalls": 0
+      }
+    },
+    {
+      "id": "throw-string-then-normal-verification",
+      "trigger": "successful-healthy-memory-reset",
+      "observerAction": {
+        "kind": "throw",
+        "thrownKind": "string"
+      },
+      "expected": {
+        "observerCalls": 1,
+        "observerErrorCount": 1,
+        "resetOutcome": "success",
+        "guardActiveAfterDelivery": false,
+        "nextNormalVerificationMayProceed": true,
+        "retainedRawFailures": 0,
+        "rawFailureLogCalls": 0,
+        "secondaryHookCalls": 0
+      }
+    },
+    {
+      "id": "throw-null-then-normal-verification",
+      "trigger": "successful-healthy-memory-reset",
+      "observerAction": {
+        "kind": "throw",
+        "thrownKind": "null"
+      },
+      "expected": {
+        "observerCalls": 1,
+        "observerErrorCount": 1,
+        "resetOutcome": "success",
+        "guardActiveAfterDelivery": false,
+        "nextNormalVerificationMayProceed": true,
+        "retainedRawFailures": 0,
+        "rawFailureLogCalls": 0,
+        "secondaryHookCalls": 0
+      }
+    },
+    {
+      "id": "throw-undefined-then-normal-verification",
+      "trigger": "successful-healthy-memory-reset",
+      "observerAction": {
+        "kind": "throw",
+        "thrownKind": "undefined"
+      },
+      "expected": {
+        "observerCalls": 1,
+        "observerErrorCount": 1,
+        "resetOutcome": "success",
+        "guardActiveAfterDelivery": false,
+        "nextNormalVerificationMayProceed": true,
+        "retainedRawFailures": 0,
+        "rawFailureLogCalls": 0,
+        "secondaryHookCalls": 0
+      }
+    },
+    {
+      "id": "throw-object-then-normal-verification",
+      "trigger": "successful-healthy-memory-reset",
+      "observerAction": {
+        "kind": "throw",
+        "thrownKind": "object"
+      },
+      "expected": {
+        "observerCalls": 1,
+        "observerErrorCount": 1,
+        "resetOutcome": "success",
+        "guardActiveAfterDelivery": false,
+        "nextNormalVerificationMayProceed": true,
+        "retainedRawFailures": 0,
+        "rawFailureLogCalls": 0,
+        "secondaryHookCalls": 0
+      }
+    },
+    {
+      "id": "synchronous-reentry-rejected-without-recursive-events",
+      "trigger": "successful-healthy-memory-reset",
+      "observerAction": {
+        "kind": "attempt-verification-and-reset",
+        "catchesRejections": true
+      },
+      "expected": {
+        "observerCalls": 1,
+        "observerErrorCount": 0,
+        "verification": {
+          "status": "unverified",
+          "reason": "clock-unavailable"
+        },
+        "resetCode": "reset-in-progress",
+        "nestedEvents": 0,
+        "nestedStoreCalls": 0,
+        "outerResetOutcome": "success",
+        "guardActiveAfterDelivery": false
+      }
+    },
+    {
+      "id": "deferred-call-does-not-inherit-observer-guard",
+      "trigger": "successful-healthy-memory-reset",
+      "observerAction": {
+        "kind": "schedule-verification-after-caller-completion"
+      },
+      "expected": {
+        "observerCalls": 1,
+        "observerErrorCount": 0,
+        "deferredCallMayProceed": true,
+        "guardActiveAfterDelivery": false
+      }
+    },
+    {
+      "id": "observer-sees-finalized-reset-state",
+      "trigger": "successful-healthy-memory-reset",
+      "observerAction": {
+        "kind": "inspect-state"
+      },
+      "expected": {
+        "observerCalls": 1,
+        "observerErrorCount": 0,
+        "state": {
+          "activeEpoch": 8,
+          "records": 0,
+          "quotaCounters": 0,
+          "resetInProgress": false
+        },
+        "event": {
+          "reason": "operator",
+          "oldEpoch": 7,
+          "newEpoch": 8,
+          "clearedRecords": 2,
+          "clearedQuotaCounters": 1,
+          "invalidatedOperations": 2,
+          "storeDeclaration": "process-clock",
+          "outcome": "success"
+        },
+        "deliveredBeforeCallerCompletion": true
+      }
+    },
+    {
+      "id": "failed-reset-event-reset-unsupported-store",
+      "trigger": "failed-reset",
+      "operatorCode": "reset-unsupported-store",
+      "observerAction": {
+        "kind": "record-event"
+      },
+      "expected": {
+        "matchingResetEvents": 1,
+        "matchingObserverCalls": 1,
+        "eventOutcome": "reset-unsupported-store",
+        "observerErrorCount": 0,
+        "deliveredBeforeCallerCompletion": true
+      }
+    },
+    {
+      "id": "failed-reset-event-reset-in-progress",
+      "trigger": "separate-concurrent-reset-caller",
+      "operatorCode": "reset-in-progress",
+      "observerAction": {
+        "kind": "record-event"
+      },
+      "expected": {
+        "matchingResetEvents": 1,
+        "matchingObserverCalls": 1,
+        "eventOutcome": "reset-in-progress",
+        "observerErrorCount": 0,
+        "deliveredBeforeCallerCompletion": true
+      }
+    },
+    {
+      "id": "failed-reset-event-reset-clock-unavailable",
+      "trigger": "failed-reset",
+      "operatorCode": "reset-clock-unavailable",
+      "observerAction": {
+        "kind": "record-event"
+      },
+      "expected": {
+        "matchingResetEvents": 1,
+        "matchingObserverCalls": 1,
+        "eventOutcome": "reset-clock-unavailable",
+        "observerErrorCount": 0,
+        "deliveredBeforeCallerCompletion": true
+      }
+    },
+    {
+      "id": "failed-reset-event-reset-failed",
+      "trigger": "failed-reset",
+      "operatorCode": "reset-failed",
+      "observerAction": {
+        "kind": "record-event"
+      },
+      "expected": {
+        "matchingResetEvents": 1,
+        "matchingObserverCalls": 1,
+        "eventOutcome": "reset-failed",
+        "observerErrorCount": 0,
+        "deliveredBeforeCallerCompletion": true
+      }
+    },
+    {
+      "id": "throwing-observer-preserves-failed-reset-and-retry",
+      "trigger": "failed-clear-then-successful-retry",
+      "observerAction": {
+        "kind": "throw-on-first-reset-event-only"
+      },
+      "expected": {
+        "resetOutcomes": [
+          "reset-failed",
+          "success"
+        ],
+        "matchingResetEvents": 2,
+        "matchingObserverCalls": 2,
+        "observerErrorCount": 1,
+        "busyAfterFailure": false,
+        "verificationOpenAfterFailure": false,
+        "verificationOpenAfterRetry": true,
+        "guardActiveAfterDelivery": false
+      }
+    },
+    {
+      "id": "health-events-are-transition-only",
+      "trigger": "healthy-unhealthy-unhealthy-healthy-healthy-samples",
+      "observerAction": {
+        "kind": "record-event"
+      },
+      "expected": {
+        "healthTransitions": [
+          "unhealthy",
+          "healthy"
+        ],
+        "observerCalls": 2,
+        "observerErrorCount": 0
+      }
+    }
+  ]
+}
