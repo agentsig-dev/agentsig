@@ -1,0 +1,21 @@
+node_modules/
+dist/
+coverage/
+.vitest/
+*.tsbuildinfo
+*.log
+
+# Local credentials must never enter version control.
+.env
+.env.*
+!.env.example
+.npmrc.local
+
+# Disposable downloads and isolated Git test workspaces.
+.tmp/
+
+# Editor and operating-system files.
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

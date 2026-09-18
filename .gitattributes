@@ -1,0 +1,10 @@
+# Keep text bytes stable across Windows/Linux regardless of core.autocrlf.
+* text=auto eol=lf
+
+# Canonical text fixtures must retain LF; EOF bytes are checked separately.
+**/fixtures/** text eol=lf
+**/golden/** text eol=lf
+
+# Binary signatures and key encodings must never undergo text conversion.
+*.bin -text -diff -merge !eol
+*.der -text -diff -merge !eol

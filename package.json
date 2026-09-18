@@ -1,0 +1,30 @@
+{
+    "name": "agentsig-workspace",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "license": "MIT",
+    "packageManager": "pnpm@10.12.1",
+    "engines": {
+        "node": ">=20"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/agentsig-dev/agentsig.git"
+    },
+    "scripts": {
+        "build": "pnpm -r run build",
+        "typecheck": "pnpm -r run typecheck",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "changeset": "changeset"
+    },
+    "devDependencies": {
+        "@changesets/cli": "2.31.1",
+        "@types/node": "20.19.43",
+        "fast-check": "4.10.1",
+        "tsup": "8.5.1",
+        "typescript": "5.9.3",
+        "vitest": "4.1.11"
+    }
+}

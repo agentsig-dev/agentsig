@@ -1,0 +1,43 @@
+{
+    "name": "@agentsig/core",
+    "version": "0.0.0",
+    "description": "Framework-independent HTTP Message Signatures with Ed25519 for Node.js.",
+    "type": "module",
+    "license": "MIT",
+    "engines": {
+        "node": ">=20"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/agentsig-dev/agentsig.git",
+        "directory": "packages/core"
+    },
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "import": {
+                "types": "./dist/index.d.ts",
+                "default": "./dist/index.js"
+            },
+            "require": {
+                "types": "./dist/index.d.cts",
+                "default": "./dist/index.cjs"
+            }
+        }
+    },
+    "files": [
+        "dist",
+        "LICENSE",
+        "README.md"
+    ],
+    "sideEffects": false,
+    "scripts": {
+        "build": "tsup src/index.ts --format esm,cjs --dts --clean --target node20",
+        "typecheck": "tsc --noEmit -p tsconfig.json"
+    },
+    "dependencies": {
+        "@agentsig/structured-fields": "workspace:*"
+    }
+}
