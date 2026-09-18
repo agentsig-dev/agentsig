@@ -1,0 +1,92 @@
+{
+  "catalogVersion": 1,
+  "approvedOn": "2026-09-18",
+  "frozen": true,
+  "codes": [
+    "reset-unsupported-store",
+    "reset-in-progress",
+    "reset-clock-unavailable",
+    "reset-failed"
+  ],
+  "separateFrom": [
+    "verification-catalog",
+    "signing-catalog"
+  ],
+  "changePolicy": "Separate approval and release notes required.",
+  "storeDeclarations": {
+    "process-clock": "Context-owned memory retention; clear records and quota counters on reset.",
+    "independent": "External retention clock; never clear records or counters on local reset.",
+    "undeclared": "Reject reset without changing references, epoch or records."
+  },
+  "implementedM2Store": "context-owned in-memory only",
+  "externalStoreScope": "Contract and test doubles only; no Redis or distributed reset adapter.",
+  "epoch": {
+    "representation": "monotonically increasing process-local integer",
+    "sentToExternalStore": false,
+    "operationCapturesStartingEpoch": true,
+    "compareBeforeConsumeAndBeforeVerified": true,
+    "invalidationPrecedesMemoryClear": true,
+    "invalidationReversible": false,
+    "activateNewEpochOnlyAfterSuccessfulCommit": true
+  },
+  "phases": [
+    "check-busy-and-store-capability",
+    "close-context-for-reset",
+    "validate-fresh-wall-and-monotonic-samples",
+    "invalidate-old-epoch-then-clear-process-clock-memory",
+    "commit-new-references-and-epoch-then-report"
+  ],
+  "verificationDuringReset": {
+    "status": "unverified",
+    "reason": "clock-unavailable",
+    "waits": false
+  },
+  "failureRecovery": {
+    "resetFailed": "Closed but retryable; busy flag cleared; old epoch stays invalid.",
+    "invalidSamples": "References and records preserved; bad samples remain visible to clock health.",
+    "automaticRetry": false,
+    "automaticReset": false
+  },
+  "events": {
+    "resetFields": [
+      "reason",
+      "oldEpoch",
+      "newEpoch",
+      "clearedRecords",
+      "clearedQuotaCounters",
+      "invalidatedOperations",
+      "storeDeclaration",
+      "outcome"
+    ],
+    "reasons": [
+      "operator",
+      "health"
+    ],
+    "reasonMeaning": "Health identifies an explicitly requested recovery, not automatic reset.",
+    "outcomes": [
+      "success",
+      "reset-unsupported-store",
+      "reset-in-progress",
+      "reset-clock-unavailable",
+      "reset-failed"
+    ],
+    "forbidden": [
+      "key material",
+      "nonce",
+      "request headers",
+      "raw store/provider errors"
+    ],
+    "failedNewEpoch": "No new active epoch; report null.",
+    "partialCounts": "Report actual known counts; unknown cleanup counts must be null, not invented zero.",
+    "healthEvents": "Entry/exit transitions only, not repeated same-state samples."
+  },
+  "independentPendingOperation": [
+    "A consume dispatched before reset may complete; no distributed cancellation is claimed.",
+    "Local old-epoch work cannot dispatch a new consume or return verified after invalidation.",
+    "Completion does not authorize the old verification invocation.",
+    "It may retain an unnecessary nonce with an old-clock retention calculation.",
+    "This is harmless to replay safety only if consume does not delete or shorten an existing live record.",
+    "The same nonce could have been accepted by another invocation; do not claim otherwise."
+  ],
+  "destructiveReset": "Even when healthy, memory reset can reopen replay acceptance for still-valid signatures."
+}

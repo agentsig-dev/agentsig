@@ -1,0 +1,354 @@
+{
+  "stage": "pre-implementation-security-context-contract",
+  "notes": [
+    "Epoch 7 is an illustrative current epoch, not a required initial epoch.",
+    "Memory adapter implementation and full verifier tests must execute these scenarios later.",
+    "Here events and state transitions are expectations, not simulated proof of implementation."
+  ],
+  "cases": [
+    {
+      "id": "healthy-memory-reset",
+      "declaration": "process-clock",
+      "initial": {
+        "epoch": 7,
+        "reference": {
+          "wallMs": 1800000000000,
+          "monotonicMs": 1000
+        },
+        "records": 2,
+        "quotaCounters": 1,
+        "inFlight": 2,
+        "healthy": true
+      },
+      "resetSample": {
+        "wallMs": 1800003611000,
+        "monotonicMs": 12000
+      },
+      "expected": {
+        "reference": {
+          "wallMs": 1800003611000,
+          "monotonicMs": 12000
+        },
+        "epoch": 8,
+        "records": 0,
+        "quotaCounters": 0,
+        "verificationOpen": true,
+        "busy": false,
+        "oldEpochValid": false,
+        "event": {
+          "reason": "operator",
+          "oldEpoch": 7,
+          "newEpoch": 8,
+          "clearedRecords": 2,
+          "clearedQuotaCounters": 1,
+          "invalidatedOperations": 2,
+          "storeDeclaration": "process-clock",
+          "outcome": "success"
+        },
+        "previouslyConsumedStillValidSignatureMayBeAcceptedAgain": true
+      }
+    },
+    {
+      "id": "unhealthy-memory-reset",
+      "declaration": "process-clock",
+      "initial": {
+        "epoch": 7,
+        "reference": {
+          "wallMs": 1800000000000,
+          "monotonicMs": 1000
+        },
+        "records": 2,
+        "quotaCounters": 1,
+        "inFlight": 2,
+        "healthy": false
+      },
+      "resetReason": "health",
+      "resetSample": {
+        "wallMs": 1800003611000,
+        "monotonicMs": 12000
+      },
+      "expected": {
+        "reference": {
+          "wallMs": 1800003611000,
+          "monotonicMs": 12000
+        },
+        "epoch": 8,
+        "records": 0,
+        "quotaCounters": 0,
+        "verificationOpen": true,
+        "busy": false,
+        "oldEpochValid": false,
+        "event": {
+          "reason": "health",
+          "oldEpoch": 7,
+          "newEpoch": 8,
+          "clearedRecords": 2,
+          "clearedQuotaCounters": 1,
+          "invalidatedOperations": 2,
+          "storeDeclaration": "process-clock",
+          "outcome": "success"
+        },
+        "healthTransitions": [
+          "healthy"
+        ]
+      }
+    },
+    {
+      "id": "independent-retention-preserves-history",
+      "declaration": "independent",
+      "initial": {
+        "epoch": 7,
+        "reference": {
+          "wallMs": 1800000000000,
+          "monotonicMs": 1000
+        },
+        "records": 2,
+        "quotaCounters": 1,
+        "inFlight": 2
+      },
+      "resetSample": {
+        "wallMs": 1800003611000,
+        "monotonicMs": 12000
+      },
+      "expected": {
+        "reference": {
+          "wallMs": 1800003611000,
+          "monotonicMs": 12000
+        },
+        "epoch": 8,
+        "records": 2,
+        "quotaCounters": 1,
+        "storeClearCalls": 0,
+        "verificationOpen": true,
+        "oldEpochValid": false,
+        "event": {
+          "reason": "operator",
+          "oldEpoch": 7,
+          "newEpoch": 8,
+          "clearedRecords": 0,
+          "clearedQuotaCounters": 0,
+          "invalidatedOperations": 2,
+          "storeDeclaration": "independent",
+          "outcome": "success"
+        }
+      }
+    },
+    {
+      "id": "undeclared-store-reset-rejected",
+      "declaration": null,
+      "initial": {
+        "epoch": 7,
+        "reference": {
+          "wallMs": 1800000000000,
+          "monotonicMs": 1000
+        },
+        "records": 2,
+        "quotaCounters": 1,
+        "inFlight": 2
+      },
+      "expected": {
+        "operatorCode": "reset-unsupported-store",
+        "reference": {
+          "wallMs": 1800000000000,
+          "monotonicMs": 1000
+        },
+        "epoch": 7,
+        "records": 2,
+        "quotaCounters": 1,
+        "clockProviderCalls": 0,
+        "storeClearCalls": 0,
+        "invalidatedOperations": 0,
+        "busy": false
+      }
+    },
+    {
+      "id": "concurrent-second-reset",
+      "declaration": "process-clock",
+      "initial": {
+        "epoch": 7,
+        "reference": {
+          "wallMs": 1800000000000,
+          "monotonicMs": 1000
+        },
+        "records": 2,
+        "quotaCounters": 1,
+        "inFlight": 2
+      },
+      "pauseFirstResetAt": "after-close-before-commit",
+      "expected": {
+        "secondOperatorCode": "reset-in-progress",
+        "secondCallStateChanges": 0,
+        "verificationDuringPause": {
+          "status": "unverified",
+          "reason": "clock-unavailable",
+          "waits": false
+        },
+        "firstResetCanComplete": true
+      }
+    },
+    {
+      "id": "old-operation-cannot-dispatch-after-reset",
+      "declaration": "process-clock",
+      "initial": {
+        "epoch": 7,
+        "reference": {
+          "wallMs": 1800000000000,
+          "monotonicMs": 1000
+        },
+        "records": 2,
+        "quotaCounters": 1,
+        "inFlight": 2
+      },
+      "steps": [
+        "begin-operation-in-epoch-7",
+        "complete-reset-to-epoch-8",
+        "attempt-old-consume"
+      ],
+      "expected": {
+        "oldOperationConsumeCalls": 0,
+        "oldOperationResult": {
+          "status": "unverified",
+          "reason": "clock-unavailable"
+        },
+        "records": 0,
+        "quotaCounters": 0
+      }
+    },
+    {
+      "id": "independent-consume-already-dispatched",
+      "declaration": "independent",
+      "initial": {
+        "epoch": 7,
+        "reference": {
+          "wallMs": 1800000000000,
+          "monotonicMs": 1000
+        },
+        "records": 2,
+        "quotaCounters": 1,
+        "inFlight": 2
+      },
+      "steps": [
+        "dispatch-consume-in-epoch-7",
+        "complete-reset-to-epoch-8",
+        "old-consume-resolves-accepted"
+      ],
+      "expected": {
+        "dispatchedConsumeCalls": 1,
+        "additionalOldEpochConsumeCalls": 0,
+        "oldOperationResult": {
+          "status": "unverified",
+          "reason": "clock-unavailable"
+        },
+        "storeClearCalls": 0,
+        "externalWriteMayComplete": true,
+        "epochIncludedInExternalConsume": false,
+        "existingLiveRetentionMayBeShortened": false
+      }
+    },
+    {
+      "id": "invalid-sample-preserves-references",
+      "declaration": "process-clock",
+      "initial": {
+        "epoch": 7,
+        "reference": {
+          "wallMs": 1800000000000,
+          "monotonicMs": 1000
+        },
+        "records": 2,
+        "quotaCounters": 1,
+        "inFlight": 2
+      },
+      "resetSample": {
+        "wallMs": {
+          "kind": "nan"
+        },
+        "monotonicMs": 12000
+      },
+      "expected": {
+        "operatorCode": "reset-clock-unavailable",
+        "reference": {
+          "wallMs": 1800000000000,
+          "monotonicMs": 1000
+        },
+        "epoch": 7,
+        "records": 2,
+        "quotaCounters": 1,
+        "storeClearCalls": 0,
+        "busy": false,
+        "healthFailureVisible": true,
+        "invalidatedOperations": 0
+      }
+    },
+    {
+      "id": "failed-clear-then-successful-retry",
+      "declaration": "process-clock",
+      "initial": {
+        "epoch": 7,
+        "reference": {
+          "wallMs": 1800000000000,
+          "monotonicMs": 1000
+        },
+        "records": 2,
+        "quotaCounters": 1,
+        "inFlight": 2
+      },
+      "resetSample": {
+        "wallMs": 1800003611000,
+        "monotonicMs": 12000
+      },
+      "firstClear": {
+        "throws": true,
+        "removedRecords": 1,
+        "removedQuotaCounters": 0
+      },
+      "expectedAfterFailure": {
+        "operatorCode": "reset-failed",
+        "reference": {
+          "wallMs": 1800000000000,
+          "monotonicMs": 1000
+        },
+        "activeEpoch": null,
+        "oldEpochValid": false,
+        "records": 1,
+        "quotaCounters": 1,
+        "busy": false,
+        "retryAllowed": true,
+        "verification": {
+          "status": "unverified",
+          "reason": "clock-unavailable"
+        },
+        "invalidationOccurredBeforeClear": true,
+        "event": {
+          "reason": "operator",
+          "oldEpoch": 7,
+          "newEpoch": null,
+          "clearedRecords": 1,
+          "clearedQuotaCounters": 0,
+          "invalidatedOperations": 2,
+          "storeDeclaration": "process-clock",
+          "outcome": "reset-failed"
+        }
+      },
+      "retry": {
+        "resetSample": {
+          "wallMs": 1800003611000,
+          "monotonicMs": 12000
+        },
+        "clearSucceeds": true
+      },
+      "expectedAfterRetry": {
+        "reference": {
+          "wallMs": 1800003611000,
+          "monotonicMs": 12000
+        },
+        "activeEpochGreaterThan": 7,
+        "records": 0,
+        "quotaCounters": 0,
+        "verificationOpen": true,
+        "busy": false,
+        "oldEpochValid": false,
+        "resetOutcome": "success"
+      }
+    }
+  ]
+}

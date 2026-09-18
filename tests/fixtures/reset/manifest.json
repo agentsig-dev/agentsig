@@ -1,0 +1,28 @@
+{
+  "formatVersion": 1,
+  "approvedOn": "2026-09-18",
+  "catalogSha256": "1afd4fa07cb6b080c33c2a9e021a33d72e2660891ae23e24c014c134268614d5",
+  "sources": [
+    {
+      "path": "tests/fixtures/m2/boundary-cases.json",
+      "sha256": "edb83230693906d7df92e6b579d2e26c2f845043b3f862e321482b3352f2e47e"
+    },
+    {
+      "path": "tests/fixtures/m2/policy-cases.json",
+      "sha256": "b50c9889968c0cf059181e110e560ea552cb06a1dfc9d14dce0f4aed51ad8230"
+    }
+  ],
+  "license": "MIT; agentsig-authored expectations based on approved local policy.",
+  "files": [
+    {
+      "path": "contract.json",
+      "bytes": 3406,
+      "sha256": "bdf7b53640562f22004e572e146e9d457323b68c8721e77a33063613442c16b8"
+    },
+    {
+      "path": "cases.json",
+      "bytes": 9109,
+      "sha256": "3168ab23f1c94b760e327ff75c71319eda5a87034339c8d1332515cd919a7bf9"
+    }
+  ]
+}
