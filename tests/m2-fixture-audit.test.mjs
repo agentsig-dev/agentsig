@@ -319,3 +319,79 @@ for (const autocrlf of ["true", "input", "false"]) {
         }
     });
 }
+
+test("approved catalog is frozen without code additions, removals, or renames", () => {
+    const policy = json("policy-cases.json");
+    assert.equal(policy.catalogVersion, 1);
+    assert.equal(policy.status, "approved-for-implementation");
+    assert.equal(hash(Buffer.from(JSON.stringify(policy.codeCatalog))),
+        "3f1ef66e027528802f3552627e87dcdde5b0124c5b78b511fadc73e14d1f7691");
+    const boundary = json("boundary-cases.json");
+    for (const [group, count] of Object.entries(boundary.catalogCounts)) {
+        assert.equal(policy.codeCatalog[group].length, count, group);
+    }
+});
+
+test("pre-implementation clock and resource boundary expectations are consistent", () => {
+    const boundary = json("boundary-cases.json");
+    assert.equal(boundary.limits.allConfigurable, true);
+    assert.equal(boundary.limits.defaultsMustBeNamedAndFrozen, true);
+    for (const example of boundary.limitCases) {
+        const maximum = boundary.limits[example.limit];
+        assert(Number.isSafeInteger(maximum));
+        assert.equal(example.observed <= maximum, example.withinLimit, example.limit);
+    }
+    for (const example of boundary.nonceCases) {
+        const valid = example.value.length >= 1 &&
+            example.value.length <= boundary.limits.maxNonceBytes &&
+            !/[^\x20-\x7e]/.test(example.value);
+        assert.equal(valid, example.validSyntax, example.id);
+    }
+
+    const clock = boundary.clockContract;
+    assert.equal(clock.maxClockDriftSeconds, 30);
+    assert.equal(clock.driftThresholdIndependentOfSignatureSkew, true);
+    assert.equal(clock.automaticRebase, false);
+    for (const example of boundary.clockCases) {
+        const effectiveMs = example.referenceWallMs +
+            example.monotonicMs - example.referenceMonotonicMs;
+        const regression = example.monotonicMs <
+            (example.previousMonotonicMs ?? example.referenceMonotonicMs);
+        const healthy = !regression &&
+            Math.abs(example.wallMs - effectiveMs) <= clock.maxClockDriftSeconds * 1000;
+        assert.equal(healthy, example.healthy, example.id);
+        if (healthy) {
+            assert.equal(Math.floor(effectiveMs / 1000), example.effectiveEpochSeconds);
+        } else {
+            assert.equal(example.expectedCode, "clock-unavailable");
+        }
+    }
+    const reset = clock.operatorReset;
+    assert.equal(reset.apiName, "resetClockReference");
+    assert.equal(reset.automatic, false);
+    assert.equal(reset.clearInMemoryReplayEntries, true);
+    assert.equal(reset.clearPerKeyQuotaCounters, true);
+    assert.equal(reset.oldEpochMayReturnVerified, false);
+    assert.equal(reset.oldEpochExpectedCode, "clock-unavailable");
+    assert.equal(reset.replayProtectionDiscontinuity, true);
+    assert.equal(reset.emitExplicitResetEvent, true);
+    // These assertions validate expectation data, not a working clock or store.
+});
+
+test("known-test-key boundary fixtures match independently computed thumbprints", () => {
+    const boundary = json("boundary-cases.json");
+    assert.equal(boundary.testKeys.length, 2);
+    for (const example of boundary.testKeys) {
+        const jwk = createPublicKey(read(example.publicKeyFile)).export({ format: "jwk" });
+        const canonical = JSON.stringify({ crv: jwk.crv, kty: jwk.kty, x: jwk.x });
+        assert.equal(createHash("sha256").update(canonical).digest("base64url"),
+            example.thumbprint);
+        assert.equal(example.defaultExpectedCode, "test-key-disallowed");
+        assert.equal(example.explicitTestPermissionAllowsKeySelection, true);
+    }
+    for (const example of boundary.discoveryCases) {
+        if (!example.supported) {
+            assert.equal(example.expectedCode, "unsupported-discovery-type");
+        }
+    }
+});

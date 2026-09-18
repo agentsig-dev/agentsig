@@ -1,0 +1,341 @@
+{
+    "formatVersion": 1,
+    "status": "approved-pre-implementation-expectations",
+    "approvedOn": "2026-09-18",
+    "catalogCounts": {
+        "unsigned": 2,
+        "verified": 2,
+        "invalid": 20,
+        "unverified": 11,
+        "configurationErrors": 8,
+        "storeOutcomes": 4
+    },
+    "catalogChangePolicy": "Adding or removing codes requires separate user approval and release notes.",
+    "limits": {
+        "allConfigurable": true,
+        "defaultsMustBeNamedAndFrozen": true,
+        "maxJwksBytes": 262144,
+        "maxKeys": 64,
+        "maxCandidates": 16,
+        "maxNonceBytes": 256,
+        "generatedNonceBytes": 32,
+        "maxScopeBytes": 256,
+        "maxAgentBindings": 64,
+        "maxAgentUrlBytes": 2048,
+        "capacity": 10000,
+        "maxPerKey": 1000
+    },
+    "limitCases": [
+        {
+            "limit": "maxJwksBytes",
+            "observed": 262144,
+            "withinLimit": true
+        },
+        {
+            "limit": "maxJwksBytes",
+            "observed": 262145,
+            "withinLimit": false
+        },
+        {
+            "limit": "maxKeys",
+            "observed": 64,
+            "withinLimit": true
+        },
+        {
+            "limit": "maxKeys",
+            "observed": 65,
+            "withinLimit": false
+        },
+        {
+            "limit": "maxCandidates",
+            "observed": 16,
+            "withinLimit": true
+        },
+        {
+            "limit": "maxCandidates",
+            "observed": 17,
+            "withinLimit": false
+        },
+        {
+            "limit": "maxNonceBytes",
+            "observed": 256,
+            "withinLimit": true
+        },
+        {
+            "limit": "maxNonceBytes",
+            "observed": 257,
+            "withinLimit": false
+        },
+        {
+            "limit": "maxScopeBytes",
+            "observed": 256,
+            "withinLimit": true
+        },
+        {
+            "limit": "maxScopeBytes",
+            "observed": 257,
+            "withinLimit": false
+        },
+        {
+            "limit": "maxAgentBindings",
+            "observed": 64,
+            "withinLimit": true
+        },
+        {
+            "limit": "maxAgentBindings",
+            "observed": 65,
+            "withinLimit": false
+        },
+        {
+            "limit": "maxAgentUrlBytes",
+            "observed": 2048,
+            "withinLimit": true
+        },
+        {
+            "limit": "maxAgentUrlBytes",
+            "observed": 2049,
+            "withinLimit": false
+        }
+    ],
+    "limitNotes": [
+        "withinLimit tests only the named resource boundary, not complete input validity.",
+        "Passing a profile budget does not bypass the explicit core 16 KiB budget.",
+        "JWKS text length is checked before JSON parsing.",
+        "Caller-provided JWKS objects require bounded traversal rather than unbounded JSON serialization."
+    ],
+    "nonceCases": [
+        {
+            "id": "empty",
+            "value": "",
+            "validSyntax": false,
+            "expectedCode": "nonce-invalid"
+        },
+        {
+            "id": "one-printable-byte",
+            "value": "a",
+            "validSyntax": true
+        },
+        {
+            "id": "space-is-printable",
+            "value": " ",
+            "validSyntax": true
+        },
+        {
+            "id": "tab",
+            "value": "\t",
+            "validSyntax": false,
+            "expectedCode": "nonce-invalid"
+        },
+        {
+            "id": "line-feed",
+            "value": "\n",
+            "validSyntax": false,
+            "expectedCode": "nonce-invalid"
+        },
+        {
+            "id": "non-ascii",
+            "value": "ü",
+            "validSyntax": false,
+            "expectedCode": "nonce-invalid"
+        }
+    ],
+    "testKeys": [
+        {
+            "id": "rfc9421-B.1.4",
+            "publicKeyFile": "published/rfc9421-public.pem",
+            "thumbprint": "poqkLGiymh_W0uP6PZFw-dvez3QJT5SolqXBCW38r0U",
+            "defaultExpectedCode": "test-key-disallowed",
+            "explicitTestPermissionAllowsKeySelection": true
+        },
+        {
+            "id": "agentsig-m2-public-test-key",
+            "publicKeyFile": "generated/public-test-public.pem",
+            "thumbprint": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+            "defaultExpectedCode": "test-key-disallowed",
+            "explicitTestPermissionAllowsKeySelection": true
+        }
+    ],
+    "testKeyNotes": [
+        "Permission bypasses only the known-test-key rejection, never other checks.",
+        "The denylist is not an exhaustive list of compromised or publicly known keys.",
+        "JWK kid changes do not bypass a thumbprint-based denylist."
+    ],
+    "discoveryCases": [
+        {
+            "profile": "ietf-wg-protocol-00",
+            "type": null,
+            "supported": true
+        },
+        {
+            "profile": "ietf-wg-protocol-00",
+            "type": "directory",
+            "supported": true
+        },
+        {
+            "profile": "ietf-wg-protocol-00",
+            "type": "jwks_uri",
+            "supported": false,
+            "expectedCode": "unsupported-discovery-type"
+        },
+        {
+            "profile": "ietf-wg-protocol-00",
+            "type": "cimd",
+            "supported": false,
+            "expectedCode": "unsupported-discovery-type"
+        },
+        {
+            "profile": "cloudflare-docs-2026-07-01",
+            "type": "legacy-string",
+            "supported": true
+        }
+    ],
+    "clockContract": {
+        "wallUnits": "milliseconds since Unix epoch",
+        "monotonicUnits": "milliseconds from an arbitrary monotonic origin",
+        "effectiveTime": "referenceWallMs + (monotonicMs - referenceMonotonicMs)",
+        "signatureTime": "floor(effectiveTime / 1000)",
+        "maxClockDriftSeconds": 30,
+        "driftThresholdIndependentOfSignatureSkew": true,
+        "thresholdComparison": "absolute drift strictly greater than threshold is unhealthy",
+        "automaticRebase": false,
+        "onUnhealthy": {
+            "expectedCode": "clock-unavailable",
+            "consumeReplay": false,
+            "expireReplayEntries": false
+        },
+        "wallDriftRecovery": "Return within threshold against the original reference; no rebase or store clear.",
+        "monotonicRegressionRecovery": "Explicit operator reset is required.",
+        "events": "Health entry/exit transitions; repeated samples in the same health state do not repeat transition events.",
+        "eventPayloadExcludes": [
+            "nonce",
+            "request headers",
+            "private key material"
+        ],
+        "operatorReset": {
+            "apiName": "resetClockReference",
+            "automatic": false,
+            "freshWallAndMonotonicReference": true,
+            "clearInMemoryReplayEntries": true,
+            "clearPerKeyQuotaCounters": true,
+            "invalidateInFlightVerificationEpochs": true,
+            "oldEpochMayReturnVerified": false,
+            "oldEpochExpectedCode": "clock-unavailable",
+            "emitExplicitResetEvent": true,
+            "replayProtectionDiscontinuity": true,
+            "previouslyAcceptedStillValidSignatureMayBeAcceptedAgain": true
+        }
+    },
+    "clockCases": [
+        {
+            "id": "healthy-progression",
+            "referenceWallMs": 1800000000000,
+            "referenceMonotonicMs": 1000,
+            "wallMs": 1800000010000,
+            "monotonicMs": 11000,
+            "healthy": true,
+            "effectiveEpochSeconds": 1800000010
+        },
+        {
+            "id": "positive-drift-exactly-threshold",
+            "referenceWallMs": 1800000000000,
+            "referenceMonotonicMs": 1000,
+            "wallMs": 1800000040000,
+            "monotonicMs": 11000,
+            "healthy": true,
+            "effectiveEpochSeconds": 1800000010
+        },
+        {
+            "id": "positive-drift-one-ms-over",
+            "referenceWallMs": 1800000000000,
+            "referenceMonotonicMs": 1000,
+            "wallMs": 1800000040001,
+            "monotonicMs": 11000,
+            "healthy": false,
+            "expectedCode": "clock-unavailable"
+        },
+        {
+            "id": "negative-drift-exactly-threshold",
+            "referenceWallMs": 1800000000000,
+            "referenceMonotonicMs": 1000,
+            "wallMs": 1799999980000,
+            "monotonicMs": 11000,
+            "healthy": true,
+            "effectiveEpochSeconds": 1800000010
+        },
+        {
+            "id": "negative-drift-one-ms-over",
+            "referenceWallMs": 1800000000000,
+            "referenceMonotonicMs": 1000,
+            "wallMs": 1799999979999,
+            "monotonicMs": 11000,
+            "healthy": false,
+            "expectedCode": "clock-unavailable"
+        },
+        {
+            "id": "monotonic-regression",
+            "referenceWallMs": 1800000000000,
+            "referenceMonotonicMs": 1000,
+            "previousMonotonicMs": 11000,
+            "wallMs": 1800000009999,
+            "monotonicMs": 10999,
+            "healthy": false,
+            "expectedCode": "clock-unavailable",
+            "requiresOperatorReset": true
+        }
+    ],
+    "clockSequences": [
+        {
+            "id": "recover-without-rebase",
+            "reference": {
+                "wallMs": 1800000000000,
+                "monotonicMs": 1000
+            },
+            "samples": [
+                {
+                    "wallMs": 1800000040001,
+                    "monotonicMs": 11000,
+                    "healthy": false
+                },
+                {
+                    "wallMs": 1800000041001,
+                    "monotonicMs": 12000,
+                    "healthy": false
+                },
+                {
+                    "wallMs": 1800000012000,
+                    "monotonicMs": 13000,
+                    "healthy": true
+                }
+            ],
+            "expectedHealthTransitions": [
+                "unhealthy",
+                "healthy"
+            ],
+            "expectedStoreClears": 0,
+            "finalEffectiveEpochSeconds": 1800000012
+        },
+        {
+            "id": "operator-reset-after-ntp-step",
+            "reference": {
+                "wallMs": 1800000000000,
+                "monotonicMs": 1000
+            },
+            "liveReplayEntriesBefore": 2,
+            "livePerKeyCountersBefore": 1,
+            "unhealthySample": {
+                "wallMs": 1800003610000,
+                "monotonicMs": 11000
+            },
+            "resetSample": {
+                "wallMs": 1800003611000,
+                "monotonicMs": 12000
+            },
+            "liveReplayEntriesAfter": 0,
+            "livePerKeyCountersAfter": 0,
+            "expectedStoreClears": 1,
+            "finalEffectiveEpochSeconds": 1800003611,
+            "oldVerificationEpochExpectedCode": "clock-unavailable",
+            "operatorResetMayReopenReplayWindow": true
+        }
+    ]
+}

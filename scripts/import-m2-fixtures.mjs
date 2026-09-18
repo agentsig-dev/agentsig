@@ -189,14 +189,16 @@ for (const profile of ["ietf-wg-protocol-00", "cloudflare-docs-2026-07-01"]) {
 json("vector-inventory.json", inventory, own);
 json("sources.json", sources.map(({ local, ...source }) => source), own);
 
-// Local policy fixtures are authored before implementation, not produced by it.
-// Normalize editor EOLs only for this local document; upstream bytes stay exact.
-const policyPath = resolve(root, destination, "policy-cases.json");
-const policyBytes = readFileSync(policyPath, "utf8").replace(/\r\n/g, "\n");
-JSON.parse(policyBytes);
-put("policy-cases.json", policyBytes, {
-    ...own, transformation: "Local authored policy data; editor CRLF converted to LF",
-});
+// Local expectation fixtures are authored before implementation, not produced
+// by it. Only normalize editor EOLs here; upstream source bytes stay exact.
+for (const name of ["policy-cases.json", "boundary-cases.json"]) {
+    const path = resolve(root, destination, name);
+    const bytes = readFileSync(path, "utf8").replace(/\r\n/g, "\n");
+    JSON.parse(bytes);
+    put(name, bytes, {
+        ...own, transformation: "Local authored expectation data; editor CRLF converted to LF",
+    });
+}
 const rfcLicensePath = "packages/core/test/fixtures/rfc9421/LICENSE.txt";
 const license = readFileSync(resolve(root, rfcLicensePath), "utf8")
     .replace(/\r\n/g, "\n")

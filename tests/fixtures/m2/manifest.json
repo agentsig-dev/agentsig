@@ -4,6 +4,17 @@
   "warning": "All private keys in this fixture set are PUBLIC TEST MATERIAL.",
   "files": [
     {
+      "path": "boundary-cases.json",
+      "bytes": 10937,
+      "sha256": "edb83230693906d7df92e6b579d2e26c2f845043b3f862e321482b3352f2e47e",
+      "provenance": {
+        "source": "agentsig independently authored test data",
+        "license": "MIT",
+        "productionSafe": false,
+        "transformation": "Local authored expectation data; editor CRLF converted to LF"
+      }
+    },
+    {
       "path": "generated/cloudflare-docs-2026-07-01/base.txt",
       "bytes": 332,
       "sha256": "91a13269ef531636f7ecf1fef16b0ee38fa9ff563e4f599817201e5a566df19e",
@@ -125,13 +136,13 @@
     },
     {
       "path": "policy-cases.json",
-      "bytes": 18084,
-      "sha256": "ab4052ee1b085c30cb1b905c5db1a632563d3d10fc7b63f58e035f28a3fbd4c3",
+      "bytes": 18410,
+      "sha256": "b50c9889968c0cf059181e110e560ea552cb06a1dfc9d14dce0f4aed51ad8230",
       "provenance": {
         "source": "agentsig independently authored test data",
         "license": "MIT",
         "productionSafe": false,
-        "transformation": "Local authored policy data; editor CRLF converted to LF"
+        "transformation": "Local authored expectation data; editor CRLF converted to LF"
       }
     },
     {

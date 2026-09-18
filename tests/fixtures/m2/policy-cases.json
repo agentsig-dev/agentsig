@@ -1,6 +1,9 @@
 {
     "formatVersion": 1,
-    "status": "fixture-contract-awaiting-implementation-approval",
+    "status": "approved-for-implementation",
+    "catalogVersion": 1,
+    "catalogFrozenOn": "2026-09-18",
+    "catalogChangePolicy": "Adding or removing codes requires separate user approval and release notes.",
     "productionImplementationExists": false,
     "defaults": {
         "signingLifetimeSeconds": 60,
@@ -80,7 +83,7 @@
         ]
     },
     "catalogNotes": [
-        "The entire catalog is a proposed closed public contract, not implemented code.",
+        "The closed catalog is approved and frozen at version 1; this file remains pre-implementation expectation data.",
         "Global store capacity exhaustion maps to unavailable and replay-store-unavailable, not a separate full/capacity code.",
         "Per-key quota has its own outcome and result code; unverified here means no completed verification, not store malfunction.",
         "No matching tag is distinct from no Signature/Signature-Input headers.",
@@ -92,10 +95,12 @@
         "algorithm-mismatch means a known declared algorithm contradicts selected trusted key material. This invalid result takes precedence over unsupported-algorithm when the contradiction is established.",
         "unsupported-algorithm means the algorithm is unsupported and no selected-key contradiction has been established; it is not signature-mismatch.",
         "agent-binding-missing means a required local binding is absent. agent-binding-mismatch means a binding exists for the selected key but the signed agent URL disagrees. Plain thumbprint mode does not require a binding.",
-        "Test-key handling, discovery-type support, clock anomalies and secondary resource budgets still require approval."
+        "Option A is approved for test-key rejection, directory-only discovery, configurable secondary limits and monotonic-reference clock health.",
+        "Explicit operator resetClockReference refreshes both clock references, clears the in-memory replay store and quota counters, and invalidates in-flight verification epochs; automatic rebase is forbidden.",
+        "Clock health transitions and explicit operator resets are observable through an event hook without request or key material."
     ],
     "timeContract": {
-        "status": "boundary-details-proposed",
+        "status": "approved",
         "units": "integer Unix seconds",
         "rules": [
             "created <= now + skew",
@@ -496,9 +501,6 @@
             "expectedStoreOutcome": "per-key-quota-exceeded"
         }
     ],
-    "pendingDecisions": [
-        "Exact clock rollback/jump handling, recovery and thresholds.",
-        "Discovery types, test-key policy and secondary resource budgets.",
-        "Final approval and freeze of the corrected closed code catalog before production implementation."
-    ]
+    "pendingDecisions": [],
+    "boundaryContractFile": "boundary-cases.json"
 }
