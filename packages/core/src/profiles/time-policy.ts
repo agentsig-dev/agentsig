@@ -10,6 +10,8 @@ export interface SignatureTimePolicy {
      * It does not verify a signature, establish identity or consume a nonce.
      */
     check(created: number, expires: number, nowEpochSeconds: number): void;
+    /** Compute only after eligibility checks, using the consumption-time sample. */
+    retainUntil(created: number, consumeNowEpochSeconds: number): number;
 }
 
 const MAX_SF_INTEGER = 999_999_999_999_999;
@@ -69,6 +71,28 @@ export function createSignatureTimePolicy(
             // record at that exact second.
             if (now >= end + skew) reject("signature-expired");
             if (now >= start + maxAge + skew) reject("signature-too-old");
+        },
+        retainUntil(created: number, consumeNowEpochSeconds: number): number {
+            if (typeof consumeNowEpochSeconds !== "number" ||
+                !Number.isSafeInteger(consumeNowEpochSeconds) || consumeNowEpochSeconds < 0) {
+                throw new CandidateRejection({
+                    status: "unverified", reason: "clock-unavailable",
+                });
+            }
+            if (!timestamp(created)) reject("invalid-time-range");
+            // Approved conservative retention, NOT expires + skew or a fixed
+            // 330-second TTL. A future-created signature admitted by skew can
+            // require a longer retention interval measured from consumption.
+            const base = BigInt(Math.max(created, consumeNowEpochSeconds));
+            const deadline = base + maxAge + skew;
+            if (deadline > BigInt(Number.MAX_SAFE_INTEGER)) {
+                // The store interface uses safe integer seconds. Never clamp,
+                // round or truncate a deadline: doing so could reopen replay.
+                throw new CandidateRejection({
+                    status: "unverified", reason: "resource-limit",
+                });
+            }
+            return Number(deadline);
         },
     });
 }

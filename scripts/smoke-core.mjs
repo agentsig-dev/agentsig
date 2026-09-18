@@ -1,0 +1,20 @@
+import assert from "node:assert/strict";
+import { createPrivateKey } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { Buffer } from "node:buffer";
+import { signHttpMessage, parseSignatureHeaders } from "../packages/core/dist/index.js";
+const fixture = (name) => readFileSync(new URL(`../packages/core/test/fixtures/rfc9421/${name}`, import.meta.url));
+const [requestLine, ...lines] = fixture("request-head.txt").toString("ascii").split("\n");
+assert.equal(requestLine, "POST /foo?param=Value&Pet=dog HTTP/1.1");
+const headers = lines.map((line) => { const i = line.indexOf(": "); assert(i > 0); return [line.slice(0, i), line.slice(i + 2)]; });
+const request = { method: "POST", targetUri: "https://example.com/foo?param=Value&Pet=dog", rawRequestTarget: "/foo?param=Value&Pet=dog", httpVersion: "1.1", headers };
+const components = ["date", "@method", "@path", "@authority", "content-type", "content-length"].map((name) => ({ name, parameters: [] }));
+const parameters = [["created", { kind: "integer", value: 1618884473 }], ["keyid", { kind: "string", value: "test-key-ed25519" }]];
+const input = { label: "sig-b26", components, parameters };
+const key = createPrivateKey(fixture("ed25519-private.pem")); // PUBLIC TEST KEY ONLY.
+const signed = await signHttpMessage({ kind: "request", request }, input, key);
+const [parsed] = parseSignatureHeaders([["Signature-Input", signed.signatureInput], ["Signature", signed.signature]]);
+assert.equal(parsed.input.label, "sig-b26");
+assert.equal(parsed.signature.byteLength, 64);
+assert.deepEqual(Buffer.from(parsed.signature), fixture("signature.bin"));
+console.log("PASS: RFC 9421 B.2.6 — 64 signature bytes match exactly.");

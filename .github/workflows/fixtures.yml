@@ -44,3 +44,5 @@ jobs:
         run: node --test tests/signing-fixture-audit.test.mjs
       - name: Audit reset epochs, operator catalog, and observer contracts independently
         run: node --test tests/reset-fixture-audit.test.mjs
+      - name: Audit metadata classification and pinned protocol attribution independently
+        run: node --test tests/metadata-fixture-audit.test.mjs
