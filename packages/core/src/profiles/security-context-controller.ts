@@ -28,6 +28,14 @@ export interface SecurityControllerOptions {
     readonly observer?: ContextObserver<SecurityContextEvent>;
 }
 
+/**
+ * Internal synchronous preparation only, not an application policy hook.
+ * Compute eligibility and retention from the exact dispatch-time sample.
+ */
+type ConsumePreparation =
+    | Omit<ReplayConsumeInput, "nowEpochSeconds">
+    | ((nowEpochSeconds: number) => Omit<ReplayConsumeInput, "nowEpochSeconds">);
+
 export interface SecurityContextController {
     readonly activeEpoch: number | null;
     readonly reference: ClockTracker["reference"];
@@ -38,7 +46,7 @@ export interface SecurityContextController {
     now(lease: OperationLease): number;
     consume(
         lease: OperationLease,
-        input: Omit<ReplayConsumeInput, "nowEpochSeconds">,
+        input: ConsumePreparation,
     ): Promise<StoreOutcome>;
     /** Final synchronous epoch/health check; caller performs its time recheck. */
     completeOperation(lease: OperationLease): number;
@@ -194,15 +202,32 @@ export function createSecurityContextController(
 
         async consume(
             lease: OperationLease,
-            input: Omit<ReplayConsumeInput, "nowEpochSeconds">,
+            input: ConsumePreparation,
         ): Promise<StoreOutcome> {
-            // Copy before the final guard: local configuration accessors must
-            // not be able to reset after validation but before dispatch.
-            const copied = {
-                scope: input.scope, keyThumbprint: input.keyThumbprint,
-                nonce: input.nonce, retainUntilEpochSeconds: input.retainUntilEpochSeconds,
-            };
-            const nowEpochSeconds = currentTime(lease);
+            const copy = (value: Omit<ReplayConsumeInput, "nowEpochSeconds">) => ({
+                scope: value.scope, keyThumbprint: value.keyThumbprint,
+                nonce: value.nonce, retainUntilEpochSeconds: value.retainUntilEpochSeconds,
+            });
+            let copied: Omit<ReplayConsumeInput, "nowEpochSeconds">;
+            let nowEpochSeconds: number;
+            if (typeof input === "function") {
+                nowEpochSeconds = currentTime(lease);
+                // Only bounded internal synchronous work belongs here. Guard
+                // reentry through both preparation and its returned properties.
+                // No await, provider call or second sample may split the time
+                // policy/retention calculation from this dispatch.
+                providerDepth++;
+                try { copied = copy(input(nowEpochSeconds)); }
+                finally { providerDepth--; }
+                requireOpen();
+                epochs.assertCurrent(lease);
+            } else {
+                // Preserve the existing descriptor path: copy BEFORE the final
+                // guard so a local accessor cannot reset between guard/dispatch.
+                copied = copy(input);
+                nowEpochSeconds = currentTime(lease);
+            }
+            // Preparation errors intentionally occur outside the backend catch.
             const payload: Readonly<ReplayConsumeInput> = Object.freeze({ ...copied, nowEpochSeconds });
             let pending: Promise<StoreOutcome>;
             try {
