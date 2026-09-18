@@ -1,0 +1,187 @@
+{
+  "purpose": "Metadata-name classification only; not supported verification algorithms",
+  "jwks": {
+    "references": [
+      "RFC 7518 section 7.1.2",
+      "RFC 8037 section 5"
+    ],
+    "records": [
+      {
+        "name": "HS256",
+        "rfc": 7518
+      },
+      {
+        "name": "HS384",
+        "rfc": 7518
+      },
+      {
+        "name": "HS512",
+        "rfc": 7518
+      },
+      {
+        "name": "RS256",
+        "rfc": 7518
+      },
+      {
+        "name": "RS384",
+        "rfc": 7518
+      },
+      {
+        "name": "RS512",
+        "rfc": 7518
+      },
+      {
+        "name": "ES256",
+        "rfc": 7518
+      },
+      {
+        "name": "ES384",
+        "rfc": 7518
+      },
+      {
+        "name": "ES512",
+        "rfc": 7518
+      },
+      {
+        "name": "PS256",
+        "rfc": 7518
+      },
+      {
+        "name": "PS384",
+        "rfc": 7518
+      },
+      {
+        "name": "PS512",
+        "rfc": 7518
+      },
+      {
+        "name": "none",
+        "rfc": 7518
+      },
+      {
+        "name": "RSA1_5",
+        "rfc": 7518
+      },
+      {
+        "name": "RSA-OAEP",
+        "rfc": 7518
+      },
+      {
+        "name": "RSA-OAEP-256",
+        "rfc": 7518
+      },
+      {
+        "name": "A128KW",
+        "rfc": 7518
+      },
+      {
+        "name": "A192KW",
+        "rfc": 7518
+      },
+      {
+        "name": "A256KW",
+        "rfc": 7518
+      },
+      {
+        "name": "dir",
+        "rfc": 7518
+      },
+      {
+        "name": "ECDH-ES",
+        "rfc": 7518
+      },
+      {
+        "name": "ECDH-ES+A128KW",
+        "rfc": 7518
+      },
+      {
+        "name": "ECDH-ES+A192KW",
+        "rfc": 7518
+      },
+      {
+        "name": "ECDH-ES+A256KW",
+        "rfc": 7518
+      },
+      {
+        "name": "A128GCMKW",
+        "rfc": 7518
+      },
+      {
+        "name": "A192GCMKW",
+        "rfc": 7518
+      },
+      {
+        "name": "A256GCMKW",
+        "rfc": 7518
+      },
+      {
+        "name": "PBES2-HS256+A128KW",
+        "rfc": 7518
+      },
+      {
+        "name": "PBES2-HS384+A192KW",
+        "rfc": 7518
+      },
+      {
+        "name": "PBES2-HS512+A256KW",
+        "rfc": 7518
+      },
+      {
+        "name": "EdDSA",
+        "rfc": 8037
+      }
+    ],
+    "names": [
+      "HS256",
+      "HS384",
+      "HS512",
+      "RS256",
+      "RS384",
+      "RS512",
+      "ES256",
+      "ES384",
+      "ES512",
+      "PS256",
+      "PS384",
+      "PS512",
+      "none",
+      "RSA1_5",
+      "RSA-OAEP",
+      "RSA-OAEP-256",
+      "A128KW",
+      "A192KW",
+      "A256KW",
+      "dir",
+      "ECDH-ES",
+      "ECDH-ES+A128KW",
+      "ECDH-ES+A192KW",
+      "ECDH-ES+A256KW",
+      "A128GCMKW",
+      "A192GCMKW",
+      "A256GCMKW",
+      "PBES2-HS256+A128KW",
+      "PBES2-HS384+A192KW",
+      "PBES2-HS512+A256KW",
+      "EdDSA"
+    ]
+  },
+  "wg-directory-00": {
+    "source": {
+      "url": "https://www.iana.org/assignments/http-message-signature/http-message-signature.xml",
+      "retrievedAt": "2026-09-18T20:36:24.390Z",
+      "registryUpdated": "2026-07-20",
+      "lastModified": "Mon, 20 Jul 2026 09:11:20 GMT",
+      "sha256": "bd4b0304e21e226fef189ed283a31392b5ffc99a37d00e9911dc011dcfb1523f",
+      "attribution": "Internet Assigned Numbers Authority (IANA), HTTP Message Signature registry",
+      "reference": "RFC 9421 section 6.2"
+    },
+    "names": [
+      "rsa-pss-sha512",
+      "rsa-v1_5-sha256",
+      "hmac-sha256",
+      "ecdsa-p256-sha256",
+      "ecdsa-p384-sha384",
+      "ed25519"
+    ]
+  }
+}

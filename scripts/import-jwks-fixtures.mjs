@@ -257,6 +257,119 @@ json("metadata-cases.json", {
     },
     cases,
 }, { license: "MIT for policy metadata; source-derived keys retain original notices" });
+const metadataCaseCount = cases.length;
+cases.length = 0;
+const ianaBytes = readFileSync(resolve(root, ".tmp/m2-jwks/iana-http-message-signature.xml"));
+const ianaDigest = "bd4b0304e21e226fef189ed283a31392b5ffc99a37d00e9911dc011dcfb1523f";
+assert.equal(hash(ianaBytes), ianaDigest);
+const ianaSource = {
+    url: "https://www.iana.org/assignments/http-message-signature/http-message-signature.xml",
+    retrievedAt: "2026-09-18T20:36:24.390Z",
+    registryUpdated: "2026-07-20",
+    lastModified: "Mon, 20 Jul 2026 09:11:20 GMT",
+    sha256: ianaDigest,
+    attribution: "Internet Assigned Numbers Authority (IANA), HTTP Message Signature registry",
+    reference: "RFC 9421 section 6.2",
+};
+put("sources/iana-http-message-signature.xml", ianaBytes, ianaSource);
+const algorithmSection = ianaBytes.toString("utf8")
+    .match(/<registry id="signature-algorithms">([\s\S]*?)<\/registry>/);
+assert(algorithmSection);
+const httpNames = [...algorithmSection[1].matchAll(/<name>([^<]+)<\/name>/g)]
+    .map((match) => match[1]);
+assert.equal(httpNames.length, 6);
+
+// Use the registration Usage Location, not name shape, to exclude enc entries.
+const joseRecords = [];
+for (const rfc of [7518, 8037]) {
+    const text = readFileSync(resolve(root, output, `sources/rfc${rfc}.txt`), "utf8");
+    for (const record of text.matchAll(/o  Algorithm Name: "([^"]+)"([\s\S]*?)(?=\n   o  Algorithm Name:|\n7\.2\.|\n5\.|\s*$)/g)) {
+        const usage = record[2].match(/Algorithm Usage Location\(s\): "([^"]+)"/);
+        assert(usage, `Missing usage location: ${record[1]}`);
+        if (usage[1] === "alg") joseRecords.push({ name: record[1], rfc });
+    }
+}
+const joseNames = joseRecords.map((record) => record.name);
+assert(joseNames.includes("PS512") && joseNames.includes("EdDSA"));
+assert(!joseNames.includes("A128GCM") && !joseNames.includes("A128CBC-HS256"));
+assert.equal(new Set(joseNames).size, joseNames.length);
+assert(joseNames.every((name) => !httpNames.includes(name)));
+json("algorithm-lists.json", {
+    purpose: "Metadata-name classification only; not supported verification algorithms",
+    jwks: { references: ["RFC 7518 section 7.1.2", "RFC 8037 section 5"], records: joseRecords, names: joseNames },
+    "wg-directory-00": { source: ianaSource, names: httpNames },
+}, { license: "agentsig-authored extraction metadata; RFC notices retained; IANA attribution in source" });
+
+function algorithmAccepted(id, format, keys, selectable, skipped, reason) {
+    accepted(`${format}-${id}`, format, keys, selectable, skipped);
+    for (const report of cases.at(-1).expected.skipped) report.reason = reason;
+}
+for (const format of ["jwks", "wg-directory-00"]) {
+    const ownNames = format === "jwks" ? joseNames : httpNames;
+    const otherNames = format === "jwks" ? httpNames : joseNames;
+    const edName = format === "jwks" ? "EdDSA" : "ed25519";
+    for (const [name, material] of [["rsa", rsa], ["p256", ec], ["x25519", x25519], ["ed448", ed448]]) {
+        const key = { ...material, kid: format === "jwks" ? `label-${name}` : thumbprint(material) };
+        algorithmAccepted(`${name}-alg-absent`, format, [ed, key], [ed], [key], "unsupported-algorithm");
+        // Deliberately includes key/algorithm mismatches: approved policy B
+        // does not implement a general compatibility table for skipped keys.
+        for (const alg of ownNames) {
+            if (alg === edName) {
+                metadataRejected(`${name}-own-ed-name`, format, { ...key, alg },
+                    "Ed25519 algorithm name requires crv Ed25519");
+            } else {
+                const declared = { ...key, alg };
+                algorithmAccepted(`${name}-own-${alg}`, format, [ed, declared], [ed],
+                    [declared], "unsupported-algorithm");
+            }
+        }
+        for (const alg of otherNames) {
+            metadataRejected(`${name}-opposite-${alg}`, format, { ...key, alg },
+                "alg belongs to the opposite JWKS format");
+        }
+        const unknown = { ...key, alg: "future-example-algorithm" };
+        algorithmAccepted(`${name}-unknown-name`, format, [ed, unknown], [ed],
+            [unknown], "unknown-algorithm-name");
+        metadataRejected(`${name}-nonstring-alg`, format, { ...key, alg: 42 },
+            "alg must be an ASCII string");
+        metadataRejected(`${name}-nonascii-alg`, format, { ...key, alg: "alg-\u00e9" },
+            "alg must be an ASCII string");
+    }
+    algorithmAccepted("ed25519-absent", format, [ed], [ed], [], "unsupported-algorithm");
+    algorithmAccepted("ed25519-correct", format, [{ ...ed, alg: edName }], [ed], [], "unsupported-algorithm");
+    for (const alg of [...ownNames, ...otherNames, "future-example-algorithm"]) {
+        if (alg !== edName) {
+            metadataRejected(`ed25519-wrong-${alg}`, format, { ...ed, alg },
+                "Ed25519 alg must match the selected JWKS format");
+        }
+    }
+    // Synthetic marker, not an actual published production secret.
+    for (const key of [{ kty: "oct" }, { kty: "oct", k: "UFVCTElDLVRFU1Q" }]) {
+        metadataRejected(`symmetric-${Object.hasOwn(key, "k") ? "with-k" : "without-k"}`,
+            format, key, "public JWKS must not contain symmetric keys");
+    }
+}
+json("algorithm-cases.json", {
+    status: "approved-policy-pre-loader-implementation-fixtures",
+    rules: [
+        "Unsupported public key, alg absent: skip and report unsupported-algorithm",
+        "Unsupported public key, own-format known name: skip; no general key/algorithm compatibility check",
+        "Opposite-format known name: invalid-jwks",
+        "Name unknown to both snapshots: skip and report unknown-algorithm-name",
+        "Own-format Ed25519 algorithm name on another curve/type: invalid-jwks",
+        "Symmetric kty oct in public JWKS: invalid-jwks, even without k",
+    ],
+    notes: [
+        "All skipped keys remain outside the verification pool; request lookup yields unsupported-algorithm",
+        "Skip reason unknown-algorithm-name is load-report metadata, not a result-catalog addition",
+        "WG 5.5.1 registry membership is strictly enforced for usable keys, not fully validated for skipped keys",
+        "Acceptance of a set with unknown-name skipped entries is not full WG directory conformance",
+        "Ed448 with EdDSA is valid JOSE in RFC 8037 but rejected by the explicitly approved local Ed25519-name exception",
+        "Generic compatibility is deliberately unchecked: for example RSA with ES256 is skipped, never verified",
+        "Ed25519 remains strict: absent or exactly EdDSA for jwks, absent or exactly ed25519 for wg-directory-00",
+    ],
+    cases,
+}, { license: "MIT for case metadata; source-derived public keys retain source notices" });
 writeFileSync(resolve(root, output, "manifest.json"), JSON.stringify({
     formatVersion: 1, files,
     relatedNotices: [
@@ -264,4 +377,5 @@ writeFileSync(resolve(root, output, "manifest.json"), JSON.stringify({
         "tests/fixtures/m2/sources/cloudflare-LICENSE.txt",
     ],
 }, null, 2) + "\n");
-console.log(`Pinned ${files.length} files, ${originalCaseCount} load cases and ${cases.length} metadata cases; no loader used.`);
+console.log(`Pinned ${files.length} files, ${originalCaseCount} load, ${metadataCaseCount} usage and ${cases.length} algorithm cases; no loader used.`);
+console.log(JSON.stringify({ joseNames, httpNames }, null, 2));

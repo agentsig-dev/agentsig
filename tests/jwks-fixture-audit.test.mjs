@@ -263,3 +263,135 @@ test("rejection fixtures locate the key and require safe actionable diagnostics"
     assert.equal(metadata.policy.catalog,
         "Unchanged; diagnostic rule descriptions are not new result codes");
 });
+
+test("algorithm vocabularies match pinned RFC registrations and dated IANA bytes", () => {
+    const lists = json("algorithm-lists.json");
+    const expectedJose = [
+        "HS256", "HS384", "HS512", "RS256", "RS384", "RS512",
+        "ES256", "ES384", "ES512", "PS256", "PS384", "PS512", "none",
+        "RSA1_5", "RSA-OAEP", "RSA-OAEP-256", "A128KW", "A192KW", "A256KW",
+        "dir", "ECDH-ES", "ECDH-ES+A128KW", "ECDH-ES+A192KW", "ECDH-ES+A256KW",
+        "A128GCMKW", "A192GCMKW", "A256GCMKW",
+        "PBES2-HS256+A128KW", "PBES2-HS384+A192KW", "PBES2-HS512+A256KW", "EdDSA",
+    ];
+    const expectedHttp = [
+        "rsa-pss-sha512", "rsa-v1_5-sha256", "hmac-sha256",
+        "ecdsa-p256-sha256", "ecdsa-p384-sha384", "ed25519",
+    ];
+    assert.deepEqual(lists.jwks.names, expectedJose);
+    assert.deepEqual(lists["wg-directory-00"].names, expectedHttp);
+    const registrations = [];
+    for (const rfc of [7518, 8037]) {
+        // Separate line/block inspection rather than the importer's regex.
+        const blocks = read(`sources/rfc${rfc}.txt`).toString("utf8")
+            .split("   o  Algorithm Name: ").slice(1);
+        for (const block of blocks) {
+            const name = block.split('"')[1];
+            const usageLine = block.split("\n")
+                .find((line) => line.includes("Algorithm Usage Location(s):"));
+            assert(usageLine, name);
+            if (usageLine.trim().endsWith('"alg"')) registrations.push({ name, rfc });
+        }
+    }
+    assert.deepEqual(lists.jwks.records, registrations);
+    assert.deepEqual(registrations.map((record) => record.name), expectedJose);
+
+    const bytes = read("sources/iana-http-message-signature.xml");
+    assert.equal(hash(bytes),
+        "bd4b0304e21e226fef189ed283a31392b5ffc99a37d00e9911dc011dcfb1523f");
+    const source = lists["wg-directory-00"].source;
+    assert.equal(source.sha256, hash(bytes));
+    assert.equal(source.url,
+        "https://www.iana.org/assignments/http-message-signature/http-message-signature.xml");
+    assert.equal(source.retrievedAt, "2026-09-18T20:36:24.390Z");
+    assert.equal(source.registryUpdated, "2026-07-20");
+    const xml = bytes.toString("utf8");
+    assert(xml.includes("<updated>2026-07-20</updated>"));
+    const section = xml.split('<registry id="signature-algorithms">')[1].split("</registry>")[0];
+    const names = section.split("<name>").slice(1).map((part) => part.split("</name>")[0]);
+    assert.deepEqual(names, expectedHttp);
+    assert(expectedJose.every((name) => !expectedHttp.includes(name)));
+});
+
+test("all algorithm fixtures follow the six approved rules without verifying unsupported keys", () => {
+    const lists = json("algorithm-lists.json");
+    const matrix = json("algorithm-cases.json");
+    assert.equal(matrix.rules.length, 6);
+    assert.equal(matrix.cases.length, 410);
+    assert.equal(new Set(matrix.cases.map((entry) => entry.id)).size, 410);
+
+    for (const entry of matrix.cases) {
+        const own = lists[entry.format].names;
+        const other = lists[entry.format === "jwks" ? "wg-directory-00" : "jwks"].names;
+        const edName = entry.format === "jwks" ? "EdDSA" : "ed25519";
+        const selected = [];
+        const skipped = [];
+        let failure;
+        for (const [index, key] of entry.jwks.keys.entries()) {
+            let rule;
+            if (key.kty === "oct") {
+                rule = "public JWKS must not contain symmetric keys";
+            } else {
+                assert.equal(createPublicKey({ key, format: "jwk" }).type, "public");
+                const hasAlg = Object.hasOwn(key, "alg");
+                if (hasAlg && (typeof key.alg !== "string" || /[^\x00-\x7f]/.test(key.alg))) {
+                    rule = "alg must be an ASCII string";
+                } else if (key.crv === "Ed25519") {
+                    if (hasAlg && key.alg !== edName) {
+                        rule = "Ed25519 alg must match the selected JWKS format";
+                    } else {
+                        selected.push(independentThumbprint(key));
+                    }
+                } else if (hasAlg && other.includes(key.alg)) {
+                    rule = "alg belongs to the opposite JWKS format";
+                } else if (key.alg === edName) {
+                    rule = "Ed25519 algorithm name requires crv Ed25519";
+                } else {
+                    skipped.push({
+                        kid: key.kid ?? null,
+                        thumbprint: independentThumbprint(key),
+                        requestCode: "unsupported-algorithm",
+                        reason: !hasAlg || own.includes(key.alg)
+                            ? "unsupported-algorithm" : "unknown-algorithm-name",
+                    });
+                }
+            }
+            if (rule) {
+                failure = {
+                    load: "rejected", code: "invalid-jwks",
+                    diagnostic: { keyIndex: index, kid: key.kid ?? null, rule },
+                };
+                break;
+            }
+        }
+        assert.deepEqual(entry.expected, failure ?? {
+            load: "accepted", selectableThumbprints: selected,
+            skippedCount: skipped.length, skipped,
+        }, entry.id);
+    }
+});
+
+test("algorithm matrix preserves forward compatibility and the explicit Ed25519-name exception", () => {
+    const cases = new Map(json("algorithm-cases.json").cases.map((entry) => [entry.id, entry]));
+    for (const format of ["jwks", "wg-directory-00"]) {
+        for (const type of ["rsa", "p256", "x25519", "ed448"]) {
+            assert.equal(cases.get(`${format}-${type}-alg-absent`).expected.load, "accepted");
+            const unknown = cases.get(`${format}-${type}-unknown-name`).expected;
+            assert.equal(unknown.load, "accepted");
+            assert.equal(unknown.skipped[0].reason, "unknown-algorithm-name");
+            assert.equal(unknown.skipped[0].requestCode, "unsupported-algorithm");
+            assert.equal(cases.get(`${format}-${type}-own-ed-name`).expected.code, "invalid-jwks");
+        }
+        for (const suffix of ["with-k", "without-k"]) {
+            assert.equal(cases.get(`${format}-symmetric-${suffix}`).expected.code, "invalid-jwks");
+        }
+        assert.equal(cases.get(`${format}-ed25519-wrong-future-example-algorithm`)
+            .expected.code, "invalid-jwks");
+    }
+    // These incompatible declarations are intentionally not validated for
+    // skipped keys. Their acceptance must never be presented as crypto support.
+    assert.equal(cases.get("jwks-rsa-own-ES256").expected.load, "accepted");
+    assert.equal(cases.get("wg-directory-00-p256-own-rsa-pss-sha512").expected.load, "accepted");
+    assert.equal(cases.get("jwks-rsa-opposite-rsa-pss-sha512").expected.code, "invalid-jwks");
+    assert.equal(cases.get("wg-directory-00-rsa-opposite-PS512").expected.code, "invalid-jwks");
+});

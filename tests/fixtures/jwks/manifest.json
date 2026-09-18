@@ -107,6 +107,36 @@
       "source": {
         "license": "MIT for policy metadata; source-derived keys retain original notices"
       }
+    },
+    {
+      "path": "sources/iana-http-message-signature.xml",
+      "bytes": 8175,
+      "sha256": "bd4b0304e21e226fef189ed283a31392b5ffc99a37d00e9911dc011dcfb1523f",
+      "source": {
+        "url": "https://www.iana.org/assignments/http-message-signature/http-message-signature.xml",
+        "retrievedAt": "2026-09-18T20:36:24.390Z",
+        "registryUpdated": "2026-07-20",
+        "lastModified": "Mon, 20 Jul 2026 09:11:20 GMT",
+        "sha256": "bd4b0304e21e226fef189ed283a31392b5ffc99a37d00e9911dc011dcfb1523f",
+        "attribution": "Internet Assigned Numbers Authority (IANA), HTTP Message Signature registry",
+        "reference": "RFC 9421 section 6.2"
+      }
+    },
+    {
+      "path": "algorithm-lists.json",
+      "bytes": 3487,
+      "sha256": "069cade9901ad628da5a65a049c901a860663fa461448df4f8ca8a8c163966fd",
+      "source": {
+        "license": "agentsig-authored extraction metadata; RFC notices retained; IANA attribution in source"
+      }
+    },
+    {
+      "path": "algorithm-cases.json",
+      "bytes": 372195,
+      "sha256": "c49197e547c556249c4e48b87fbbd6d53512e428d58f00c5a7a89e065de4e1f1",
+      "source": {
+        "license": "MIT for case metadata; source-derived public keys retain source notices"
+      }
     }
   ],
   "relatedNotices": [
