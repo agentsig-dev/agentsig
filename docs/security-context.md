@@ -1,10 +1,11 @@
 # M2 ortak güvenlik bağlamı: saat, dönem ve sıfırlama
 
-Durum: 2026-09-18. İç koordinatör, gerçek bellek içi replay deposu ve
-ortak bağlam fabrikası uygulanmıştır. Gerçek depo entegrasyonu ve ayrıca
-başarısızlık enjeksiyonu için test dublörleri sınanır. Tam çevrimdışı doğrulayıcı
-ve profil paket dışa aktarımları henüz tamamlanmadı. Bu sonuçlar üretime
-hazırlık veya güvenlik denetimi iddiası değildir.
+Durum: 2026-09-18. İç koordinatör, gerçek bellek içi replay deposu, ortak bağlam
+fabrikası ve çevrimdışı doğrulayıcı entegrasyonu uygulanmıştır. Gerçek depo,
+sıfırlama yarışları ve başarısızlık enjeksiyonu için test dublörleri sınanır.
+Profil ESM/CJS dışa aktarımları ve tam round-trip testleri yerelde geçmiştir.
+Bu sonuçlar üretime hazırlık veya güvenlik denetimi iddiası değildir.
+Güncel dış API: [çevrimdışı doğrulama rehberi](offline-verification.md).
 
 ## Zaman ve saat sağlığı
 
@@ -37,8 +38,11 @@ doğrulayıcılar bağımsız saat sıfırlayamaz.
 Dönem kimliği monoton artan, süreç-yerel bir tam sayıdır. İşlemler başladıkları
 döneme ait bağlam-sahipli tanıtıcı taşır. Depoya gönderimden önce ve depo
 beklemesinden sonra dönem ve saat sağlığı tekrar kontrol edilir.
-Sonuç üretme aşamasında da kontrol zorunludur. Tam doğrulayıcı ayrıca
-imzanın zaman penceresini yeniden sınamalıdır.
+Sonuç üretme aşamasında da kontrol zorunludur. Tam doğrulayıcı bu son kontrolün
+zaman örneğiyle bütün uygun adayların zaman pencerelerini yeniden sınar.
+Son kontrolden başarı sonucuna kadar bekleme veya uygulama callback'i yoktur.
+Önceki grubun depo tüketimi kabul edilmiş olsa bile sonraki grup beklerken
+sıfırlama yapılması eski çağrının başarılı aday döndürmesini engeller.
 
 Dönem kimliği uzak depoya gönderilmez. Başka bağlamın veya sonlanmış dönemin
 tanıtıcısı, sayısal dönem kimliği aynı olsa bile kabul edilmez.
@@ -128,20 +132,19 @@ commit'lerinde koordinatörden önce sabitlenmiştir.
 bilinen kısmi temizlik, yeniden deneme, saat değişimi ve yeniden giriş
 regresyonlarını test dublörleriyle sınar.
 
-Windows / Node 22 üzerinde bu alt adıma ait 102 hedefli test geçti.
-Tam yerel regresyonda 4.136 birim testi, mevcut entegrasyon takımı,
-54 bağımsız fixture denetimi ve M1 audit'i başarılıdır. İki paketin
-derleme ve tip kontrolleri de geçti. Mevcut ESM/CJS tüketici kontrolleri
-M1 girişlerini kapsar; profil dışa aktarımlarını henüz sınamaz.
-Bu sayıların kaydedildiği koordinatör teslimatından sonra gerçek bellek deposu
-ve bağlam fabrikası da eklendi. Son hedefli çalıştırmada 25 depo, 5 gerçek
-depo/koordinatör entegrasyonu, 10 fabrika ve 25 koordinatör testi olmak üzere
-65 test ile core tip kontrolü geçti. Gerçek depo ve fabrika eklendikten sonra
-tam yerel regresyon da başarılıdır: iki paketin derleme/tip kontrolleri,
-tüm birim ve mevcut entegrasyon testleri, M1 audit'i ve 54 bağımsız fixture
-denetimi geçti. Tam doğrulayıcı, korumacı saklama süresi hesabının entegrasyonu
-ve profil ESM/CJS tüketici testleri bekliyor; uzak CI sonucu doğrulanmadı.
-Push, yayın veya WG bildirimi yapılmadı.
+Tarihsel koordinatör teslimatında Windows / Node 22 üzerinde 102 hedefli test,
+4.136 birim testi ve 54 bağımsız fixture denetimi geçmişti. Gerçek bellek deposu
+ve fabrika eklendikten sonra bunlara ait 65 hedefli test de başarılı oldu.
+
+Güncel tam yerel regresyon: 4.284 birim testi, 13 entegrasyon testi,
+60 bağımsız ek fixture denetimi ve M1 audit'i geçti. Derleme ve tip denetimleri
+başarılıdır. Profil tüketici testleri artık ayrı ESM/CJS süreçlerinde gerçek
+paket alt yolunu, round-trip, replay ve açık sıfırlama davranışını sınar.
+[Doğrulayıcı yarış testleri](../packages/core/test/profile-verifier-multiple.test.ts)
+bekleyen ikinci grup sırasında sıfırlamanın önceki kabulü de geçersiz kıldığını
+ve nihai zaman kontrolünün önceki grubun süresi dolmuş imzasını reddettiğini gösterir.
+Bu yeni değişiklikler için uzak CI sonucu henüz doğrulanmadı.
+Asistan push, yayın veya WG bildirimi yapmadı.
 
 ## Gerçek bellek deposu ve ortak fabrika
 
@@ -158,9 +161,14 @@ Otomatik temizleme zamanlayıcısı yoktur. Süre dolumu yalnızca bağlamın sa
 kontrolünden geçen tüketim çağrısında işlenir; salt okunur sayaçları okumak
 kayıt silmez. Ayrı süreçler ve ayrı bağlamlar replay geçmişini paylaşmaz.
 
-Depo verilen saklama sonunu uygular. Korumacı son zaman hesabı ve imzanın
-tüketim öncesi/sonrası zaman kontrolü tam doğrulayıcı entegrasyonunun işidir;
-depo başarısı tek başına doğrulanmış istek anlamına gelmez.
+Depo verilen saklama sonunu uygular. Doğrulayıcı, iç koordinatörün gönderim
+anındaki sağlıklı saat örneğiyle zaman uygunluğunu ve korumacı saklama sonunu
+birlikte hesaplar. Hesap oluşturma ile tüketim zamanının büyüğüne azami yaş
+ve toleransı ekler; aynı çağrıdaki ortak nonce grubunda uygun üyelerin en uzun
+gereksinimi kullanılır. Hazırlık hatası depo arızası gibi gizlenmez ve tüketim
+başlatmaz. Dış depo arayüzüne callback veya dönem kimliği gönderilmez.
+[Gönderim-anı regresyonları](../packages/core/test/profile-consume-preparation.test.ts)
+bu sınırı sınar. Depo başarısı tek başına doğrulanmış istek anlamına gelmez.
 
 [Ortak fabrika](../packages/core/src/profiles/security-context.ts) varsayılan
 bellek deposunu ve koordinatörü birlikte oluşturur. Operatör yüzeyi yalnızca
@@ -177,4 +185,6 @@ reddedilir. Haricî depo sayaçları bilinmediği için sayı uydurulmaz.
 [Gerçek depo entegrasyon testleri](../packages/core/test/profile-memory-context.test.ts)
 sağlıksız saatte tüketim/temizleme engelini, 100 eşzamanlı tüketimde tek kabulü,
 eski dönem tamamlamasının reddini ve sağlıklı sıfırlamanın replay geçmişini
-bilinçli olarak silmesini gösterir. Tam doğrulayıcı round-trip testinin yerini almaz.
+bilinçli olarak silmesini gösterir. Bunlar tam doğrulayıcı round-trip testinin
+yerini almaz; [ayrı kabul kapısı](../packages/core/test/profile-verifier-roundtrip.test.ts)
+iki profilde gerçek imzalayan, kimlik, zaman ve replay zinciriyle ayrıca geçmiştir.

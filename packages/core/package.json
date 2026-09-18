@@ -29,6 +29,16 @@
                 "types": "./dist/index.d.cts",
                 "default": "./dist/index.cjs"
             }
+        },
+        "./profiles": {
+            "import": {
+                "types": "./dist/profiles.d.ts",
+                "default": "./dist/profiles.js"
+            },
+            "require": {
+                "types": "./dist/profiles.d.cts",
+                "default": "./dist/profiles.cjs"
+            }
         }
     },
     "files": [
@@ -38,7 +48,7 @@
     ],
     "sideEffects": false,
     "scripts": {
-        "build": "tsup src/index.ts --format esm,cjs --dts --clean --target node20",
+        "build": "tsup src/index.ts src/profiles.ts --format esm,cjs --dts --clean --target node20",
         "typecheck": "tsc --noEmit -p tsconfig.json"
     },
     "dependencies": {

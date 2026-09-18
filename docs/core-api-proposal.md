@@ -1,5 +1,5 @@
 # agentsig — core API önerisi
-Durum: ilk motor kilometre taşı uygulandı (core-m1); aşağıdaki ilk öneri tarihsel tasarım kaydıdır. Güncel API karşılaştırması §11'dedir. M2 yalnızca [onay bekleyen plan](milestone-2-plan.md) aşamasındadır. İnceleme tarihi: 2026-09-18.
+Durum: ilk motor kilometre taşı uygulandı (core-m1); aşağıdaki ilk öneri tarihsel tasarım kaydıdır. M1 API karşılaştırması §11'dedir. Sonraki onaylarla M2 çevrimdışı doğrulayıcı, replay/zaman entegrasyonu ve profil ESM/CJS girişi uygulanmış; yerel round-trip kabul kapısı geçmiştir. Güncel M2 referansı: [çevrimdışı doğrulama rehberi](offline-verification.md) ve [M2 planı](milestone-2-plan.md). İnceleme tarihi: 2026-09-18.
 
 ## Uygulama onayı — 2026-09-18
 Bu bölüm, aşağıdaki ilk önerilerle çelişen noktalarda önceliklidir.
@@ -159,7 +159,13 @@ export declare function verifyHttpSignatureCryptography(
 - Structured Fields altyapısı RFC 9651 Date ve Display String dahil kayıpsız türleri destekler. RFC 9421'in RFC 8941'e dayanan imza alanları için kabul edilen türler ayrıca sınırlandırılır; yeni türleri desteklemek her alanda kabul etmek anlamına gelmez.
 - Ondalıklar binlik ölçekli tamsayı olarak tutulur: tamsayı/ondalık ayrımı kaybolmaz ve ikili kayan nokta yuvarlaması kanonik baytları değiştirmez. Ölçek ve RFC aralıkları doğrulanır.
 
-## 4. Profil katmanı: önerilen sözleşmeler
+## 4. Profil katmanı: tarihsel önerilen sözleşmeler
+
+Aşağıdaki tip taslağı güncel dış API değildir. Uygulanan
+[sonuç ve yapılandırma tipleri](../packages/core/src/profiles/verification-types.ts)
+kapalı kodları ve aday başına sonuçları kullanır. M2 aynı istekte tek ajan
+başlığı grameri seçer; farklı gramerleri birleştirme veya başarısızlıkta diğer
+profili deneme desteği yoktur.
 Profil adları için öneri: ietf-wg-protocol-00 ve cloudflare-docs-2026-07-01.
 İkinci ad Cloudflare'in kendi sürüm numarası değil, agentsig'in sabitlediği doküman profilinin adıdır.
 Protokol değişikliği yeni profil gerektirir. Hata ve güvenlik düzeltmeleri ise sürüm notlarıyla yapılır; güvensiz uygulama davranışı dondurulmaz.
@@ -314,7 +320,7 @@ Paket belgeleri incelendi; kriptografik kaynakların ve testlerin tamamı denetl
 ### Konumlandırma
 agentsig ilk Node HTTP imza motoru veya ilk TypeScript Web Bot Auth paketi değildir.
 Hedef fark: Node yerleşik kripto ile açık, sürümü sabit profiller; varsayılan atomik replay kontrolü; güvenli keşif; framework adaptörleri; CLI ve kaynaklı uyumluluk matrisi.
-Bu farklar henüz uygulanmış yetenekler değil, proje hedefleridir. Resmî IETF/Cloudflare referans uygulaması veya onaylı kütüphane iddiası yapılmaz.
+İlk araştırma sırasında bunlar proje hedefleriydi. Sonraki M2 uygulamasında sabit profiller ve varsayılan atomik replay kontrolü eklendi; güvenli ağ keşfi, adaptörler ve CLI hâlâ hedef kapsamıdır. Resmî IETF/Cloudflare referans uygulaması veya onaylı kütüphane iddiası yapılmaz.
 
 ## 10. İlk uygulama teslimatı
 1. Monorepo temelini, MIT lisansı, pnpm/changesets ve ESM/CJS tip/test araçlarını kur; yalnızca core'u işlevsel paket olarak geliştir.
@@ -357,7 +363,7 @@ Bu karşılaştırma uygulama davranışını değiştirmez ve bütün RFC kural
 | SF alan tür bilgisi | Çağıran tür tablosu | İmza alanları ve Content-Digest için yerleşik Dictionary bilgisi eklendi; diğer alanlar çağırandan gelir. Otomatik ağ/IANA sorgusu yoktur. |
 | Kripto çalışma şekli | Promise tabanlı API | Dönüş tipi aynı; [uygulama](../packages/core/src/crypto.ts:35) sınırlı girdi üzerinde senkrondur. Promise, worker-thread veya bloklamayan kriptografi vaadi değildir. |
 | Trailer ve algoritmalar | Trailer yok; yalnızca Ed25519 | **Sapma yok.** Açık ret davranışları ve dört bağımsız golden takımı vardır. |
-| Tam Web Bot Auth sonucu | Sonraki katmanın taslağı | §4'teki profil, zaman, ReplayStore ve VerificationResult henüz dışa aktarılmıyor. Bu bir M1 eksikliği değil, onaylanan kapsam sınırıdır; M2'de kapalı kodlara daraltılacak. |
+| Tam Web Bot Auth sonucu | Sonraki katmanın taslağı | Bu tarihsel M1 teslimatında dışa aktarılmıyordu; M1 kapsam sınırı korunur. Sonraki M2 teslimatı ayrı [profil girişinde](../packages/core/src/profiles.ts) kapalı sonuç kodları, zaman ve replay entegrasyonu sunar. |
 
 Güncel kullanım referansı: [core belgesi](../packages/core/README.md).
 GitHub metadata adresi https://github.com/agentsig-dev/agentsig; npm kapsamı @agentsig olarak kalır.

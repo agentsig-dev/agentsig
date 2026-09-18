@@ -5,12 +5,25 @@ Ed25519 kriptografisi Node'un yerleşik kripto modülünü kullanır.
 Tek çalışma zamanı bağımlılığı @agentsig/structured-fields paketidir.
 ESM ve CommonJS çıktıları ile her iki biçim için tip bildirimleri sağlanır.
 
-**Durum:** İlk motor kilometre taşı. Web Bot Auth profil doğrulayıcısı değildir;
+**Durum:** Saf RFC motoru ve ayrı çevrimdışı Web Bot Auth profil katmanı mevcuttur.
+İki profilin tam round-trip ve ESM/CJS tüketici testleri yerelde geçmiştir;
 güvenlik denetiminden geçmiş veya üretime hazır olduğu iddia edilmez.
 
-## Dört işlem
+## İki ayrı giriş
 
-Dış API [paket girişinde](src/index.ts) tanımlıdır.
+- @agentsig/core: [saf RFC 9421 motoru](src/index.ts); saat, güven ve replay politikası içermez.
+- @agentsig/core/profiles: [profil API'si](src/profiles.ts); imzalayan, çevrimdışı
+  doğrulayıcı, yerel açık JWKS yükleyicisi ve paylaşılan saat/replay bağlamı.
+
+[Çevrimdışı kullanım ve güven sınırları](../../docs/offline-verification.md)
+profil yapılandırmasını, çoklu aday politikasını ve kimlik türlerini açıklar.
+Anahtar rotasyonunda ortak bağlam korunmalıdır; istek başına yeni bellek bağlamı
+oluşturmak replay korumasını etkisizleştirir. Ağdan keşif ve gövde digest
+karşılaştırması uygulanmamıştır. Profil başarısı erişim yetkisi değildir.
+
+## Saf motorun dört işlemi
+
+Dış motor API'si [paket girişinde](src/index.ts) tanımlıdır.
 
 | İşlem | Girdi | Çıktı |
 | --- | --- | --- |
@@ -46,9 +59,9 @@ otomatik içe aktarılmaz. Açıkça belirtilmiş imza algoritması Ed25519 ile
 İmzalayıcı mevcut başlıkları değiştirmez. Dönen değerlerin başka imzaları ezmeden
 birleştirilmesi çağıranın açık işlemidir; etiket çakışmalarına dikkat edilmelidir.
 
-## Kapsam
+## Saf motorun kapsamı
 
-| RFC özelliği | İlk kilometre taşı |
+| RFC özelliği | Motor girişi |
 | --- | --- |
 | Sıralı başlık oluşumları, OWS, açık HTTP/1.1 obs-fold bağlamı | Desteklenir |
 | Structured Field katı serileştirme ve Dictionary üyesi seçimi | Alanın türü biliniyorsa desteklenir |
@@ -62,7 +75,8 @@ birleştirilmesi çağıranın açık işlemidir; etiket çakışmalarına dikka
 | Ed25519 dışı kriptografi | Açıkça reddedilir |
 | Bilinmeyen türetilmiş bileşen veya bileşen parametresi | Açıkça reddedilir |
 | Bilinmeyen imza meta verisi | Desteklenen SF türündeyse imzaya dahil edilir; anlamı yorumlanmaz |
-| Web Bot Auth profilleri, JWKS/keşif, cache, nonce, saat | Bu teslimatın dışında |
+| Web Bot Auth profilleri, yerel JWKS, nonce ve saat | Ayrı profil girişinde uygulanır; saf motorun parçası değildir |
+| Ağdan keşif, dizin cache'i | Henüz uygulanmadı |
 
 İmza meta verisi ve bileşen tanımları RFC 8941 türlerini kullanır; RFC 9651 Date
 ve Display String ekleri bu konumlarda kabul edilmez. Bilinen HTTP Structured
@@ -73,9 +87,9 @@ diğer alanların türü çağıran tarafından bildirilir.
 Tam RFC 9421 algoritma/özellik desteği iddia edilmez. Yukarıdaki kapsam tablosu,
 testler ve kararlı hata sonuçları destek sınırını tanımlar.
 
-## Güven sınırı
+## Saf motorun güven sınırı
 
-**Kriptografik geçerlilik aşağıdakileri kanıtlamaz:**
+**Yalnızca kriptografik geçerlilik aşağıdakileri kanıtlamaz:**
 - Açık anahtarın belirli bir ajan, alan adı veya operatöre ait olduğunu.
 - İsteğin yeni olduğunu veya daha önce işlenmediğini.
 - İmzanın oluşturulma/sona erme zamanlarının kabul edilebilir olduğunu.
@@ -83,10 +97,13 @@ testler ve kararlı hata sonuçları destek sınırını tanımlar.
 - Content-Digest başlığıyla gerçek gövdenin eşleştiğini.
 - İsteğin yetkili, iyi niyetli veya hız sınırından muaf olduğunu.
 
-Çağıran hangi bileşenlerin zorunlu olduğunu belirlemeli, güvenilir anahtarı
-seçmeli ve tam doğrulama politikalarını ayrıca uygulamalıdır. Özellikle
-Content-Digest başlığını imzalamak, motorun gövdeyi doğruladığı anlamına gelmez.
+Saf motoru doğrudan kullanan çağıran hangi bileşenlerin zorunlu olduğunu
+belirlemeli, güvenilir anahtarı seçmeli ve tam doğrulama politikalarını ayrıca
+uygulamalıdır. Ayrı profil doğrulayıcısı M2 kapsam, yerel kimlik, zaman ve replay
+kontrollerini birleştirir; operatör itibarı veya yetkilendirme sağlamaz.
+Content-Digest başlığını imzalamak, gerçek gövdenin doğrulandığı anlamına gelmez.
 RFC test anahtarları kamuya açıktır; üretimde kesinlikle kullanılmamalıdır.
+Profil katmanı bilinen test anahtarlarını varsayılan reddeder.
 
 Ayrıştırıcı tüm etiket çiftlerini döndürür; herhangi bir çiftte karşılık
 eksikse bu tüm-çiftler API'si hata verir. İki imza başlığı da yoksa boş dizi

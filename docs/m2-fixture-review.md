@@ -1,13 +1,18 @@
 # M2 fixture teslimatı ve uygulama onay kapısı
 
-Tarih: 2026-09-18. Durum: **yalnızca kaynaklar, test verileri ve bağımsız audit**.
-Profil doğrulayıcısı, zaman politikası veya replay deposu uygulanmadı.
-Push ve yayınlama bu teslimatın parçası değildir.
-Kullanıcı b6e2269 için Node 20/22/24 × Windows/Linux CI ve fixture integrity
-workflow'unun yeşil olduğunu bildirdi. Aşağıdaki katalog revizyonu henüz
-dondurulmadı; bu yeni değişikliklerin uzak CI sonucu ayrıca değerlendirilmelidir.
-WG'ye gönderilmek üzere [nötr rapor taslağı](wg-e2-1-report-draft.md) hazırlandı;
-hiçbir bildirim gönderilmedi.
+Tarih: 2026-09-18. **Bu belge uygulama öncesi fixture teslimatının tarihsel kaydıdır.**
+Aşağıdaki henüz uygulanmamış/onaylanmamış ifadeleri o teslimat anını anlatır;
+güncel uygulama engeli değildir. Sonraki kullanıcı onaylarıyla katalog sürüm 1
+olarak donduruldu ve dört A seçeneği açık operatör sıfırlamasıyla birlikte kabul edildi.
+Çevrimdışı doğrulayıcı, zaman/replay katmanı ve profil ESM/CJS girişi artık
+uygulanmıştır; iki profilde tam round-trip kabul kapısı yerelde geçmiştir.
+Güncel kapsam: [çevrimdışı doğrulama rehberi](offline-verification.md).
+
+Kullanıcı b6e2269 ve daha sonra 6285514'e kadarki teslimatlar için uzak CI
+başarısını bildirdi. Bu sonuç yeni yerel değişikliklerin CI başarısı değildir.
+Push ve yayın kullanıcıya aittir.
+[WG rapor taslağı](wg-e2-1-report-draft.md) hazırdır; kullanıcı göndereceğini
+belirtti, tamamlandığı henüz teyit edilmedi. Asistan bildirim göndermedi.
 
 ## Kaynak sabitlemesi ve atıflar
 
@@ -77,7 +82,9 @@ Aşağıdaki olay verileri onay sonrası uygulama testlerine dönüştürülecek
 ## Tam kapalı kod kataloğu
 
 Aşağıdaki kümeler [makine-okunur katalogla](../tests/fixtures/m2/policy-cases.json)
-aynıdır. Liste **uygulama öncesi onaya sunulan sözleşmedir**.
+aynıdır. Uygulama öncesi onaya sunulan bu sözleşme daha sonra **sürüm 1 olarak
+onaylanıp dondurulmuştur**. Kod ekleme, kaldırma veya yeniden adlandırma ayrı
+onay ve sürüm notu gerektirir.
 Başarı/ret kodu serbest metin değildir; teşhis ayrıntıları ayrı, sınırlı alanlarda
 taşınabilir. Aday etiketi yalnızca sonuç korelasyonu içindir.
 
@@ -199,10 +206,12 @@ dışa eşleme invalid / ambiguous-signatures olur. Ön kontrolleri geçemeyen
 adayların gerçek ret nedenleri korunur. İç değerlendirme nesnesi dışa aktarılmaz.
 Bu dışa eşleme önerisi nihai sözleşme onayına dahildir.
 
-## Üretim kodundan önce kalan dört seçim
+## Tarihsel dört seçenek — A seçenekleri sonradan onaylandı
 
-Aşağıdaki değerler **öneri, henüz onaylanmadı**. Onaylanan süre ve kapasite
-varsayılanlarını değiştirmez; kod katalogda veya runtime'da dondurulmadı.
+Aşağıdaki tablo ilk önerileri ve alternatiflerinin maliyetlerini korur.
+Dört A seçeneği uygulama öncesinde onaylandı; sınır fixture'ları ayrı commit'e
+alındı. Saat sıfırlaması ve başarısızlık sözleşmesi ayrıca
+[güvenlik bağlamı belgesinde](security-context.md) açıklanır.
 
 | Konu | Önerilen A seçeneği | Artı / eksi | B alternatifi ve etkisi |
 | --- | --- | --- | --- |

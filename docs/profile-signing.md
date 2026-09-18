@@ -1,8 +1,10 @@
 # M2 profil imzalayanı
 
-Durum: 2026-09-18. Kaynak uygulaması ve golden testleri mevcut; profil paket
-girişi ve tam çevrimdışı doğrulayıcı entegrasyonu henüz tamamlanmadı.
+Durum: 2026-09-18. Kaynak uygulaması, golden testleri, profil paket girişi ve
+tam çevrimdışı doğrulayıcı entegrasyonu mevcut; yerel kabul testleri geçti.
 Güvenlik incelemesinden geçmiş veya üretime hazır olduğu iddia edilmez.
+[Çevrimdışı doğrulama rehberi](offline-verification.md) güncel API ve güven
+sınırlarını açıklar.
 
 ## Sözleşme
 
@@ -95,7 +97,7 @@ ayrıntıları veya neden zincirine alınmaz. Kripto hatası yalnızca kripto
 koduyla gizlenmez. Bilinen kamuya açık test anahtarları varsayılan reddedilir;
 açık test izni diğer güvenlik kontrollerini kaldırmaz.
 
-## Golden ölçütü ve kalan entegrasyon
+## Golden ölçütü ve tamamlanan entegrasyon
 
 Fixture'lar uygulamadan önce bb54838 yerel commit'ine alınmıştır.
 [Bağımsız fixture denetimi](../tests/signing-fixture-audit.test.mjs) agentsig
@@ -104,15 +106,21 @@ kodunu kullanmadan dört imzayı ve tam başlık baytlarını doğrular.
 iki profilde normal ve kaçış gerektiren nonce ile çıktının fixture'a bayt
 eşitliğini sınar; golden kabul ölçütü kendi imzalayanımızla round-trip değildir.
 
-Yerel Windows / Node 22 üzerinde imzalayan ve yardımcılarına ait 168 test geçti.
-Bu alt adımın tam regresyonu da başarılıdır: 4.034 birim testi, 9 entegrasyon
-testi, 44 bağımsız fixture denetimi ve M1 audit'i geçti. İki paketin derleme
-ve tip kontrolleri başarılıdır. Mevcut ESM/CJS tüketici testleri M1 girişlerini
-kapsar; profil girişlerinin tüketici testleri henüz eklenmedi.
-Bu değişikliklerin uzak CI matrisi henüz doğrulanmadı.
+İlk imzalayan alt adımında yerel Windows / Node 22 üzerinde 168 hedefli test,
+4.034 birim testi, 9 entegrasyon testi, 44 bağımsız fixture denetimi ve M1 audit'i
+geçmişti. Bunlar o teslimata ait tarihsel sayılardır.
 
-**Tam çevrimdışı doğrulayıcıdan verified sonucu alan round-trip testi,
-zaman ve replay katmanları tamamlandığında zorunlu entegrasyon kapısıdır.**
-Mevcut saf kriptografik doğrulama bunun yerine sayılmaz.
-Paket dışa aktarımları ve ESM/CJS profil tüketici testleri henüz beklemektedir.
-Push, yayın ve WG bildirimi yapılmadı.
+**Tam çevrimdışı doğrulayıcıyla round-trip kabul kapısı geçti.**
+[Round-trip testleri](../packages/core/test/profile-verifier-roundtrip.test.ts)
+iki profilin dört bağımsız golden çıktısında tam doğrulanmış başarı ve ikinci
+kullanımda replay reddini sınar. Başarı; yerel kimlik bağlama, zaman ve gerçek
+bellek deposuyla nonce tüketimini içerir. Saf kripto kontrolü bunun yerine
+sayılmaz; bağımsız golden bayt eşitliği ayrıca korunur.
+
+[Profil tüketici testleri](../tests/profile-consumer.test.mjs) ayrı ESM/CJS
+süreçlerinde gerçek paket alt yoluyla imzalama/doğrulama ve replay reddini,
+iki biçimin tip bildirimlerini ve iç yetkilerin dışa aktarılmamasını sınar.
+Son tam yerel regresyon: 4.284 birim testi, 13 entegrasyon testi, 60 bağımsız
+ek fixture denetimi ve M1 audit'i başarılı; iki paketin derleme ve tip
+denetimleri geçti. Bu yeni değişiklikler için uzak CI matrisi henüz doğrulanmadı.
+Asistan push, yayın veya WG bildirimi yapmadı.

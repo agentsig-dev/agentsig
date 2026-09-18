@@ -1,13 +1,15 @@
 # agentsig
 
-> **Status: core engine only, pre-release, not security-reviewed**
+> **Status: offline Web Bot Auth profiles implemented, pre-release, not security-reviewed**
 
 Node.js için açık kaynak HTTP Message Signatures ve Web Bot Auth araç takımı.
 
-**Mevcut teslimat:** profilden bağımsız RFC 9421 + Ed25519 motoru ve ayrı RFC 9651
-Structured Fields paketi. Web Bot Auth profilleri ve framework adaptörleri henüz
-uygulanmamıştır. Proje güvenlik denetiminden geçmiş değildir; resmî IETF veya
-Cloudflare referans uygulaması/onayı iddia edilmez.
+**Mevcut uygulama:** profilden bağımsız RFC 9421 + Ed25519 motoru, ayrı RFC 9651
+Structured Fields paketi ve iki sabit Web Bot Auth profili için çevrimdışı
+imzalama/doğrulama. Yerel JWKS, zaman politikası ve atomik bellek replay deposu
+entegredir. Framework adaptörleri ve ağdan keşif henüz uygulanmamıştır.
+Proje güvenlik denetiminden geçmiş değildir; resmî IETF veya Cloudflare referans
+uygulaması/onayı iddia edilmez.
 
 GitHub: https://github.com/agentsig-dev/agentsig
 npm organizasyonu: **agentsig** (GitHub organizasyonu: **agentsig-dev**).
@@ -15,11 +17,11 @@ npm organizasyonu: **agentsig** (GitHub organizasyonu: **agentsig-dev**).
 ## Kısa yol haritası
 
 - **M1 — mevcut:** RFC 9421 + Ed25519 motoru, ayrı Structured Fields paketi ve bağımsız fixture denetimi. Kullanıcı tarafından push edilen **core-m1** etiketi için CI matrisi yeşil olarak doğrulandı.
-- **M2 — öneri, onay bekliyor:** iki sabit profil, zaman politikası, replay deposu ve elle verilen JWKS ile çevrimdışı doğrulama. [M2 planı](docs/milestone-2-plan.md).
+- **M2 — yerel kabul kapısı geçti:** iki sabit profil, zaman politikası, replay deposu ve elle verilen JWKS ile çevrimdışı doğrulama. İki profilde tam imzalayan/doğrulayıcı round-trip ve profil ESM/CJS tüketici testleri başarılı. [M2 planı](docs/milestone-2-plan.md).
 - **Daha sonra:** güvenli dizin fetch/cache, istemci sarmalayıcısı, framework adaptörleri ve CLI; her aşama ayrı onaya tabidir.
 
-**Profil, ağ, zaman/replay, adaptör ve CLI katmanları henüz yoktur.**
-Planın belgelenmesi bu katmanların uygulandığı veya uygulama onayının alındığı anlamına gelmez.
+**Ağdan dizin keşfi/cache, adaptörler ve CLI henüz yoktur.**
+Çevrimdışı doğrulama, alan adı sahipliğine ilişkin canlı ağ kanıtı sağlamaz.
 
 ## Neden bu kütüphane?
 
@@ -50,14 +52,16 @@ yeterli bulmak ve isteğe izin vermek ayrı kararlardır.
 Rate limit ise "bu kimlik/istemci ne sıklıkla işlem yapabilir?" politikasını
 uygular. Geçerli imza hız sınırından muafiyet sağlamaz; ikisi birlikte kullanılır.
 Kısa imza ömrü replay penceresini daraltır, tek başına tekrar kullanımını önlemez.
-Nonce deposu ve saat politikası bu ilk motor teslimatında bulunmaz.
+Nonce deposu ve saat politikası ayrı profil girişinde uygulanır; saf RFC motoru
+bu yan etkileri içermez. İsteğe bağlı nonce politikası açıkça seçilirse nonce'suz
+başarı tekrar kullanımına karşı koruma sağlamaz.
 
 ## Paketler
 
 | Paket | Durum |
 | --- | --- |
 | @agentsig/structured-fields | Kayıpsız ham AST, anlamsal model, RFC 9651 parser/serializer ve kaynak limitleri |
-| @agentsig/core | RFC 9421 ayrıştırma, imza tabanı, Ed25519 imzalama ve kriptografik doğrulama |
+| @agentsig/core | Saf RFC 9421 motoru; ayrı profil girişinde çevrimdışı Web Bot Auth imzalama, kimlik/zaman/replay doğrulaması |
 | @agentsig/fetch | Planlandı; bu teslimatta yok |
 | @agentsig/hono | Planlandı; bu teslimatta yok |
 | @agentsig/fastify | Planlandı; bu teslimatta yok |
@@ -65,7 +69,8 @@ Nonce deposu ve saat politikası bu ilk motor teslimatında bulunmaz.
 | agentsig — CLI | Planlandı; bu teslimatta yok |
 
 [Core API ve güven sınırı](packages/core/README.md) ·
-[Structured Fields API ve bütçeler](packages/structured-fields/README.md)
+[Structured Fields API ve bütçeler](packages/structured-fields/README.md) ·
+[Çevrimdışı profil API'si](docs/offline-verification.md)
 
 İki mevcut paket ESM/CJS ve ilgili tip bildirimlerini üretir; Node 20+ çalışma
 zamanını hedefler. Üretimde güvenlik güncellemeleri alan bir Node sürümü kullanın.
@@ -113,17 +118,20 @@ için tam Git geçmişi alınır; audit bağımlılık kurulumu veya motor derle
 
 ## Protocol compatibility
 
-Aşağıdaki tablo **gelecek profil katmanının kaynak sabitlemesidir**; mevcut
-core motoru bu profilleri doğruladığını veya Cloudflare'de kabul edildiğini
-iddia etmez.
+Aşağıdaki tablo **sabitlenmiş kaynakların protokol kurallarını** karşılaştırır.
+Uygulamanın daha sıkı yerel kapsam, origin, zaman ve replay politikaları
+[profil belgelerinde](docs/offline-verification.md) açıklanır. Çevrimdışı
+test başarısı Cloudflare hizmetinde kabul veya tam taslak uyumluluğu değildir.
 
-Planlanan profiller:
-- Varsayılan IETF WG protocol-00: 1 Eylül 2026 tarihli taslak.
-- Açıkça seçilen Cloudflare doküman profili: sayfadaki son güncelleme 1 Temmuz 2026.
-- Erişim tarihi: 18 Eylül 2026. Cloudflare kaynağının değişmez snapshot'ı profil
-  uygulamasından önce ayrıca sabitlenecek.
-- İmzalayan otomatik downgrade/sessiz yeniden deneme yapmayacak.
-- Doğrulayıcı kullanılan profili sonuçta bildirecek; kabul politikasını uygulama belirleyecek.
+Uygulanan profiller:
+- Varsayılan imzalayan IETF WG protocol-00: 1 Eylül 2026 tarihli taslak.
+- İmzalayanda açıkça seçilen Cloudflare doküman profili: sayfadaki son güncelleme 1 Temmuz 2026.
+- Erişim tarihi: 18 Eylül 2026. Cloudflare kaynağı değişmez
+  acfb1f2270b9473ae65a15674995e0b2f3b6ab0c commit'inden uygulama öncesinde sabitlendi.
+- İmzalayan otomatik downgrade/sessiz yeniden deneme yapmaz.
+- Doğrulayıcı tek bir başlık grameri seçer, başarısızlıkta diğerini denemez.
+  Varsayılan olarak iki profili tanır; uygulama kabul edilen profilleri daraltabilir.
+- Kullanılan profil aday sonucunda bildirilir; erişim yetkisini uygulama belirler.
 
 | Konu | WG protocol-00 | Cloudflare dokümanı | Satır kaynakları |
 | --- | --- | --- | --- |

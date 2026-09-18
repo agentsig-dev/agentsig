@@ -1,20 +1,23 @@
 # M2 — çevrimdışı Web Bot Auth profil katmanı
 
-Durum: **M2 uygulaması onaylandı; çevrimdışı doğrulayıcı entegrasyonu sürüyor**. Tarih: 2026-09-18.
+Durum: **M2 çevrimdışı doğrulayıcı ve profil dışa aktarımları uygulandı; yerel round-trip kabul kapısı geçti**. Tarih: 2026-09-18.
 Doğrulama kataloğu sürüm 1 olarak dondurulmuştur; kod değişikliği ayrı onay ve sürüm notu gerektirir.
 Bu belgenin aşağıdaki öneri/alternatif bölümleri tarihsel tasarım kaydıdır; eski
 “onay bekliyor” ifadeleri güncel uygulama engeli değildir. Güncel onaylı davranışlar:
 [JWKS yükleme](jwks-loading.md), [profil kimliği](profile-identity-policy.md),
 [imzalayan](profile-signing.md), [saat/replay bağlamı](security-context.md).
-Tam doğrulayıcı, profil dışa aktarımları ve verified round-trip henüz tamamlanmadı.
-Bu belge tamamlanmış uyumluluk veya uzak CI başarısı iddiası değildir.
+[Çevrimdışı doğrulama rehberi](offline-verification.md) güncel dış API'yi açıklar.
+Son tam yerel kontrolde 4.284 birim testi ve 13 entegrasyon testi; ayrıca
+60 bağımsız ek fixture denetimi ve M1 audit'i geçti. İki profilde dört golden
+çıktının tam doğrulayıcıyla round-trip başarısı ayrıca sınandı.
+Bu belge tam protokol uyumluluğu veya yeni değişikliklerin uzak CI başarısı iddiası değildir.
 Depo: https://github.com/agentsig-dev/agentsig — npm kapsamı @agentsig.
 
 ## 1. Kapsam
 
-M1 motoru değiştirilmeden onun üzerinde, @agentsig/core içinde ayrı profil alt
-giriş noktası önerilir. Yeni npm paketi gerekmez. Kesin dış API fixture
-sözleşmeleriyle birlikte onaya sunulur.
+M1 motorunun üzerinde, @agentsig/core içinde ayrı @agentsig/core/profiles alt
+giriş noktası uygulanmıştır. Yeni npm paketi eklenmemiştir. ESM/CJS çalışma
+zamanı ve tip bildirimleri gerçek paket tüketicileriyle yerelde sınanmıştır.
 
 M2 iki sürümü sabit profil, profil bazlı imzalama/doğrulama, zaman politikası,
 elle verilen JWKS, atomik replay arayüzü, bellek içi depo ve kapalı sonuç kodlarını
@@ -111,12 +114,13 @@ Asenkron depo beklemesinden sonra zaman tekrar sınanır; bu sırada süresi dol
 imza kabul edilmez. Tüketilmiş nonce geri alınmaz: erişilebilirlik pahasına
 replay güvenliği korunur.
 
-Saat geri giderse daha önce temizlenen nonce yeniden geçerli olmamalıdır.
-Duvar/monoton saat karşılaştırması, önerilen 30 saniyelik ayrı sapma eşiği,
-toparlanma ve daha katı alternatif [karar tablosunda](m2-fixture-review.md)
-açıklanır; bu saat-anomalisi politikası henüz onaylanmadı.
+Saat geri giderse daha önce temizlenen nonce sessizce yeniden geçerli olmamalıdır.
+Duvar/monoton saat karşılaştırması ve ayrı 30 saniyelik sapma eşiği onaylanıp
+uygulanmıştır. Tarihsel alternatifler [karar tablosunda](m2-fixture-review.md),
+güncel toparlanma ve açık sıfırlama sözleşmesi [bağlam belgesinde](security-context.md)
+açıklanır. Açık sıfırlama replay geçmişini kesebilir; otomatik uygulanmaz.
 İmza toleransı ile saat sağlığı eşiği aynı yapılandırma alanı değildir.
-Kesin sapma eşiği ve süre aritmetiği fixture'ları koddan önce onaylanacaktır.
+Kesin sapma eşiği ve süre aritmetiği fixture'ları uygulamadan önce sabitlenmiştir.
 Depo kaybı veya süreç yeniden başlatma sonrası bellek içi replay geçmişinin
 korunmadığı açıkça belgelenir; süreçler arası garanti verilmez.
 
@@ -153,11 +157,11 @@ bu kontrol isteği bizzat özel anahtar sahibinin gönderdiğini ispatlamaz.
 Anahtar kotası, tek anahtarın toplam kapasiteyi tek başına doldurmasını sınırlar;
 birden fazla geçerli anahtar ve genel CPU tüketimi için tam DoS koruması değildir.
 
-Nonce için en fazla 256 ASCII bayt, üretilen nonce için 32 rastgele bayt önerisi
-henüz ayrıca onaylanmadı. Gelen nonce'un entropisi kanıtlanamaz.
+Nonce için en fazla 256 printable ASCII bayt ve üretilen nonce için 32 rastgele
+bayt onaylanmış varsayılanlardır. Gelen nonce'un entropisi kanıtlanamaz.
 Varsayılanlarla korumacı saklama üst sınırı ilk kabulden 360 sn sonrasına uzanabilir.
-Yerel JWKS için 64 anahtar / 256 KiB, profil aday sayısı için 16 önerisi de
-protokol gereksinimi değil, onay bekleyen kaynak bütçesidir.
+Yerel JWKS için 64 anahtar / 256 KiB ve profil aday sayısı için 16 sınırı da
+protokol gereksinimi değil, onaylanmış ve yapılandırılabilir yerel kaynak bütçesidir.
 
 ## 7. VerificationResult — kapalı sonuç modeli önerisi
 
@@ -227,7 +231,7 @@ yapılır ve tam replay başarısı olarak dışa sızdırılmaz.
 M1 tüm-çiftler ayrıştırıcısı bozuk bir çiftte tüm çağrıyı reddeder; bu mevcut sınır
 ayrıca korunur. Onaylanan altı davranış politika fixture'ında kaydedilmiştir.
 
-## 8. Onay bekleyen güvenlik seçenekleri
+## 8. Tarihsel güvenlik seçenekleri — sonraki onaylarla kesinleştirildi
 
 | Karar | Öneri | Alternatif / maliyet |
 | --- | --- | --- |
@@ -243,7 +247,9 @@ ayrıca korunur. Onaylanan altı davranış politika fixture'ında kaydedilmişt
 İmzalayan nonce kullansa bile saldırgan ilk kullanım yarışını kazanabilir.
 Nonce gövdeyi, yolu veya yöntemi kendiliğinden bağlamaz. Kapsam seçenekleri bu
 nedenle replay seçeneklerinden ayrı karardır.
-Bu tablodaki öneriler otomatik onay değildir; uygulama öncesinde kullanıcı seçer.
+Tablodaki eski öneriler sonraki kullanıcı onaylarıyla kesinleştirilmiştir.
+Güncel davranış, belgenin başında bağlantılı uygulama belgeleri ve dondurulmuş
+fixture sözleşmeleridir; farklı bir güvenlik seçeneği sessizce uygulanmaz.
 
 ## 9. Fixture-first commit sırası ve kabul kapıları
 
@@ -283,9 +289,11 @@ sonraki kilometre taşına ertelendi. E.2.1 özgün baytları korunarak etiket b
 aşamasının agent-label-mismatch negatif fixture'ı olarak kullanılır; diğer
 kapsam/zaman ihlalleri nedeniyle tam doğrulayıcının ilk hatası varsayılmaz.
 [WG rapor taslağı](wg-e2-1-report-draft.md) kullanıcı tarafından gönderilmek üzere
-hazırdır; gönderilmemiştir.
+hazırdır. Kullanıcı göndereceğini belirtti; gönderimin tamamlandığı henüz teyit edilmedi.
 Bu tarihsel teslimatı izleyen onayda katalog ve güvenlik seçenekleri
 donduruldu; profil yardımcıları, imzalayan, saat/sıfırlama koordinatörü ve
 bellek deposu uygulandı. Güncel kapsam için belgenin başındaki durum notu geçerlidir.
-Metadata fixture denetiminin geçmesi, henüz tamamlanmamış doğrulayıcının
-aynı senaryoları geçtiği anlamına gelmez. Push ve yayın kullanıcıya aittir.
+Metadata fixture denetimi ile gerçek doğrulayıcı entegrasyonu ayrı testlerdir;
+biri diğerinin yerine sayılmaz. Güncel uygulamada tam doğrulayıcı, çoklu aday,
+replay/sıfırlama yarışları ve profil ESM/CJS tüketicileri ayrıca sınanmıştır.
+Push ve yayın kullanıcıya aittir.
