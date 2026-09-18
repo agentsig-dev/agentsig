@@ -12,6 +12,87 @@ const json = (path) => JSON.parse(read(path).toString("utf8"));
 const hash = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const manifest = json("manifest.json");
 
+test("component restrictions distinguish local scope from pinned Cloudflare limitations", () => {
+    const matrix = json("component-restrictions.json");
+    assert.equal(matrix.cases.length, 24);
+    assert.equal(new Set(matrix.cases.map((entry) => entry.id)).size, 24);
+    const reference = matrix.sources.cloudflare;
+    const source = readFileSync(resolve(root, reference.path));
+    assert.equal(hash(source), reference.sha256);
+    assert.equal(reference.sha256,
+        "c4aeeef723df97b020ecc4d9e680b77b5bfb6c214a6443b0fb7f00efd7e422f7");
+    const text = source.toString("utf8");
+    const section = text.slice(text.indexOf("## Limitations"), text.indexOf("## Troubleshooting"));
+    for (const name of ["@query-params", "@status", "sf", "bs", "key", "req", "name", "@query-param"]) {
+        assert(section.includes("`" + name + "`"), name);
+    }
+    let local = 0;
+    let cloudflare = 0;
+    for (const entry of matrix.cases) {
+        assert.equal(entry.expected.status, "unverified");
+        assert.equal(entry.expected.code, "unsupported-profile");
+        const diagnostic = entry.expected.diagnostic;
+        assert.equal(diagnostic.kind, "component");
+        assert.equal(diagnostic.profile, entry.profile);
+        assert(entry.component.startsWith('"' + diagnostic.component + '"'));
+        if (diagnostic.source === "agentsig-m2-local-countersignature-limit") {
+            local++;
+            assert(["signature", "signature-input"].includes(diagnostic.component));
+        } else {
+            cloudflare++;
+            assert.equal(diagnostic.source, "cloudflare-docs-2026-07-01-limitations");
+            assert.equal(entry.profile, "cloudflare-docs-2026-07-01");
+            if (diagnostic.parameter) assert(entry.component.includes(";" + diagnostic.parameter));
+        }
+    }
+    assert.equal(local, 16);
+    assert.equal(cloudflare, 8);
+    assert.deepEqual(matrix.unknownProfileCase.expected, {
+        status: "unverified", code: "unsupported-profile",
+        diagnostic: {
+            kind: "profile", profile: "future-profile", source: "agentsig-m2-profile-set",
+        },
+    });
+});
+
+test("rejected candidates remain counted and reported under every aggregate policy", () => {
+    const matrix = json("rejected-candidate-counting.json");
+    assert.equal(matrix.cases.length, 6);
+    assert.equal(new Set(matrix.cases.map((entry) => entry.id)).size, 6);
+    for (const entry of matrix.cases) {
+        assert.equal(entry.candidates.filter((item) => item.tag === "web-bot-auth").length, 2);
+        assert.equal(entry.candidates[0].covers, '"signature";key="inner"');
+        assert.equal(entry.expected.selectedCount, 2);
+        assert.deepEqual(entry.expected.evaluatedLabels, ["outer", "inner"]);
+        assert.deepEqual(entry.expected.outer, {
+            status: "unverified", code: "unsupported-profile",
+        });
+        assert.equal(entry.expected.topLevelVerified, entry.policy === "any");
+        if (entry.policy === "exactly-one") {
+            assert.equal(entry.expected.topLevelStatus, "invalid");
+            assert.equal(entry.expected.topLevelCode, "ambiguous-signatures");
+            assert.equal(entry.expected.consumeCalls, 0);
+            assert.deepEqual(entry.expected.inner, {
+                status: "invalid", code: "ambiguous-signatures",
+            });
+        } else {
+            assert(["all", "any"].includes(entry.policy));
+            assert.deepEqual(entry.expected.inner, {
+                status: "verified", code: "nonce-consumed",
+            });
+            assert.equal(entry.prerequisites.length, 2);
+        }
+    }
+    // These are authored expectations, not an aggregate verifier implementation.
+    const catalog = JSON.parse(readFileSync(resolve(root,
+        "tests/fixtures/m2/policy-cases.json"), "utf8")).codeCatalog;
+    for (const entry of matrix.cases) {
+        for (const result of [entry.expected.outer, entry.expected.inner]) {
+            assert(catalog[result.status].includes(result.code));
+        }
+    }
+});
+
 test("required coverage expectations distinguish profiles and retain the approved minimum", () => {
     const matrix = json("coverage-cases.json");
     assert.equal(matrix.stage, "required-component-coverage-only");
@@ -60,10 +141,10 @@ test("profile manifest covers exact source and expectation bytes", () => {
         }
     }
     walk();
-    assert.equal(manifest.files.length, 8);
+    assert.equal(manifest.files.length, 10);
     assert.deepEqual(paths.filter((path) => path !== "manifest.json").sort(),
         manifest.files.map((entry) => entry.path).sort());
-    assert.equal(new Set(manifest.files.map((entry) => entry.path)).size, 8);
+    assert.equal(new Set(manifest.files.map((entry) => entry.path)).size, 10);
     for (const entry of manifest.files) {
         assert(!entry.path.includes(".."));
         const bytes = read(entry.path);

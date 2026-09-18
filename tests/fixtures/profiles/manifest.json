@@ -95,6 +95,26 @@
         "license": "MIT",
         "derivation": "Explicit expectations; no production imports"
       }
+    },
+    {
+      "path": "component-restrictions.json",
+      "bytes": 12759,
+      "sha256": "d3fd4b2c73223c1cb76b9cff8cd29b756648ddca0437c4c691fdd7f92c233cdc",
+      "source": {
+        "author": "agentsig",
+        "license": "MIT",
+        "derivation": "Explicit expectations; no production imports"
+      }
+    },
+    {
+      "path": "rejected-candidate-counting.json",
+      "bytes": 6340,
+      "sha256": "8984b649256d1408b429ee8ecb860b2e1021b4dccd9e0ed64e94f8f7d10c7685",
+      "source": {
+        "author": "agentsig",
+        "license": "MIT",
+        "derivation": "Explicit expectations; no production imports"
+      }
     }
   ]
 }

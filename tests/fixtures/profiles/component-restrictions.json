@@ -1,0 +1,398 @@
+{
+  "stage": "profile-component-support-only",
+  "sources": {
+    "local": "Approved M2 scope: defer signature/signature-input coverage; revisit as a separate milestone if M4 proxy deployment needs it.",
+    "cloudflare": {
+      "path": "tests/fixtures/m2/sources/cloudflare-2026-07-01.mdx",
+      "sha256": "c4aeeef723df97b020ecc4d9e680b77b5bfb6c214a6443b0fb7f00efd7e422f7",
+      "section": "Limitations (lines 235-248); section 4.1 also excludes sf/bs"
+    }
+  },
+  "notes": [
+    "Local signature/signature-input restriction applies to both profiles and takes precedence over Cloudflare parameter restrictions.",
+    "Cloudflare literally lists @query-params; it separately excludes name / @query-param support. Preserve that distinction.",
+    "Diagnostics distinguish unsupported profile names from unsupported components within a supported profile.",
+    "Diagnostic kind/source/parameter are details, not additions to the frozen result-code catalog.",
+    "This gate does not assert RFC syntax validity or cryptographic validity of a component."
+  ],
+  "cases": [
+    {
+      "id": "ietf-wg-protocol-00-signature-whole",
+      "profile": "ietf-wg-protocol-00",
+      "component": "\"signature\"",
+      "expected": {
+        "status": "unverified",
+        "code": "unsupported-profile",
+        "diagnostic": {
+          "kind": "component",
+          "profile": "ietf-wg-protocol-00",
+          "component": "signature",
+          "source": "agentsig-m2-local-countersignature-limit"
+        }
+      }
+    },
+    {
+      "id": "ietf-wg-protocol-00-signature-;key=\"inner\"",
+      "profile": "ietf-wg-protocol-00",
+      "component": "\"signature\";key=\"inner\"",
+      "expected": {
+        "status": "unverified",
+        "code": "unsupported-profile",
+        "diagnostic": {
+          "kind": "component",
+          "profile": "ietf-wg-protocol-00",
+          "component": "signature",
+          "source": "agentsig-m2-local-countersignature-limit"
+        }
+      }
+    },
+    {
+      "id": "ietf-wg-protocol-00-signature-;sf",
+      "profile": "ietf-wg-protocol-00",
+      "component": "\"signature\";sf",
+      "expected": {
+        "status": "unverified",
+        "code": "unsupported-profile",
+        "diagnostic": {
+          "kind": "component",
+          "profile": "ietf-wg-protocol-00",
+          "component": "signature",
+          "source": "agentsig-m2-local-countersignature-limit"
+        }
+      }
+    },
+    {
+      "id": "ietf-wg-protocol-00-signature-;bs",
+      "profile": "ietf-wg-protocol-00",
+      "component": "\"signature\";bs",
+      "expected": {
+        "status": "unverified",
+        "code": "unsupported-profile",
+        "diagnostic": {
+          "kind": "component",
+          "profile": "ietf-wg-protocol-00",
+          "component": "signature",
+          "source": "agentsig-m2-local-countersignature-limit"
+        }
+      }
+    },
+    {
+      "id": "ietf-wg-protocol-00-signature-input-whole",
+      "profile": "ietf-wg-protocol-00",
+      "component": "\"signature-input\"",
+      "expected": {
+        "status": "unverified",
+        "code": "unsupported-profile",
+        "diagnostic": {
+          "kind": "component",
+          "profile": "ietf-wg-protocol-00",
+          "component": "signature-input",
+          "source": "agentsig-m2-local-countersignature-limit"
+        }
+      }
+    },
+    {
+      "id": "ietf-wg-protocol-00-signature-input-;key=\"inner\"",
+      "profile": "ietf-wg-protocol-00",
+      "component": "\"signature-input\";key=\"inner\"",
+      "expected": {
+        "status": "unverified",
+        "code": "unsupported-profile",
+        "diagnostic": {
+          "kind": "component",
+          "profile": "ietf-wg-protocol-00",
+          "component": "signature-input",
+          "source": "agentsig-m2-local-countersignature-limit"
+        }
+      }
+    },
+    {
+      "id": "ietf-wg-protocol-00-signature-input-;sf",
+      "profile": "ietf-wg-protocol-00",
+      "component": "\"signature-input\";sf",
+      "expected": {
+        "status": "unverified",
+        "code": "unsupported-profile",
+        "diagnostic": {
+          "kind": "component",
+          "profile": "ietf-wg-protocol-00",
+          "component": "signature-input",
+          "source": "agentsig-m2-local-countersignature-limit"
+        }
+      }
+    },
+    {
+      "id": "ietf-wg-protocol-00-signature-input-;bs",
+      "profile": "ietf-wg-protocol-00",
+      "component": "\"signature-input\";bs",
+      "expected": {
+        "status": "unverified",
+        "code": "unsupported-profile",
+        "diagnostic": {
+          "kind": "component",
+          "profile": "ietf-wg-protocol-00",
+          "component": "signature-input",
+          "source": "agentsig-m2-local-countersignature-limit"
+        }
+      }
+    },
+    {
+      "id": "cloudflare-docs-2026-07-01-signature-whole",
+      "profile": "cloudflare-docs-2026-07-01",
+      "component": "\"signature\"",
+      "expected": {
+        "status": "unverified",
+        "code": "unsupported-profile",
+        "diagnostic": {
+          "kind": "component",
+          "profile": "cloudflare-docs-2026-07-01",
+          "component": "signature",
+          "source": "agentsig-m2-local-countersignature-limit"
+        }
+      }
+    },
+    {
+      "id": "cloudflare-docs-2026-07-01-signature-;key=\"inner\"",
+      "profile": "cloudflare-docs-2026-07-01",
+      "component": "\"signature\";key=\"inner\"",
+      "expected": {
+        "status": "unverified",
+        "code": "unsupported-profile",
+        "diagnostic": {
+          "kind": "component",
+          "profile": "cloudflare-docs-2026-07-01",
+          "component": "signature",
+          "source": "agentsig-m2-local-countersignature-limit"
+        }
+      }
+    },
+    {
+      "id": "cloudflare-docs-2026-07-01-signature-;sf",
+      "profile": "cloudflare-docs-2026-07-01",
+      "component": "\"signature\";sf",
+      "expected": {
+        "status": "unverified",
+        "code": "unsupported-profile",
+        "diagnostic": {
+          "kind": "component",
+          "profile": "cloudflare-docs-2026-07-01",
+          "component": "signature",
+          "source": "agentsig-m2-local-countersignature-limit"
+        }
+      }
+    },
+    {
+      "id": "cloudflare-docs-2026-07-01-signature-;bs",
+      "profile": "cloudflare-docs-2026-07-01",
+      "component": "\"signature\";bs",
+      "expected": {
+        "status": "unverified",
+        "code": "unsupported-profile",
+        "diagnostic": {
+          "kind": "component",
+          "profile": "cloudflare-docs-2026-07-01",
+          "component": "signature",
+          "source": "agentsig-m2-local-countersignature-limit"
+        }
+      }
+    },
+    {
+      "id": "cloudflare-docs-2026-07-01-signature-input-whole",
+      "profile": "cloudflare-docs-2026-07-01",
+      "component": "\"signature-input\"",
+      "expected": {
+        "status": "unverified",
+        "code": "unsupported-profile",
+        "diagnostic": {
+          "kind": "component",
+          "profile": "cloudflare-docs-2026-07-01",
+          "component": "signature-input",
+          "source": "agentsig-m2-local-countersignature-limit"
+        }
+      }
+    },
+    {
+      "id": "cloudflare-docs-2026-07-01-signature-input-;key=\"inner\"",
+      "profile": "cloudflare-docs-2026-07-01",
+      "component": "\"signature-input\";key=\"inner\"",
+      "expected": {
+        "status": "unverified",
+        "code": "unsupported-profile",
+        "diagnostic": {
+          "kind": "component",
+          "profile": "cloudflare-docs-2026-07-01",
+          "component": "signature-input",
+          "source": "agentsig-m2-local-countersignature-limit"
+        }
+      }
+    },
+    {
+      "id": "cloudflare-docs-2026-07-01-signature-input-;sf",
+      "profile": "cloudflare-docs-2026-07-01",
+      "component": "\"signature-input\";sf",
+      "expected": {
+        "status": "unverified",
+        "code": "unsupported-profile",
+        "diagnostic": {
+          "kind": "component",
+          "profile": "cloudflare-docs-2026-07-01",
+          "component": "signature-input",
+          "source": "agentsig-m2-local-countersignature-limit"
+        }
+      }
+    },
+    {
+      "id": "cloudflare-docs-2026-07-01-signature-input-;bs",
+      "profile": "cloudflare-docs-2026-07-01",
+      "component": "\"signature-input\";bs",
+      "expected": {
+        "status": "unverified",
+        "code": "unsupported-profile",
+        "diagnostic": {
+          "kind": "component",
+          "profile": "cloudflare-docs-2026-07-01",
+          "component": "signature-input",
+          "source": "agentsig-m2-local-countersignature-limit"
+        }
+      }
+    },
+    {
+      "id": "cloudflare-@status-component",
+      "profile": "cloudflare-docs-2026-07-01",
+      "component": "\"@status\"",
+      "expected": {
+        "status": "unverified",
+        "code": "unsupported-profile",
+        "diagnostic": {
+          "kind": "component",
+          "profile": "cloudflare-docs-2026-07-01",
+          "component": "@status",
+          "source": "cloudflare-docs-2026-07-01-limitations"
+        }
+      }
+    },
+    {
+      "id": "cloudflare-@query-params-component",
+      "profile": "cloudflare-docs-2026-07-01",
+      "component": "\"@query-params\"",
+      "expected": {
+        "status": "unverified",
+        "code": "unsupported-profile",
+        "diagnostic": {
+          "kind": "component",
+          "profile": "cloudflare-docs-2026-07-01",
+          "component": "@query-params",
+          "source": "cloudflare-docs-2026-07-01-limitations"
+        }
+      }
+    },
+    {
+      "id": "cloudflare-@query-param-name",
+      "profile": "cloudflare-docs-2026-07-01",
+      "component": "\"@query-param\";name=\"sku\"",
+      "expected": {
+        "status": "unverified",
+        "code": "unsupported-profile",
+        "diagnostic": {
+          "kind": "component",
+          "profile": "cloudflare-docs-2026-07-01",
+          "component": "@query-param",
+          "parameter": "name",
+          "source": "cloudflare-docs-2026-07-01-limitations"
+        }
+      }
+    },
+    {
+      "id": "cloudflare-x-example-sf",
+      "profile": "cloudflare-docs-2026-07-01",
+      "component": "\"x-example\";sf",
+      "expected": {
+        "status": "unverified",
+        "code": "unsupported-profile",
+        "diagnostic": {
+          "kind": "component",
+          "profile": "cloudflare-docs-2026-07-01",
+          "component": "x-example",
+          "parameter": "sf",
+          "source": "cloudflare-docs-2026-07-01-limitations"
+        }
+      }
+    },
+    {
+      "id": "cloudflare-x-example-bs",
+      "profile": "cloudflare-docs-2026-07-01",
+      "component": "\"x-example\";bs",
+      "expected": {
+        "status": "unverified",
+        "code": "unsupported-profile",
+        "diagnostic": {
+          "kind": "component",
+          "profile": "cloudflare-docs-2026-07-01",
+          "component": "x-example",
+          "parameter": "bs",
+          "source": "cloudflare-docs-2026-07-01-limitations"
+        }
+      }
+    },
+    {
+      "id": "cloudflare-x-example-key",
+      "profile": "cloudflare-docs-2026-07-01",
+      "component": "\"x-example\";key=\"value\"",
+      "expected": {
+        "status": "unverified",
+        "code": "unsupported-profile",
+        "diagnostic": {
+          "kind": "component",
+          "profile": "cloudflare-docs-2026-07-01",
+          "component": "x-example",
+          "parameter": "key",
+          "source": "cloudflare-docs-2026-07-01-limitations"
+        }
+      }
+    },
+    {
+      "id": "cloudflare-x-example-req",
+      "profile": "cloudflare-docs-2026-07-01",
+      "component": "\"x-example\";req",
+      "expected": {
+        "status": "unverified",
+        "code": "unsupported-profile",
+        "diagnostic": {
+          "kind": "component",
+          "profile": "cloudflare-docs-2026-07-01",
+          "component": "x-example",
+          "parameter": "req",
+          "source": "cloudflare-docs-2026-07-01-limitations"
+        }
+      }
+    },
+    {
+      "id": "cloudflare-@method-req",
+      "profile": "cloudflare-docs-2026-07-01",
+      "component": "\"@method\";req",
+      "expected": {
+        "status": "unverified",
+        "code": "unsupported-profile",
+        "diagnostic": {
+          "kind": "component",
+          "profile": "cloudflare-docs-2026-07-01",
+          "component": "@method",
+          "parameter": "req",
+          "source": "cloudflare-docs-2026-07-01-limitations"
+        }
+      }
+    }
+  ],
+  "unknownProfileCase": {
+    "profile": "future-profile",
+    "expected": {
+      "status": "unverified",
+      "code": "unsupported-profile",
+      "diagnostic": {
+        "kind": "profile",
+        "profile": "future-profile",
+        "source": "agentsig-m2-profile-set"
+      }
+    }
+  }
+}

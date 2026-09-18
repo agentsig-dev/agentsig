@@ -1,0 +1,240 @@
+{
+  "stage": "selection-and-aggregation-contract; verifier integration required",
+  "notes": [
+    "Select all tag=web-bot-auth signatures before profile-support rejection.",
+    "Never drop a rejected candidate from count or per-label results.",
+    "Otherwise eligible inner candidate still requires cryptography, identity, time and replay; these are explicit scenario prerequisites.",
+    "Default ambiguity consumes no nonce, even for the eligible inner candidate.",
+    "No nested signature verification or delegated trust is implemented."
+  ],
+  "cases": [
+    {
+      "id": "ietf-wg-protocol-00-exactly-one",
+      "profile": "ietf-wg-protocol-00",
+      "policy": "exactly-one",
+      "candidates": [
+        {
+          "label": "outer",
+          "tag": "web-bot-auth",
+          "covers": "\"signature\";key=\"inner\""
+        },
+        {
+          "label": "inner",
+          "tag": "web-bot-auth",
+          "covers": null
+        }
+      ],
+      "prerequisites": [
+        "inner passes every non-replay gate",
+        "fresh replay store accepts inner nonce when consumption is permitted"
+      ],
+      "expected": {
+        "selectedCount": 2,
+        "evaluatedLabels": [
+          "outer",
+          "inner"
+        ],
+        "outer": {
+          "status": "unverified",
+          "code": "unsupported-profile"
+        },
+        "inner": {
+          "status": "invalid",
+          "code": "ambiguous-signatures"
+        },
+        "topLevelVerified": false,
+        "topLevelStatus": "invalid",
+        "topLevelCode": "ambiguous-signatures",
+        "consumeCalls": 0
+      }
+    },
+    {
+      "id": "ietf-wg-protocol-00-all",
+      "profile": "ietf-wg-protocol-00",
+      "policy": "all",
+      "candidates": [
+        {
+          "label": "outer",
+          "tag": "web-bot-auth",
+          "covers": "\"signature\";key=\"inner\""
+        },
+        {
+          "label": "inner",
+          "tag": "web-bot-auth",
+          "covers": null
+        }
+      ],
+      "prerequisites": [
+        "inner passes every non-replay gate",
+        "fresh replay store accepts inner nonce when consumption is permitted"
+      ],
+      "expected": {
+        "selectedCount": 2,
+        "evaluatedLabels": [
+          "outer",
+          "inner"
+        ],
+        "outer": {
+          "status": "unverified",
+          "code": "unsupported-profile"
+        },
+        "inner": {
+          "status": "verified",
+          "code": "nonce-consumed"
+        },
+        "topLevelVerified": false
+      }
+    },
+    {
+      "id": "ietf-wg-protocol-00-any",
+      "profile": "ietf-wg-protocol-00",
+      "policy": "any",
+      "candidates": [
+        {
+          "label": "outer",
+          "tag": "web-bot-auth",
+          "covers": "\"signature\";key=\"inner\""
+        },
+        {
+          "label": "inner",
+          "tag": "web-bot-auth",
+          "covers": null
+        }
+      ],
+      "prerequisites": [
+        "inner passes every non-replay gate",
+        "fresh replay store accepts inner nonce when consumption is permitted"
+      ],
+      "expected": {
+        "selectedCount": 2,
+        "evaluatedLabels": [
+          "outer",
+          "inner"
+        ],
+        "outer": {
+          "status": "unverified",
+          "code": "unsupported-profile"
+        },
+        "inner": {
+          "status": "verified",
+          "code": "nonce-consumed"
+        },
+        "topLevelVerified": true
+      }
+    },
+    {
+      "id": "cloudflare-docs-2026-07-01-exactly-one",
+      "profile": "cloudflare-docs-2026-07-01",
+      "policy": "exactly-one",
+      "candidates": [
+        {
+          "label": "outer",
+          "tag": "web-bot-auth",
+          "covers": "\"signature\";key=\"inner\""
+        },
+        {
+          "label": "inner",
+          "tag": "web-bot-auth",
+          "covers": null
+        }
+      ],
+      "prerequisites": [
+        "inner passes every non-replay gate",
+        "fresh replay store accepts inner nonce when consumption is permitted"
+      ],
+      "expected": {
+        "selectedCount": 2,
+        "evaluatedLabels": [
+          "outer",
+          "inner"
+        ],
+        "outer": {
+          "status": "unverified",
+          "code": "unsupported-profile"
+        },
+        "inner": {
+          "status": "invalid",
+          "code": "ambiguous-signatures"
+        },
+        "topLevelVerified": false,
+        "topLevelStatus": "invalid",
+        "topLevelCode": "ambiguous-signatures",
+        "consumeCalls": 0
+      }
+    },
+    {
+      "id": "cloudflare-docs-2026-07-01-all",
+      "profile": "cloudflare-docs-2026-07-01",
+      "policy": "all",
+      "candidates": [
+        {
+          "label": "outer",
+          "tag": "web-bot-auth",
+          "covers": "\"signature\";key=\"inner\""
+        },
+        {
+          "label": "inner",
+          "tag": "web-bot-auth",
+          "covers": null
+        }
+      ],
+      "prerequisites": [
+        "inner passes every non-replay gate",
+        "fresh replay store accepts inner nonce when consumption is permitted"
+      ],
+      "expected": {
+        "selectedCount": 2,
+        "evaluatedLabels": [
+          "outer",
+          "inner"
+        ],
+        "outer": {
+          "status": "unverified",
+          "code": "unsupported-profile"
+        },
+        "inner": {
+          "status": "verified",
+          "code": "nonce-consumed"
+        },
+        "topLevelVerified": false
+      }
+    },
+    {
+      "id": "cloudflare-docs-2026-07-01-any",
+      "profile": "cloudflare-docs-2026-07-01",
+      "policy": "any",
+      "candidates": [
+        {
+          "label": "outer",
+          "tag": "web-bot-auth",
+          "covers": "\"signature\";key=\"inner\""
+        },
+        {
+          "label": "inner",
+          "tag": "web-bot-auth",
+          "covers": null
+        }
+      ],
+      "prerequisites": [
+        "inner passes every non-replay gate",
+        "fresh replay store accepts inner nonce when consumption is permitted"
+      ],
+      "expected": {
+        "selectedCount": 2,
+        "evaluatedLabels": [
+          "outer",
+          "inner"
+        ],
+        "outer": {
+          "status": "unverified",
+          "code": "unsupported-profile"
+        },
+        "inner": {
+          "status": "verified",
+          "code": "nonce-consumed"
+        },
+        "topLevelVerified": true
+      }
+    }
+  ]
+}

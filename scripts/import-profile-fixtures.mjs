@@ -202,6 +202,108 @@ json("coverage-cases.json", {
     ],
     cases: coverageCases,
 });
+const restrictionCases = [];
+for (const profile of ["ietf-wg-protocol-00", "cloudflare-docs-2026-07-01"]) {
+    for (const field of ["signature", "signature-input"]) {
+        for (const suffix of ["", ';key="inner"', ";sf", ";bs"]) {
+            restrictionCases.push({
+                id: `${profile}-${field}-${suffix || "whole"}`,
+                profile, component: `"${field}"${suffix}`,
+                expected: {
+                    status: "unverified", code: "unsupported-profile",
+                    diagnostic: {
+                        kind: "component", profile, component: field,
+                        source: "agentsig-m2-local-countersignature-limit",
+                    },
+                },
+            });
+        }
+    }
+}
+for (const [component, name, parameter] of [
+    ['"@status"', "@status", null],
+    ['"@query-params"', "@query-params", null],
+    ['"@query-param";name="sku"', "@query-param", "name"],
+    ['"x-example";sf', "x-example", "sf"],
+    ['"x-example";bs', "x-example", "bs"],
+    ['"x-example";key="value"', "x-example", "key"],
+    ['"x-example";req', "x-example", "req"],
+    ['"@method";req', "@method", "req"],
+]) {
+    restrictionCases.push({
+        id: `cloudflare-${name}-${parameter ?? "component"}`,
+        profile: "cloudflare-docs-2026-07-01", component,
+        expected: {
+            status: "unverified", code: "unsupported-profile",
+            diagnostic: {
+                kind: "component", profile: "cloudflare-docs-2026-07-01",
+                component: name,
+                ...(parameter === null ? {} : { parameter }),
+                source: "cloudflare-docs-2026-07-01-limitations",
+            },
+        },
+    });
+}
+json("component-restrictions.json", {
+    stage: "profile-component-support-only",
+    sources: {
+        local: "Approved M2 scope: defer signature/signature-input coverage; revisit as a separate milestone if M4 proxy deployment needs it.",
+        cloudflare: {
+            path: "tests/fixtures/m2/sources/cloudflare-2026-07-01.mdx",
+            sha256: "c4aeeef723df97b020ecc4d9e680b77b5bfb6c214a6443b0fb7f00efd7e422f7",
+            section: "Limitations (lines 235-248); section 4.1 also excludes sf/bs",
+        },
+    },
+    notes: [
+        "Local signature/signature-input restriction applies to both profiles and takes precedence over Cloudflare parameter restrictions.",
+        "Cloudflare literally lists @query-params; it separately excludes name / @query-param support. Preserve that distinction.",
+        "Diagnostics distinguish unsupported profile names from unsupported components within a supported profile.",
+        "Diagnostic kind/source/parameter are details, not additions to the frozen result-code catalog.",
+        "This gate does not assert RFC syntax validity or cryptographic validity of a component.",
+    ],
+    cases: restrictionCases,
+    unknownProfileCase: {
+        profile: "future-profile",
+        expected: {
+            status: "unverified", code: "unsupported-profile",
+            diagnostic: { kind: "profile", profile: "future-profile", source: "agentsig-m2-profile-set" },
+        },
+    },
+});
+json("rejected-candidate-counting.json", {
+    stage: "selection-and-aggregation-contract; verifier integration required",
+    notes: [
+        "Select all tag=web-bot-auth signatures before profile-support rejection.",
+        "Never drop a rejected candidate from count or per-label results.",
+        "Otherwise eligible inner candidate still requires cryptography, identity, time and replay; these are explicit scenario prerequisites.",
+        "Default ambiguity consumes no nonce, even for the eligible inner candidate.",
+        "No nested signature verification or delegated trust is implemented.",
+    ],
+    cases: ["ietf-wg-protocol-00", "cloudflare-docs-2026-07-01"].flatMap((profile) =>
+        ["exactly-one", "all", "any"].map((policy) => ({
+            id: `${profile}-${policy}`, profile, policy,
+            candidates: [
+                { label: "outer", tag: "web-bot-auth", covers: '"signature";key="inner"' },
+                { label: "inner", tag: "web-bot-auth", covers: null },
+            ],
+            prerequisites: [
+                "inner passes every non-replay gate",
+                "fresh replay store accepts inner nonce when consumption is permitted",
+            ],
+            expected: {
+                selectedCount: 2,
+                evaluatedLabels: ["outer", "inner"],
+                outer: { status: "unverified", code: "unsupported-profile" },
+                inner: policy === "exactly-one"
+                    ? { status: "invalid", code: "ambiguous-signatures" }
+                    : { status: "verified", code: "nonce-consumed" },
+                topLevelVerified: policy === "any",
+                ...(policy === "exactly-one"
+                    ? { topLevelStatus: "invalid", topLevelCode: "ambiguous-signatures", consumeCalls: 0 }
+                    : {}),
+            },
+        }))),
+});
 writeFileSync(resolve(destination, "manifest.json"), JSON.stringify({
     formatVersion: 1, approvedOn: "2026-09-18",
     scope: "Pre-implementation origin, duplicate and local-binding expectations",
