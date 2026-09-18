@@ -1,0 +1,35 @@
+{
+  "ed25519": {
+    "key": {
+      "crv": "Ed25519",
+      "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+      "kty": "OKP"
+    },
+    "thumbprint": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84"
+  },
+  "rsa": {
+    "key": {
+      "kty": "RSA",
+      "n": "r4tmm3r20Wd_PbqvP1s2-QEtvpuRaV8Yq40gjUR8y2Rjxa6dpG2GXHbPfvMs8ct-Lh1GH45x28Rw3Ry53mm-oAXjyQ86OnDkZ5N8lYbggD4O3w6M6pAvLkhk95AndTrifbIFPNU8PPMO7OyrFAHqgDsznjPFmTOtCEcN2Z1FpWgchwuYLPL-Wokqltd11nqqzi-bJ9cvSKADYdUAAN5WUtzdpiy6LbTgSxP7ociU4Tn0g5I6aDZJ7A8Lzo0KSyZYoA485mqcO0GVAdVw9lq4aOT9v6d-nb4bnNkQVklLQ3fVAvJm-xdDOp9LCNCN48V2pnDOkFV6-U9nV5oyc6XI2w",
+      "e": "AQAB"
+    },
+    "thumbprint": "oD0HwocPBSfpNy5W3bpJeyFGY_IQ_YpqxSjQ3Yd-CLA"
+  },
+  "p256": {
+    "key": {
+      "kty": "EC",
+      "x": "qIVYZVLCrPZHGHjP17CTW0_-D9Lfw0EkjqF7xB4FivA",
+      "y": "Mc4nN9LTDOBhfoUeg8Ye9WedFRhnZXZJA12Qp0zZ6F0",
+      "crv": "P-256"
+    },
+    "thumbprint": "ydQXMtvbsOsZyFir-Y7A8t7fKEM1gbKPvyFkdpu4fvI"
+  },
+  "x25519": {
+    "key": {
+      "kty": "OKP",
+      "crv": "X25519",
+      "x": "3p7bfXt9wbTTW2HC7OQ1Nz-DQ8hbeGdNrfx-FG-IK08"
+    },
+    "thumbprint": "giQqigT_IKcuzHl0FVJ3k5ts3_TWNAxvsC08UZsfcM8"
+  }
+}

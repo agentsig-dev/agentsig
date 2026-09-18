@@ -1,0 +1,771 @@
+{
+  "status": "pre-loader-implementation-fixtures",
+  "testKeyPermission": true,
+  "notes": [
+    "Key loading does not itself approve known test keys for request verification.",
+    "Thumbprint selection is independent of alg and kid in both formats.",
+    "Malformed-set rejection is the approved local policy, stricter than RFC 7517 section 5 SHOULD-ignore advice.",
+    "No unsupported algorithm verification is implemented by these fixtures."
+  ],
+  "references": {
+    "jwks": [
+      "RFC 7517 sections 4.4, 4.5, 5",
+      "RFC 8037 sections 2, 3.1"
+    ],
+    "directory": [
+      "Pinned WG-00 sections 5.5 and 5.5.1"
+    ],
+    "thumbprint": [
+      "RFC 7638 section 3.2",
+      "RFC 8037 section 2"
+    ]
+  },
+  "cases": [
+    {
+      "id": "jwks-metadata-absent",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          }
+        ]
+      },
+      "expected": {
+        "load": "accepted",
+        "selectableThumbprints": [
+          "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84"
+        ],
+        "skippedCount": 0,
+        "skipped": []
+      }
+    },
+    {
+      "id": "jwks-matching-alg",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "alg": "EdDSA"
+          }
+        ]
+      },
+      "expected": {
+        "load": "accepted",
+        "selectableThumbprints": [
+          "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84"
+        ],
+        "skippedCount": 0,
+        "skipped": []
+      }
+    },
+    {
+      "id": "jwks-thumbprint-kid",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84"
+          }
+        ]
+      },
+      "expected": {
+        "load": "accepted",
+        "selectableThumbprints": [
+          "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84"
+        ],
+        "skippedCount": 0,
+        "skipped": []
+      }
+    },
+    {
+      "id": "jwks-wrong-alg-vocabulary",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "alg": "ed25519"
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks"
+      }
+    },
+    {
+      "id": "jwks-nonstring-alg",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "alg": 1
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks"
+      }
+    },
+    {
+      "id": "jwks-nonstring-kid",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": 1
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks"
+      }
+    },
+    {
+      "id": "jwks-mixed-public-keys",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "kty": "RSA",
+            "n": "r4tmm3r20Wd_PbqvP1s2-QEtvpuRaV8Yq40gjUR8y2Rjxa6dpG2GXHbPfvMs8ct-Lh1GH45x28Rw3Ry53mm-oAXjyQ86OnDkZ5N8lYbggD4O3w6M6pAvLkhk95AndTrifbIFPNU8PPMO7OyrFAHqgDsznjPFmTOtCEcN2Z1FpWgchwuYLPL-Wokqltd11nqqzi-bJ9cvSKADYdUAAN5WUtzdpiy6LbTgSxP7ociU4Tn0g5I6aDZJ7A8Lzo0KSyZYoA485mqcO0GVAdVw9lq4aOT9v6d-nb4bnNkQVklLQ3fVAvJm-xdDOp9LCNCN48V2pnDOkFV6-U9nV5oyc6XI2w",
+            "e": "AQAB",
+            "kid": "label-RSA-rsa"
+          },
+          {
+            "kty": "EC",
+            "x": "qIVYZVLCrPZHGHjP17CTW0_-D9Lfw0EkjqF7xB4FivA",
+            "y": "Mc4nN9LTDOBhfoUeg8Ye9WedFRhnZXZJA12Qp0zZ6F0",
+            "crv": "P-256",
+            "kid": "label-EC-P-256"
+          },
+          {
+            "kty": "OKP",
+            "crv": "X25519",
+            "x": "3p7bfXt9wbTTW2HC7OQ1Nz-DQ8hbeGdNrfx-FG-IK08",
+            "kid": "label-OKP-X25519"
+          }
+        ]
+      },
+      "expected": {
+        "load": "accepted",
+        "selectableThumbprints": [
+          "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84"
+        ],
+        "skippedCount": 3,
+        "skipped": [
+          {
+            "kid": "label-RSA-rsa",
+            "thumbprint": "oD0HwocPBSfpNy5W3bpJeyFGY_IQ_YpqxSjQ3Yd-CLA",
+            "requestCode": "unsupported-algorithm"
+          },
+          {
+            "kid": "label-EC-P-256",
+            "thumbprint": "ydQXMtvbsOsZyFir-Y7A8t7fKEM1gbKPvyFkdpu4fvI",
+            "requestCode": "unsupported-algorithm"
+          },
+          {
+            "kid": "label-OKP-X25519",
+            "thumbprint": "giQqigT_IKcuzHl0FVJ3k5ts3_TWNAxvsC08UZsfcM8",
+            "requestCode": "unsupported-algorithm"
+          }
+        ]
+      }
+    },
+    {
+      "id": "jwks-unsupported-only",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "kty": "RSA",
+            "n": "r4tmm3r20Wd_PbqvP1s2-QEtvpuRaV8Yq40gjUR8y2Rjxa6dpG2GXHbPfvMs8ct-Lh1GH45x28Rw3Ry53mm-oAXjyQ86OnDkZ5N8lYbggD4O3w6M6pAvLkhk95AndTrifbIFPNU8PPMO7OyrFAHqgDsznjPFmTOtCEcN2Z1FpWgchwuYLPL-Wokqltd11nqqzi-bJ9cvSKADYdUAAN5WUtzdpiy6LbTgSxP7ociU4Tn0g5I6aDZJ7A8Lzo0KSyZYoA485mqcO0GVAdVw9lq4aOT9v6d-nb4bnNkQVklLQ3fVAvJm-xdDOp9LCNCN48V2pnDOkFV6-U9nV5oyc6XI2w",
+            "e": "AQAB",
+            "kid": "label-RSA-rsa"
+          },
+          {
+            "kty": "EC",
+            "x": "qIVYZVLCrPZHGHjP17CTW0_-D9Lfw0EkjqF7xB4FivA",
+            "y": "Mc4nN9LTDOBhfoUeg8Ye9WedFRhnZXZJA12Qp0zZ6F0",
+            "crv": "P-256",
+            "kid": "label-EC-P-256"
+          },
+          {
+            "kty": "OKP",
+            "crv": "X25519",
+            "x": "3p7bfXt9wbTTW2HC7OQ1Nz-DQ8hbeGdNrfx-FG-IK08",
+            "kid": "label-OKP-X25519"
+          }
+        ]
+      },
+      "expected": {
+        "load": "accepted",
+        "selectableThumbprints": [],
+        "skippedCount": 3,
+        "skipped": [
+          {
+            "kid": "label-RSA-rsa",
+            "thumbprint": "oD0HwocPBSfpNy5W3bpJeyFGY_IQ_YpqxSjQ3Yd-CLA",
+            "requestCode": "unsupported-algorithm"
+          },
+          {
+            "kid": "label-EC-P-256",
+            "thumbprint": "ydQXMtvbsOsZyFir-Y7A8t7fKEM1gbKPvyFkdpu4fvI",
+            "requestCode": "unsupported-algorithm"
+          },
+          {
+            "kid": "label-OKP-X25519",
+            "thumbprint": "giQqigT_IKcuzHl0FVJ3k5ts3_TWNAxvsC08UZsfcM8",
+            "requestCode": "unsupported-algorithm"
+          }
+        ]
+      }
+    },
+    {
+      "id": "jwks-missing-okp-x",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "kty": "OKP"
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks"
+      }
+    },
+    {
+      "id": "jwks-curve-length-mismatch",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed448",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks"
+      }
+    },
+    {
+      "id": "jwks-key-type-curve-mismatch",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "P-256",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks"
+      }
+    },
+    {
+      "id": "jwks-unknown-unhashable-type",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "kty": "UnknownExampleType"
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks"
+      }
+    },
+    {
+      "id": "jwks-malformed-unsupported-key-poisons-set",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "kty": "EC",
+            "x": "qIVYZVLCrPZHGHjP17CTW0_-D9Lfw0EkjqF7xB4FivA",
+            "crv": "P-256"
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks"
+      }
+    },
+    {
+      "id": "jwks-missing-rsa-modulus",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "kty": "RSA",
+            "e": "AQAB"
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks"
+      }
+    },
+    {
+      "id": "wg-directory-00-metadata-absent",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          }
+        ]
+      },
+      "expected": {
+        "load": "accepted",
+        "selectableThumbprints": [
+          "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84"
+        ],
+        "skippedCount": 0,
+        "skipped": []
+      }
+    },
+    {
+      "id": "wg-directory-00-matching-alg",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "alg": "ed25519"
+          }
+        ]
+      },
+      "expected": {
+        "load": "accepted",
+        "selectableThumbprints": [
+          "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84"
+        ],
+        "skippedCount": 0,
+        "skipped": []
+      }
+    },
+    {
+      "id": "wg-directory-00-thumbprint-kid",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84"
+          }
+        ]
+      },
+      "expected": {
+        "load": "accepted",
+        "selectableThumbprints": [
+          "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84"
+        ],
+        "skippedCount": 0,
+        "skipped": []
+      }
+    },
+    {
+      "id": "wg-directory-00-wrong-alg-vocabulary",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "alg": "EdDSA"
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks"
+      }
+    },
+    {
+      "id": "wg-directory-00-nonstring-alg",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "alg": 1
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks"
+      }
+    },
+    {
+      "id": "wg-directory-00-nonstring-kid",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": 1
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks"
+      }
+    },
+    {
+      "id": "wg-directory-00-mixed-public-keys",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "kty": "RSA",
+            "n": "r4tmm3r20Wd_PbqvP1s2-QEtvpuRaV8Yq40gjUR8y2Rjxa6dpG2GXHbPfvMs8ct-Lh1GH45x28Rw3Ry53mm-oAXjyQ86OnDkZ5N8lYbggD4O3w6M6pAvLkhk95AndTrifbIFPNU8PPMO7OyrFAHqgDsznjPFmTOtCEcN2Z1FpWgchwuYLPL-Wokqltd11nqqzi-bJ9cvSKADYdUAAN5WUtzdpiy6LbTgSxP7ociU4Tn0g5I6aDZJ7A8Lzo0KSyZYoA485mqcO0GVAdVw9lq4aOT9v6d-nb4bnNkQVklLQ3fVAvJm-xdDOp9LCNCN48V2pnDOkFV6-U9nV5oyc6XI2w",
+            "e": "AQAB",
+            "kid": "oD0HwocPBSfpNy5W3bpJeyFGY_IQ_YpqxSjQ3Yd-CLA"
+          },
+          {
+            "kty": "EC",
+            "x": "qIVYZVLCrPZHGHjP17CTW0_-D9Lfw0EkjqF7xB4FivA",
+            "y": "Mc4nN9LTDOBhfoUeg8Ye9WedFRhnZXZJA12Qp0zZ6F0",
+            "crv": "P-256",
+            "kid": "ydQXMtvbsOsZyFir-Y7A8t7fKEM1gbKPvyFkdpu4fvI"
+          },
+          {
+            "kty": "OKP",
+            "crv": "X25519",
+            "x": "3p7bfXt9wbTTW2HC7OQ1Nz-DQ8hbeGdNrfx-FG-IK08",
+            "kid": "giQqigT_IKcuzHl0FVJ3k5ts3_TWNAxvsC08UZsfcM8"
+          }
+        ]
+      },
+      "expected": {
+        "load": "accepted",
+        "selectableThumbprints": [
+          "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84"
+        ],
+        "skippedCount": 3,
+        "skipped": [
+          {
+            "kid": "oD0HwocPBSfpNy5W3bpJeyFGY_IQ_YpqxSjQ3Yd-CLA",
+            "thumbprint": "oD0HwocPBSfpNy5W3bpJeyFGY_IQ_YpqxSjQ3Yd-CLA",
+            "requestCode": "unsupported-algorithm"
+          },
+          {
+            "kid": "ydQXMtvbsOsZyFir-Y7A8t7fKEM1gbKPvyFkdpu4fvI",
+            "thumbprint": "ydQXMtvbsOsZyFir-Y7A8t7fKEM1gbKPvyFkdpu4fvI",
+            "requestCode": "unsupported-algorithm"
+          },
+          {
+            "kid": "giQqigT_IKcuzHl0FVJ3k5ts3_TWNAxvsC08UZsfcM8",
+            "thumbprint": "giQqigT_IKcuzHl0FVJ3k5ts3_TWNAxvsC08UZsfcM8",
+            "requestCode": "unsupported-algorithm"
+          }
+        ]
+      }
+    },
+    {
+      "id": "wg-directory-00-unsupported-only",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "kty": "RSA",
+            "n": "r4tmm3r20Wd_PbqvP1s2-QEtvpuRaV8Yq40gjUR8y2Rjxa6dpG2GXHbPfvMs8ct-Lh1GH45x28Rw3Ry53mm-oAXjyQ86OnDkZ5N8lYbggD4O3w6M6pAvLkhk95AndTrifbIFPNU8PPMO7OyrFAHqgDsznjPFmTOtCEcN2Z1FpWgchwuYLPL-Wokqltd11nqqzi-bJ9cvSKADYdUAAN5WUtzdpiy6LbTgSxP7ociU4Tn0g5I6aDZJ7A8Lzo0KSyZYoA485mqcO0GVAdVw9lq4aOT9v6d-nb4bnNkQVklLQ3fVAvJm-xdDOp9LCNCN48V2pnDOkFV6-U9nV5oyc6XI2w",
+            "e": "AQAB",
+            "kid": "oD0HwocPBSfpNy5W3bpJeyFGY_IQ_YpqxSjQ3Yd-CLA"
+          },
+          {
+            "kty": "EC",
+            "x": "qIVYZVLCrPZHGHjP17CTW0_-D9Lfw0EkjqF7xB4FivA",
+            "y": "Mc4nN9LTDOBhfoUeg8Ye9WedFRhnZXZJA12Qp0zZ6F0",
+            "crv": "P-256",
+            "kid": "ydQXMtvbsOsZyFir-Y7A8t7fKEM1gbKPvyFkdpu4fvI"
+          },
+          {
+            "kty": "OKP",
+            "crv": "X25519",
+            "x": "3p7bfXt9wbTTW2HC7OQ1Nz-DQ8hbeGdNrfx-FG-IK08",
+            "kid": "giQqigT_IKcuzHl0FVJ3k5ts3_TWNAxvsC08UZsfcM8"
+          }
+        ]
+      },
+      "expected": {
+        "load": "accepted",
+        "selectableThumbprints": [],
+        "skippedCount": 3,
+        "skipped": [
+          {
+            "kid": "oD0HwocPBSfpNy5W3bpJeyFGY_IQ_YpqxSjQ3Yd-CLA",
+            "thumbprint": "oD0HwocPBSfpNy5W3bpJeyFGY_IQ_YpqxSjQ3Yd-CLA",
+            "requestCode": "unsupported-algorithm"
+          },
+          {
+            "kid": "ydQXMtvbsOsZyFir-Y7A8t7fKEM1gbKPvyFkdpu4fvI",
+            "thumbprint": "ydQXMtvbsOsZyFir-Y7A8t7fKEM1gbKPvyFkdpu4fvI",
+            "requestCode": "unsupported-algorithm"
+          },
+          {
+            "kid": "giQqigT_IKcuzHl0FVJ3k5ts3_TWNAxvsC08UZsfcM8",
+            "thumbprint": "giQqigT_IKcuzHl0FVJ3k5ts3_TWNAxvsC08UZsfcM8",
+            "requestCode": "unsupported-algorithm"
+          }
+        ]
+      }
+    },
+    {
+      "id": "wg-directory-00-missing-okp-x",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "kty": "OKP"
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks"
+      }
+    },
+    {
+      "id": "wg-directory-00-curve-length-mismatch",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed448",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks"
+      }
+    },
+    {
+      "id": "wg-directory-00-key-type-curve-mismatch",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "P-256",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks"
+      }
+    },
+    {
+      "id": "wg-directory-00-unknown-unhashable-type",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "kty": "UnknownExampleType"
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks"
+      }
+    },
+    {
+      "id": "wg-directory-00-malformed-unsupported-key-poisons-set",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "kty": "EC",
+            "x": "qIVYZVLCrPZHGHjP17CTW0_-D9Lfw0EkjqF7xB4FivA",
+            "crv": "P-256"
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks"
+      }
+    },
+    {
+      "id": "wg-directory-00-missing-rsa-modulus",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP"
+          },
+          {
+            "kty": "RSA",
+            "e": "AQAB"
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks"
+      }
+    },
+    {
+      "id": "jwks-operator-chosen-kid",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "operator-label"
+          }
+        ]
+      },
+      "expected": {
+        "load": "accepted",
+        "selectableThumbprints": [
+          "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84"
+        ],
+        "skippedCount": 0,
+        "skipped": []
+      }
+    },
+    {
+      "id": "wg-directory-operator-chosen-kid",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "crv": "Ed25519",
+            "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM",
+            "kty": "OKP",
+            "kid": "operator-label"
+          }
+        ]
+      },
+      "expected": {
+        "load": "rejected",
+        "code": "invalid-jwks"
+      }
+    },
+    {
+      "id": "cloudflare-example-jwks",
+      "format": "jwks",
+      "jwks": {
+        "keys": [
+          {
+            "kty": "OKP",
+            "crv": "Ed25519",
+            "x": "JrQLj5P_89iXES9-vFgrIy29clF9CC_oPPsw3c5D0bs"
+          }
+        ]
+      },
+      "expected": {
+        "load": "accepted",
+        "selectableThumbprints": [
+          "poqkLGiymh_W0uP6PZFw-dvez3QJT5SolqXBCW38r0U"
+        ],
+        "skippedCount": 0,
+        "skipped": []
+      }
+    },
+    {
+      "id": "cloudflare-example-wg-directory-00",
+      "format": "wg-directory-00",
+      "jwks": {
+        "keys": [
+          {
+            "kty": "OKP",
+            "crv": "Ed25519",
+            "x": "JrQLj5P_89iXES9-vFgrIy29clF9CC_oPPsw3c5D0bs"
+          }
+        ]
+      },
+      "expected": {
+        "load": "accepted",
+        "selectableThumbprints": [
+          "poqkLGiymh_W0uP6PZFw-dvez3QJT5SolqXBCW38r0U"
+        ],
+        "skippedCount": 0,
+        "skipped": []
+      }
+    }
+  ]
+}
