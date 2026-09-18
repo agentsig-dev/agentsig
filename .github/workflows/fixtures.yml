@@ -42,3 +42,5 @@ jobs:
         run: node --test tests/profile-fixture-audit.test.mjs
       - name: Audit independent signer golden bytes and frozen error contract
         run: node --test tests/signing-fixture-audit.test.mjs
+      - name: Audit reset epochs, operator catalog, and observer contracts independently
+        run: node --test tests/reset-fixture-audit.test.mjs
