@@ -94,3 +94,69 @@ M1 audit'i ve iki paketin derleme/tip kontrolleri geçti.
 ESM/CJS tüketici testleri mevcut M1 girişlerini kapsar; yeni yardımcıların
 paket dışa aktarımı ve tam doğrulayıcı entegrasyonu henüz tamamlanmadı.
 Bu değişikliklerin uzak CI matrisi henüz doğrulanmadı. Push ve yayın yapılmadı.
+
+## Aday seçimi, başlık biçimi ve bileşen desteği
+
+[Aday seçimi](../packages/core/src/profiles/candidates.ts) önce ham tekrarları
+denetler, ardından bütün imza çiftlerini ayrıştırır ve protokol tag’iyle seçim
+yapar. İmza etiketinin adı seçim ölçütü değildir. Bozuk bir çift, başka protokol
+tag’i taşısa bile imzasız trafik olarak kabul edilmez.
+
+[Ajan başlığı ayrıştırması](../packages/core/src/profiles/agent-header.ts)
+Dictionary ile eski String biçimini tel gösteriminden bir kez seçer.
+Ayrıştırma veya doğrulama hatası diğer profili deneyerek başarıya çevrilmez.
+WG’de her aday yalnızca kendi etiketiyle eşleşen üyenin iddiasını kullanır.
+Desteklenmeyen keşif türü URL yolundan tahmin edilmez ve ağ erişimi başlatmaz.
+
+[Asgari kapsam kontrolü](../packages/core/src/profiles/coverage.ts) iki profilde
+de yöntem ve tam hedef URI ister. WG’de etikete karşılık gelen ajan üyesi,
+Cloudflare profilinde ajan başlığının tamamı kapsanmalıdır. Ek bileşenlerin
+geçerliliği ve profil desteği bu kontrolden ayrıdır.
+
+[Bileşen desteği kontrolü](../packages/core/src/profiles/component-support.ts)
+iki profilde de Signature veya Signature-Input alanını kapsayan adayı
+unsupported-profile ile reddeder; alanın tamamını veya bir üyesini kapsamak
+bu sınırı değiştirmez. Bu, WG’nin böyle bir özelliği yasakladığı anlamına
+gelmez: zincirli kapsam M2’nin belgelenmiş yerel kapsamı dışındadır.
+M4 proxy arkası dağıtımda ihtiyaç doğarsa ayrı bir kilometre taşıyla ele alınır.
+
+Cloudflare’in sabitlenmiş belgesindeki destek dışı bileşenler ve parametreler
+de unsupported-profile üretir. Teşhis, desteklenmeyen profil adı ile desteklenen
+profil içindeki destek dışı bileşeni ayırır; bileşeni, varsa parametreyi ve
+Cloudflare Limitations bölümü veya yerel M2 sınırı olan kaynağı belirtir.
+Teşhis ayrıntıları donmuş sonuç kataloğuna yeni kod eklemez.
+
+### Reddedilen aday sayımdan düşmez
+
+Tag ile seçim, bileşen reddinden öncedir. İki adaydan biri diğer imzayı
+kapsıyorsa ikisi de sayımda kalır:
+
+- Varsayılan exactly-one politikası ambiguous-signatures üretir; nonce tüketilmez.
+- Açık all/any politikasında dış adayın unsupported-profile sonucu korunur ve
+  diğer aday bağımsız değerlendirilir.
+- All başarılı olamaz; any ancak diğer aday bütün kimlik, kripto, zaman ve
+  replay kontrollerini geçerse başarılı olabilir.
+
+Reddedilen adayı yok saymak, ek imzalarla kabul politikasını yönlendirme riski
+oluşturur. Bu nedenle değerlendirme sonuçları aday listesini yeniden filtrelemez.
+[Sayım fixture’ları](../tests/fixtures/profiles/rejected-candidate-counting.json)
+bu toplu davranışı sabitler. Mevcut testler seçim listesinin ve aday bazlı
+retlerin korunmasını sınar; tam toplama ve nonce tüketimi entegrasyonu
+henüz uygulanmamıştır.
+
+### Bu alt adımın doğrulama durumu
+
+Kapsam fixture’ları 37159c4; bileşen kısıtları ve reddedilen aday sayımı
+fixture’ları 5f017f1 yerel commit’lerinde uygulamadan önce sabitlenmiştir.
+
+Yerel Windows / Node 22 tam regresyonunda 3.866 birim testi, 9 entegrasyon
+testi ve 35 bağımsız fixture denetimi geçti; derleme ve tip kontrolleri
+başarılıdır. [Kriptografik zincir testleri](../packages/core/test/profile-crypto-chain.test.ts)
+iki bağımsız imzalı örneği doğrular; yöntem, hedef sorgusu veya özgün ajan
+değeri değişince imza reddedilir. Aynı kanonik origin’e dönüşmek, farklı
+imzalı baytları eşdeğer kılmaz.
+
+Tam profil imzalayanı, zaman/replay katmanı, çevrimdışı doğrulayıcı ve profil
+paket dışa aktarımları henüz tamamlanmadı. Mevcut ESM/CJS tüketici testleri
+M1 girişlerini kapsar. Yeni değişikliklerin uzak CI sonucu doğrulanmadı.
+Push, yayın veya WG bildirimi yapılmadı.
