@@ -1,0 +1,268 @@
+{
+  "stage": "required-component-coverage-only",
+  "notes": [
+    "Component strings are RFC 9421 component identifiers, not HTTP field values.",
+    "Assume the candidate label has a valid corresponding agent claim.",
+    "Missing coverage of that claim is insufficient-coverage; a missing agent member is a separate agent-label-mismatch gate.",
+    "M2 requires method and target-uri in both profiles, stricter than the protocol minimum.",
+    "WG requires the matching key-selected Signature-Agent member; legacy requires the whole field.",
+    "Passing required coverage does not prove component validity, cryptography, identity, time or replay acceptance.",
+    "Additional component restrictions and WG countersignature coverage are separate checks."
+  ],
+  "cases": [
+    {
+      "id": "ietf-wg-protocol-00-required-components",
+      "profile": "ietf-wg-protocol-00",
+      "label": "agent",
+      "components": [
+        "\"@method\"",
+        "\"@target-uri\"",
+        "\"signature-agent\";key=\"agent\""
+      ],
+      "expected": {
+        "sufficient": true
+      }
+    },
+    {
+      "id": "ietf-wg-protocol-00-additional-authority",
+      "profile": "ietf-wg-protocol-00",
+      "label": "agent",
+      "components": [
+        "\"@authority\"",
+        "\"@method\"",
+        "\"@target-uri\"",
+        "\"signature-agent\";key=\"agent\""
+      ],
+      "expected": {
+        "sufficient": true
+      }
+    },
+    {
+      "id": "ietf-wg-protocol-00-different-order",
+      "profile": "ietf-wg-protocol-00",
+      "label": "agent",
+      "components": [
+        "\"signature-agent\";key=\"agent\"",
+        "\"@target-uri\"",
+        "\"@method\""
+      ],
+      "expected": {
+        "sufficient": true
+      }
+    },
+    {
+      "id": "ietf-wg-protocol-00-missing-method",
+      "profile": "ietf-wg-protocol-00",
+      "label": "agent",
+      "components": [
+        "\"@target-uri\"",
+        "\"signature-agent\";key=\"agent\""
+      ],
+      "expected": {
+        "sufficient": false,
+        "status": "invalid",
+        "code": "insufficient-coverage"
+      }
+    },
+    {
+      "id": "ietf-wg-protocol-00-missing-target-uri",
+      "profile": "ietf-wg-protocol-00",
+      "label": "agent",
+      "components": [
+        "\"@method\"",
+        "\"signature-agent\";key=\"agent\""
+      ],
+      "expected": {
+        "sufficient": false,
+        "status": "invalid",
+        "code": "insufficient-coverage"
+      }
+    },
+    {
+      "id": "ietf-wg-protocol-00-missing-agent",
+      "profile": "ietf-wg-protocol-00",
+      "label": "agent",
+      "components": [
+        "\"@method\"",
+        "\"@target-uri\""
+      ],
+      "expected": {
+        "sufficient": false,
+        "status": "invalid",
+        "code": "insufficient-coverage"
+      }
+    },
+    {
+      "id": "ietf-wg-protocol-00-authority-does-not-replace-target",
+      "profile": "ietf-wg-protocol-00",
+      "label": "agent",
+      "components": [
+        "\"@method\"",
+        "\"@authority\"",
+        "\"signature-agent\";key=\"agent\""
+      ],
+      "expected": {
+        "sufficient": false,
+        "status": "invalid",
+        "code": "insufficient-coverage"
+      }
+    },
+    {
+      "id": "ietf-wg-protocol-00-other-profile-agent-component",
+      "profile": "ietf-wg-protocol-00",
+      "label": "agent",
+      "components": [
+        "\"@method\"",
+        "\"@target-uri\"",
+        "\"signature-agent\""
+      ],
+      "expected": {
+        "sufficient": false,
+        "status": "invalid",
+        "code": "insufficient-coverage"
+      }
+    },
+    {
+      "id": "ietf-wg-protocol-00-wrong-agent-member",
+      "profile": "ietf-wg-protocol-00",
+      "label": "agent",
+      "components": [
+        "\"@method\"",
+        "\"@target-uri\"",
+        "\"signature-agent\";key=\"other\""
+      ],
+      "expected": {
+        "sufficient": false,
+        "status": "invalid",
+        "code": "insufficient-coverage"
+      }
+    },
+    {
+      "id": "cloudflare-docs-2026-07-01-required-components",
+      "profile": "cloudflare-docs-2026-07-01",
+      "label": "agent",
+      "components": [
+        "\"@method\"",
+        "\"@target-uri\"",
+        "\"signature-agent\""
+      ],
+      "expected": {
+        "sufficient": true
+      }
+    },
+    {
+      "id": "cloudflare-docs-2026-07-01-additional-authority",
+      "profile": "cloudflare-docs-2026-07-01",
+      "label": "agent",
+      "components": [
+        "\"@authority\"",
+        "\"@method\"",
+        "\"@target-uri\"",
+        "\"signature-agent\""
+      ],
+      "expected": {
+        "sufficient": true
+      }
+    },
+    {
+      "id": "cloudflare-docs-2026-07-01-different-order",
+      "profile": "cloudflare-docs-2026-07-01",
+      "label": "agent",
+      "components": [
+        "\"signature-agent\"",
+        "\"@target-uri\"",
+        "\"@method\""
+      ],
+      "expected": {
+        "sufficient": true
+      }
+    },
+    {
+      "id": "cloudflare-docs-2026-07-01-missing-method",
+      "profile": "cloudflare-docs-2026-07-01",
+      "label": "agent",
+      "components": [
+        "\"@target-uri\"",
+        "\"signature-agent\""
+      ],
+      "expected": {
+        "sufficient": false,
+        "status": "invalid",
+        "code": "insufficient-coverage"
+      }
+    },
+    {
+      "id": "cloudflare-docs-2026-07-01-missing-target-uri",
+      "profile": "cloudflare-docs-2026-07-01",
+      "label": "agent",
+      "components": [
+        "\"@method\"",
+        "\"signature-agent\""
+      ],
+      "expected": {
+        "sufficient": false,
+        "status": "invalid",
+        "code": "insufficient-coverage"
+      }
+    },
+    {
+      "id": "cloudflare-docs-2026-07-01-missing-agent",
+      "profile": "cloudflare-docs-2026-07-01",
+      "label": "agent",
+      "components": [
+        "\"@method\"",
+        "\"@target-uri\""
+      ],
+      "expected": {
+        "sufficient": false,
+        "status": "invalid",
+        "code": "insufficient-coverage"
+      }
+    },
+    {
+      "id": "cloudflare-docs-2026-07-01-authority-does-not-replace-target",
+      "profile": "cloudflare-docs-2026-07-01",
+      "label": "agent",
+      "components": [
+        "\"@method\"",
+        "\"@authority\"",
+        "\"signature-agent\""
+      ],
+      "expected": {
+        "sufficient": false,
+        "status": "invalid",
+        "code": "insufficient-coverage"
+      }
+    },
+    {
+      "id": "cloudflare-docs-2026-07-01-other-profile-agent-component",
+      "profile": "cloudflare-docs-2026-07-01",
+      "label": "agent",
+      "components": [
+        "\"@method\"",
+        "\"@target-uri\"",
+        "\"signature-agent\";key=\"agent\""
+      ],
+      "expected": {
+        "sufficient": false,
+        "status": "invalid",
+        "code": "insufficient-coverage"
+      }
+    },
+    {
+      "id": "cloudflare-docs-2026-07-01-wrong-agent-member",
+      "profile": "cloudflare-docs-2026-07-01",
+      "label": "agent",
+      "components": [
+        "\"@method\"",
+        "\"@target-uri\"",
+        "\"signature-agent\";key=\"other\""
+      ],
+      "expected": {
+        "sufficient": false,
+        "status": "invalid",
+        "code": "insufficient-coverage"
+      }
+    }
+  ]
+}

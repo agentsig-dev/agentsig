@@ -85,6 +85,16 @@
         "license": "MIT",
         "derivation": "Explicit expectations; no production imports"
       }
+    },
+    {
+      "path": "coverage-cases.json",
+      "bytes": 7152,
+      "sha256": "86bbbc9c4f59c94bba0230129e337fa00653c77576e64660bd8efd1bccb1a26b",
+      "source": {
+        "author": "agentsig",
+        "license": "MIT",
+        "derivation": "Explicit expectations; no production imports"
+      }
     }
   ]
 }

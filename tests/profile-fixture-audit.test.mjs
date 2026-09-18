@@ -12,6 +12,44 @@ const json = (path) => JSON.parse(read(path).toString("utf8"));
 const hash = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const manifest = json("manifest.json");
 
+test("required coverage expectations distinguish profiles and retain the approved minimum", () => {
+    const matrix = json("coverage-cases.json");
+    assert.equal(matrix.stage, "required-component-coverage-only");
+    assert.equal(matrix.cases.length, 18);
+    assert.equal(new Set(matrix.cases.map((entry) => entry.id)).size, 18);
+    const positiveNames = ["required-components", "additional-authority", "different-order"];
+    const negativeNames = [
+        "missing-method", "missing-target-uri", "missing-agent",
+        "authority-does-not-replace-target", "other-profile-agent-component",
+        "wrong-agent-member",
+    ];
+    for (const profile of ["ietf-wg-protocol-00", "cloudflare-docs-2026-07-01"]) {
+        const entries = matrix.cases.filter((entry) => entry.profile === profile);
+        assert.equal(entries.length, 9);
+        assert.deepEqual(entries.map((entry) => entry.id).sort(),
+            [...positiveNames, ...negativeNames].map((name) => `${profile}-${name}`).sort());
+        const agent = profile === "ietf-wg-protocol-00"
+            ? '"signature-agent";key="agent"' : '"signature-agent"';
+        for (const entry of entries) {
+            assert.equal(entry.label, "agent");
+            const complete = ['"@method"', '"@target-uri"', agent]
+                .every((component) => entry.components.includes(component));
+            const authoredPositive = positiveNames.some((name) => entry.id === `${profile}-${name}`);
+            assert.equal(complete, authoredPositive, entry.id);
+            assert.deepEqual(entry.expected, authoredPositive
+                ? { sufficient: true }
+                : { sufficient: false, status: "invalid", code: "insufficient-coverage" },
+                entry.id);
+        }
+    }
+    const policy = JSON.parse(readFileSync(resolve(root,
+        "tests/fixtures/m2/policy-cases.json"), "utf8"));
+    assert.deepEqual(policy.defaults.requiredComponents, [
+        "@method", "@target-uri", "profile-specific-agent-component",
+    ]);
+    assert(policy.codeCatalog.invalid.includes("insufficient-coverage"));
+});
+
 test("profile manifest covers exact source and expectation bytes", () => {
     const paths = [];
     function walk(relative = "") {
@@ -22,10 +60,10 @@ test("profile manifest covers exact source and expectation bytes", () => {
         }
     }
     walk();
-    assert.equal(manifest.files.length, 7);
+    assert.equal(manifest.files.length, 8);
     assert.deepEqual(paths.filter((path) => path !== "manifest.json").sort(),
         manifest.files.map((entry) => entry.path).sort());
-    assert.equal(new Set(manifest.files.map((entry) => entry.path)).size, 7);
+    assert.equal(new Set(manifest.files.map((entry) => entry.path)).size, 8);
     for (const entry of manifest.files) {
         assert(!entry.path.includes(".."));
         const bytes = read(entry.path);

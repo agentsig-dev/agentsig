@@ -165,6 +165,43 @@ json("binding-cases.json", {
         },
     ],
 });
+const coverageCases = [];
+for (const profile of ["ietf-wg-protocol-00", "cloudflare-docs-2026-07-01"]) {
+    const wg = profile === "ietf-wg-protocol-00";
+    const agentComponent = wg ? '"signature-agent";key="agent"' : '"signature-agent"';
+    const otherProfileComponent = wg ? '"signature-agent"' : '"signature-agent";key="agent"';
+    for (const [id, components, sufficient] of [
+        ["required-components", ['"@method"', '"@target-uri"', agentComponent], true],
+        ["additional-authority", ['"@authority"', '"@method"', '"@target-uri"', agentComponent], true],
+        ["different-order", [agentComponent, '"@target-uri"', '"@method"'], true],
+        ["missing-method", ['"@target-uri"', agentComponent], false],
+        ["missing-target-uri", ['"@method"', agentComponent], false],
+        ["missing-agent", ['"@method"', '"@target-uri"'], false],
+        ["authority-does-not-replace-target", ['"@method"', '"@authority"', agentComponent], false],
+        ["other-profile-agent-component", ['"@method"', '"@target-uri"', otherProfileComponent], false],
+        ["wrong-agent-member", ['"@method"', '"@target-uri"', '"signature-agent";key="other"'], false],
+    ]) {
+        coverageCases.push({
+            id: `${profile}-${id}`, profile, label: "agent", components,
+            expected: sufficient
+                ? { sufficient: true }
+                : { sufficient: false, status: "invalid", code: "insufficient-coverage" },
+        });
+    }
+}
+json("coverage-cases.json", {
+    stage: "required-component-coverage-only",
+    notes: [
+        "Component strings are RFC 9421 component identifiers, not HTTP field values.",
+        "Assume the candidate label has a valid corresponding agent claim.",
+        "Missing coverage of that claim is insufficient-coverage; a missing agent member is a separate agent-label-mismatch gate.",
+        "M2 requires method and target-uri in both profiles, stricter than the protocol minimum.",
+        "WG requires the matching key-selected Signature-Agent member; legacy requires the whole field.",
+        "Passing required coverage does not prove component validity, cryptography, identity, time or replay acceptance.",
+        "Additional component restrictions and WG countersignature coverage are separate checks.",
+    ],
+    cases: coverageCases,
+});
 writeFileSync(resolve(destination, "manifest.json"), JSON.stringify({
     formatVersion: 1, approvedOn: "2026-09-18",
     scope: "Pre-implementation origin, duplicate and local-binding expectations",
