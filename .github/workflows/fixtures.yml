@@ -40,3 +40,5 @@ jobs:
         run: node --test tests/jwks-fixture-audit.test.mjs
       - name: Audit profile origin, duplicate, and identity expectations independently
         run: node --test tests/profile-fixture-audit.test.mjs
+      - name: Audit independent signer golden bytes and frozen error contract
+        run: node --test tests/signing-fixture-audit.test.mjs
