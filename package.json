@@ -15,8 +15,12 @@
     "scripts": {
         "build": "pnpm -r run build",
         "typecheck": "pnpm -r run typecheck",
-        "test": "vitest run",
-        "test:watch": "vitest",
+        "test": "pnpm run build && pnpm run test:unit && pnpm run test:integration",
+        "test:unit": "vitest run packages",
+        "test:watch": "vitest packages",
+        "test:fixtures": "node --test tests/fixture-integrity.test.mjs",
+        "test:integration": "node --test tests/fixture-integrity.test.mjs tests/structured-fields-consumer.test.mjs tests/core-consumer.test.mjs",
+        "check": "pnpm run build && pnpm run typecheck && pnpm run test:unit && pnpm run test:integration",
         "changeset": "changeset"
     },
     "devDependencies": {
