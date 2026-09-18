@@ -1,6 +1,7 @@
 # M2 — çevrimdışı Web Bot Auth profil katmanı
 
-Durum: **öneri; uygulama onayı bekleniyor**. Tarih: 2026-09-18.
+Durum: **kaynak ve fixture hazırlığı onaylandı ve tamamlandı; üretim uygulaması için yeniden onay bekleniyor**. Tarih: 2026-09-18.
+Son kararlar ve tam kod kataloğu: [M2 fixture teslimatı](m2-fixture-review.md).
 Bu belge kod veya tamamlanmış uyumluluk iddiası değildir.
 Depo: https://github.com/agentsig-dev/agentsig — npm kapsamı @agentsig.
 
@@ -62,8 +63,8 @@ edilir; özel d alanı reddedilir. use/key_ops kısıtları mevcutsa doğrulama 
 uyumlu olmalıdır. JWK alg değerinin JOSE bağlamı ile HTTP alg değeri birbirine
 karıştırılmaz; kabul matrisi kaynak ve negatif fixture'larla sabitlenir.
 
-İki olası kimlik modu:
-- **Öneri: yalnızca anahtar kimliği.** Elle JWKS verilince başarı anahtar
+Onaylanan iki kimlik modu:
+- **Varsayılan: yalnızca anahtar kimliği.** Elle JWKS verilince başarı anahtar
   thumbprint'ine atfedilir. İmzalı Signature-Agent değeri bir iddia olarak ayrıca
   raporlanabilir, ancak doğrulanmış alan adı/operatör değildir.
 - **Açık yerel bağlama:** Uygulama agent identifier → JWKS eşlemesi verir.
@@ -71,8 +72,8 @@ karıştırılmaz; kabul matrisi kaynak ve negatif fixture'larla sabitlenir.
   çözümlemesi veya protokolün dizin kanıtı değildir. Aynı anahtarın başka URL'de
   bulunması otomatik bağlama sağlamaz; operatör adı uygulamaya aittir.
 
-Kullanıcıdan onay bekleyen öneri: iki modu desteklemek, düz JWKS için ilkini
-kullanmak; URL bağlamasını yalnızca açık yapılandırmayla etkinleştirmek.
+Kullanıcı iki modu onayladı: düz JWKS için anahtar thumbprint'i;
+URL bağlaması yalnızca açık yerel yapılandırmayla etkinleştirilir ve sonuçta türü belirtilir.
 Statik anahtar değişimi yeni doğrulayıcı/anahtar görünümüyle yapılır; aynı replay
 deposu korunur. Anahtar rotasyonu tek başına daha önce kabul edilmiş nonce'ları silmez.
 
@@ -94,7 +95,7 @@ Alternatif: toleransı yalnızca gelecekteki created için uygulamak; sona ermi�
 imzayı asla uzatmaz, fakat dağıtık saat farklarında daha çok ret üretir.
 Öneri yukarıdaki simetrik tolerans; mevcut 60/300/300/30 varsayılanları değişmez.
 
-Replay saklama üst sınırı önerisi: max(tüketim anı, created) + maxAge + skew.
+Onaylanan korumacı replay saklama üst sınırı: max(tüketim anı, created) + maxAge + skew.
 Sabit 330 sn kullanılmaz. created 30 sn ileride kabul edilmişse varsayılanlarla
 ilk kabulden 360 sn sonrasına kadar saklama gerekebilir.
 Daha erken temizleme alternatifi: min(expires, created + maxAge) + skew;
@@ -116,8 +117,10 @@ korunmadığı açıkça belgelenir; süreçler arası garanti verilmez.
 
 ## 6. ReplayStore ve bellek içi depo
 
-Önerilen sözleşme: consume(scope, keyThumbprint, nonce, retainUntilEpochSeconds)
-→ Promise ile accepted / replayed / unavailable / capacity-exceeded sonucu.
+Depo sözleşmesi yönü: consume(scope, keyThumbprint, nonce, retainUntilEpochSeconds)
+→ Promise ile accepted / replayed / unavailable / per-key-quota-exceeded sonucu.
+Toplam kapasite doluluğu unavailable döndürür; ayrı capacity-exceeded kodu yoktur.
+Anahtar kotası ayrı per-key-quota-exceeded sonucudur; depo arızası olarak sınıflanmaz.
 Bunlar ayrı sorgu ve yazma değil, tek atomik işlem olmalıdır.
 
 Scope doğrulayıcının yapılandırdığı güven alanıdır; istekten alınmaz.
@@ -133,29 +136,33 @@ mevcut nonce tekrarı, depo arızası veya kapasite aşımı başarıya çevrilm
 
 Bellek içi depo: kontrol ve ekleme arasında await yok; kapasite kontrollü,
 sonlanmış kayıtlar temizlenir, yaşayan kayıtlar LRU ile atılmaz.
-Önerilen sınırlar: 10.000 kayıt, nonce en fazla 256 ASCII bayt, üretilen nonce
-32 rastgele baytın base64url gösterimi. Gelen nonce'un entropisi kanıtlanamaz;
-istemci üretimi ve depo tekrar kontrolü ayrı sorumluluklardır.
-Ömrü en fazla 360 sn olan kayıtlarla 10.000 kapasite, sürekli yeni nonce
-akışında yaklaşık 28 kabul/sn dolum noktasına karşılık gelir; genel performans
-vaadi değildir. Alternatif 100.000 kayıt daha yüksek hacim ve bellek maliyetidir.
-Yerel JWKS için öneri: 64 anahtar, 256 KiB giriş; ayrı profil imza sayısı 16.
-Bunlar protokol limitleri değil, onay bekleyen kaynak varsayılanlarıdır.
+Onaylanan toplam kapasite 10.000; yapılandırılabilir maxPerKey varsayılanı 1.000.
+Kripto ve kimlik kontrollerinden önce tüketim yapılmaz. Böylece anahtar başına
+kota doğrulanmış thumbprint üzerinden uygulanır; keyid iddiasına güvenilmez.
+Yakalanmış geçerli isteği yeniden gönderen biri de tüketimi tetikleyebilir:
+bu kontrol isteği bizzat özel anahtar sahibinin gönderdiğini ispatlamaz.
+Anahtar kotası, tek anahtarın toplam kapasiteyi tek başına doldurmasını sınırlar;
+birden fazla geçerli anahtar ve genel CPU tüketimi için tam DoS koruması değildir.
+
+Nonce için en fazla 256 ASCII bayt, üretilen nonce için 32 rastgele bayt önerisi
+henüz ayrıca onaylanmadı. Gelen nonce'un entropisi kanıtlanamaz.
+Varsayılanlarla korumacı saklama üst sınırı ilk kabulden 360 sn sonrasına uzanabilir.
+Yerel JWKS için 64 anahtar / 256 KiB, profil aday sayısı için 16 önerisi de
+protokol gereksinimi değil, onay bekleyen kaynak bütçesidir.
 
 ## 7. VerificationResult — kapalı sonuç modeli önerisi
 
-Aşağıdaki kod kümeleri öneridir; uygulamada serbest metin reason bulunmayacak.
+Bu bölümdeki ilk büyük harfli kod taslağının yerine [tam küçük harfli kod kataloğu](m2-fixture-review.md)
+ve [makine-okunur politika fixture'ı](../tests/fixtures/m2/policy-cases.json) geçer.
+Uygulamada serbest metin reason bulunmayacak.
 Sonuç birlikleri başarı, geçersiz girdi ve doğrulanamama durumlarını ayıracak.
 Yalnızca başarılı sonuçta doğrulanmış anahtar kimliği bulunur. Başarısız sonuçta
 ajanın iddia ettiği kimlik “verified identity” alanına yerleştirilmez.
 
-| Durum | Kapalı neden kodları |
-| --- | --- |
-| unsigned | NO_SIGNATURE |
-| verified, replay korumalı | NONCE_CONSUMED; replayProtected: true |
-| verified, açık optional politika ve eksik nonce | NONCE_ABSENT_OPTIONAL; replayProtected: false |
-| invalid | MALFORMED_SIGNATURE, MALFORMED_AGENT, AMBIGUOUS_PROFILE, MISSING_REQUIRED_PARAMETER, INVALID_PARAMETER, INVALID_TIME_RANGE, CREATED_IN_FUTURE, SIGNATURE_EXPIRED, SIGNATURE_TOO_OLD, LIFETIME_EXCEEDED, INSUFFICIENT_COVERAGE, KEY_ID_MISMATCH, ALGORITHM_MISMATCH, SIGNATURE_MISMATCH, NONCE_REQUIRED, NONCE_INVALID, REPLAY_DETECTED |
-| unverified | UNSUPPORTED_PROFILE, UNSUPPORTED_DISCOVERY_TYPE, PROFILE_DISALLOWED, UNKNOWN_KEY, AGENT_BINDING_MISSING, RESOURCE_LIMIT, REPLAY_STORE_UNAVAILABLE, REPLAY_STORE_FULL, CLOCK_UNAVAILABLE |
+Kod kataloğu başarı, geçersiz girdi, tamamlanamayan doğrulama, yapılandırma hatası
+ve depo işlemi sonuçlarını ayrı kapalı kümeler olarak tanımlar.
+Toplam doluluk replay-store-unavailable; anahtar kotası per-key-quota-exceeded;
+varsayılan çoklu aday reddi ambiguous-signatures olarak raporlanır.
 
 Yanlış yerel JWKS, limit veya saat yapılandırması oluşturma aşamasında tipli
 yapılandırma hatasıdır; saldırganın imzası bozukmuş gibi raporlanmaz.
@@ -163,24 +170,26 @@ Beklenmeyen programlama hataları genel invalid sonucuyla gizlenmez.
 Doğrulanan sonuç ayrıca profil, etiket, imzalanan bileşenler, key thumbprint,
 doğrulama zamanı ve güven kaynağını taşır. Bu, erişim izni değildir.
 
-Çoklu imza için öneri: açık etiket seçimi; bilinçsiz “ilk geçerli imza yeter”
-politikası yok. Alternatif: tüm etiketlerin bağımsız sonuç dizisi; uygulama
-any/all kuralını açıkça uygular. M1 tüm-çiftler ayrıştırıcısı bozuk bir çiftte
-tüm çağrıyı reddeder; M2 başlangıcında bu sınır korunur, sessiz parsiyel kabul yok.
-Aynı nonce'a sahip çoklu adaylar için tüketim sırası ve tek kullanımlık doğrulama
-davranışı fixture'larda açıkça sınanır; verify salt gözlem işlemi değildir.
+Onaylanan aday seçimi: tag değeri web-bot-auth olan imzalar; etiket adı seçim
+girdisi değildir. Tek aday değerlendirilir. Çoklu adayların tamamı değerlendirilir
+ve etiket başına sonuç dizisi döner. Varsayılan tam olarak bir aday ister;
+fazlasında üst düzey invalid / ambiguous-signatures döner.
+Üst düzey verified yalnızca açık çoklu-aday politikası izin verirse mümkündür.
+“İlk geçen kazanır”, adayları sessizce düşürme ve etiket allowlist'i yoktur.
+M1 tüm-çiftler ayrıştırıcısı bozuk bir çiftte tüm çağrıyı reddeder; bu mevcut sınır
+ayrıca korunur. Çoklu-aday değerlendirmesinin nonce yan etkisi, aynı nonce'a
+sahip adayların sırası ve birleştirme kuralı uygulama onayında kesinleştirilmelidir.
 
 ## 8. Onay bekleyen güvenlik seçenekleri
 
 | Karar | Öneri | Alternatif / maliyet |
 | --- | --- | --- |
-| JWKS kimlik bağlaması | Düz JWKS → yalnızca thumbprint; URL için açık yerel eşleme | Yalnızca URL'ye bağlı yapılandırma: daha katı, basit anahtar testi zorlaşır |
-| İmzalama kapsamı | İki profilde method + target-uri + profilin ajan bileşeni | Minimum authority + ajan: aracı uyumu iyi, yol/yöntem bağlanmaz |
-| Doğrulama kapsamı | Profil minimumu ve ayrıca yapılandırılabilir zorunlu bileşenler; sonuç kapsamı açık taşır | Method + target-uri zorunlu: daha güçlü istek bağlama, minimum protokol istemcilerini reddeder |
-| Gövde | M2 gövde doğrulaması yapmaz; belgelenmiş sınırlama | Digest/body doğrulamasını eklemek: bu planın kapsamını büyütür |
-| Zaman ve TTL | §5 simetrik tolerans ve korumacı saklama | Expiry toleransını kaldırmak / daha erken temizlemek |
-| Kapasite | 10.000 kayıt, canlı kayıt atma yok, dolulukta başarı yok | 100.000: daha fazla bellek; yaşayan kayıtları silmek önerilmez |
-| Çoklu imza | Açık etiket seçimi | Sonuç dizisi; uygulama açık kabul/tüketim kuralı seçer |
+| JWKS kimlik bağlaması | **Onaylandı:** düz JWKS → thumbprint; URL yalnızca açık eşlemeyle | TLS/dizin sahipliği kanıtı iddia edilmez |
+| İmzalama ve doğrulama kapsamı | **Onaylandı:** method + target-uri + profilin ajan bileşeni | Protokol minimumundan daha sıkı M2 politikasıdır |
+| Gövde | **Onaylandı:** content-digest M2 kapsamında yok | Dizin yanıt vektörünü arşivlemek gövde doğrulama özelliği eklemez |
+| Zaman ve TTL | **Onaylandı:** 60/300/300/30 ve korumacı saklama | Kesin sınır eşitsizlikleri ve saat anomalileri fixture onayında netleşir |
+| Kapasite | **Onaylandı:** 10.000 toplam; maxPerKey 1.000; yaşayan kayıt atılmaz | Kota kapsamı ve ret önceliği fixture onayında netleşir |
+| Çoklu imza | **Onaylandı:** tag ile seçim, her adaya sonuç, varsayılan exactly-one | Nonce tüketim yan etkisi ve açık aggregate politikası onay bekliyor |
 | Bilinen test anahtarları | Normal doğrulayıcıda reddet; testte açık izin | Tümüyle uygulamaya bırakmak yanlışlıkla üretim kullanımı riskini artırır |
 | Keşif türleri | M2 directory biçimi; diğerleri destek-dışı | Tamamen yerel jwks_uri/cimd eşleme desteğiyle test kapsamı artar |
 
@@ -217,6 +226,11 @@ fetch'e düşülmediği kontrolü bulunur.
 
 ## 10. Bu turda yapılmayanlar
 
-M2 kaynak snapshot'ı, fixture üretimi, API uygulaması, zaman kontrolü veya replay
-deposu eklenmedi. Ağ katmanının SSRF, DNS rebinding, HTTP cache ve otomatik
-rotasyon kararları sonraki kilometre taşına ertelendi.
+M2 kaynak snapshot'ları ve bağımsız fixture'lar hazırlandı; API uygulaması,
+zaman kontrolü ve replay deposu eklenmedi. WG-00 Ek E.2'nin üç Ed25519 vektörü
+bağımsız doğrulandı. E.2.1'deki sig2/agent2 farkı değiştirilmedi; kriptografik
+geçerlilik ile profil/M2 politika kabulü ayrı kaydedildi. Cloudflare kaynak commit'i
+acfb1f2270b9473ae65a15674995e0b2f3b6ab0c olarak sabitlendi.
+Ağ katmanının SSRF, DNS rebinding, HTTP cache ve otomatik rotasyon kararları
+sonraki kilometre taşına ertelendi. Üretim koduna geçmeden fixture raporu ve kod
+kataloğu için tekrar onay alınacak.

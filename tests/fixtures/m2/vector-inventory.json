@@ -1,0 +1,54 @@
+[
+  {
+    "id": "E.2.1",
+    "kind": "published-cryptographic-vector",
+    "cryptoValid": true,
+    "label": "sig2",
+    "m2Positive": false,
+    "exclusions": [
+      "agent-member-label-mismatch",
+      "missing-method-and-target-uri",
+      "lifetime-exceeds-M2-policy"
+    ]
+  },
+  {
+    "id": "E.2.2",
+    "kind": "published-cryptographic-vector",
+    "cryptoValid": true,
+    "label": "sig2",
+    "m2Positive": false,
+    "exclusions": [
+      "legacy-format-not-WG-signer-profile",
+      "missing-method-and-target-uri",
+      "lifetime-exceeds-M2-policy"
+    ]
+  },
+  {
+    "id": "E.2.3",
+    "kind": "published-cryptographic-vector",
+    "cryptoValid": true,
+    "label": "binding",
+    "m2Positive": false,
+    "exclusions": [
+      "directory-response-outside-M2-scope"
+    ]
+  },
+  {
+    "id": "cloudflare-section-4.4",
+    "kind": "document-serialization-fixture",
+    "cryptoCrossReference": "WG E.2.2 (requires example.com authority and RFC public key)",
+    "m2Positive": false,
+    "exclusions": [
+      "missing-method-and-target-uri",
+      "lifetime-exceeds-M2-policy"
+    ]
+  },
+  {
+    "id": "WG E.1.1/E.1.2",
+    "kind": "published-rsa-vectors",
+    "checked": false,
+    "exclusions": [
+      "RSA-outside-Ed25519-scope"
+    ]
+  }
+]

@@ -1,0 +1,326 @@
+{
+    "formatVersion": 1,
+    "status": "fixture-contract-awaiting-implementation-approval",
+    "productionImplementationExists": false,
+    "defaults": {
+        "signingLifetimeSeconds": 60,
+        "maxLifetimeSeconds": 300,
+        "maxAgeSeconds": 300,
+        "clockSkewSeconds": 30,
+        "noncePolicy": "required",
+        "capacity": 10000,
+        "maxPerKey": 1000,
+        "candidateTag": "web-bot-auth",
+        "candidatePolicy": "exactly-one",
+        "requiredComponents": [
+            "@method",
+            "@target-uri",
+            "profile-specific-agent-component"
+        ]
+    },
+    "codeCatalog": {
+        "unsigned": [
+            "no-signature"
+        ],
+        "verified": [
+            "nonce-consumed",
+            "nonce-absent-optional"
+        ],
+        "invalid": [
+            "malformed-signature",
+            "malformed-agent",
+            "ambiguous-signatures",
+            "ambiguous-profile",
+            "agent-label-mismatch",
+            "missing-required-parameter",
+            "invalid-parameter",
+            "invalid-time-range",
+            "created-in-future",
+            "signature-expired",
+            "signature-too-old",
+            "lifetime-exceeded",
+            "insufficient-coverage",
+            "key-id-mismatch",
+            "algorithm-mismatch",
+            "signature-mismatch",
+            "nonce-required",
+            "nonce-invalid",
+            "replay-detected"
+        ],
+        "unverified": [
+            "no-web-bot-auth-candidate",
+            "unsupported-profile",
+            "unsupported-discovery-type",
+            "profile-disallowed",
+            "unknown-key",
+            "agent-binding-missing",
+            "resource-limit",
+            "replay-store-unavailable",
+            "per-key-quota-exceeded",
+            "clock-unavailable",
+            "test-key-disallowed",
+            "aggregate-policy-required"
+        ],
+        "configurationErrors": [
+            "invalid-jwks",
+            "invalid-key-configuration",
+            "invalid-agent-binding",
+            "invalid-time-policy",
+            "invalid-replay-policy",
+            "invalid-resource-limits",
+            "invalid-clock-configuration",
+            "invalid-candidate-policy"
+        ],
+        "storeOutcomes": [
+            "accepted",
+            "replayed",
+            "unavailable",
+            "per-key-quota-exceeded"
+        ]
+    },
+    "catalogNotes": [
+        "The entire catalog is a proposed closed public contract, not implemented code.",
+        "Global store capacity exhaustion maps to unavailable and replay-store-unavailable, not a separate full/capacity code.",
+        "Per-key quota has its own outcome and result code; unverified here means no completed verification, not store malfunction.",
+        "No matching tag is distinct from no Signature/Signature-Input headers.",
+        "Configuration errors are thrown during setup; they are not evidence of a hostile request.",
+        "Candidate results retain labels for correlation, never for candidate selection.",
+        "Test-key handling, discovery-type support and aggregate-policy mechanics remain subject to explicit approval."
+    ],
+    "timeContract": {
+        "status": "boundary-details-proposed",
+        "units": "integer Unix seconds",
+        "rules": [
+            "created <= now + skew",
+            "expires > created",
+            "expires - created <= maxLifetime",
+            "now < expires + skew",
+            "now < created + maxAge + skew"
+        ],
+        "retention": "max(consumeNow, created) + maxAge + skew",
+        "cases": [
+            {
+                "id": "valid-60-second-lifetime",
+                "now": 1800000000,
+                "created": 1800000000,
+                "expires": 1800000060,
+                "expectedTimeValid": true,
+                "retainUntil": 1800000330
+            },
+            {
+                "id": "future-created-at-tolerance",
+                "now": 1800000000,
+                "created": 1800000030,
+                "expires": 1800000090,
+                "expectedTimeValid": true,
+                "retainUntil": 1800000360
+            },
+            {
+                "id": "future-created-beyond-tolerance",
+                "now": 1800000000,
+                "created": 1800000031,
+                "expires": 1800000091,
+                "expectedCode": "created-in-future"
+            },
+            {
+                "id": "one-second-before-expiry-boundary",
+                "now": 1800000089,
+                "created": 1800000000,
+                "expires": 1800000060,
+                "expectedTimeValid": true,
+                "retainUntil": 1800000419
+            },
+            {
+                "id": "exact-expiry-boundary",
+                "now": 1800000090,
+                "created": 1800000000,
+                "expires": 1800000060,
+                "expectedCode": "signature-expired"
+            },
+            {
+                "id": "lifetime-beyond-policy",
+                "now": 1800000000,
+                "created": 1800000000,
+                "expires": 1800000301,
+                "expectedCode": "lifetime-exceeded"
+            },
+            {
+                "id": "non-positive-lifetime",
+                "now": 1800000000,
+                "created": 1800000000,
+                "expires": 1800000000,
+                "expectedCode": "invalid-time-range"
+            },
+            {
+                "id": "age-boundary-independent-of-expiry",
+                "policyOverrides": {
+                    "maxLifetimeSeconds": 600
+                },
+                "now": 1800000330,
+                "created": 1800000000,
+                "expires": 1800000600,
+                "expectedCode": "signature-too-old"
+            }
+        ]
+    },
+    "replayCases": [
+        {
+            "id": "invalid-signature-never-consumes",
+            "signatureValid": false,
+            "expectedConsumeCalls": 0,
+            "expectedCode": "signature-mismatch"
+        },
+        {
+            "id": "identity-check-failure-never-consumes",
+            "signatureValid": true,
+            "explicitBindingMatches": false,
+            "expectedConsumeCalls": 0,
+            "expectedCode": "agent-binding-missing"
+        },
+        {
+            "id": "concurrent-identical-valid-request",
+            "simultaneousAttempts": 100,
+            "scope": "merchant-a",
+            "sameThumbprint": true,
+            "sameNonce": true,
+            "expectedAccepted": 1,
+            "expectedReplayed": 99
+        },
+        {
+            "id": "global-capacity",
+            "capacity": 10000,
+            "maxPerKey": 1000,
+            "liveEntries": 10000,
+            "liveEntriesForIncomingKey": 0,
+            "incomingNonceAlreadyPresent": false,
+            "expectedStoreOutcome": "unavailable",
+            "expectedCode": "replay-store-unavailable",
+            "expectedEvictedLiveEntries": 0
+        },
+        {
+            "id": "per-key-quota",
+            "capacity": 10000,
+            "maxPerKey": 1000,
+            "liveEntries": 1000,
+            "liveEntriesForIncomingKey": 1000,
+            "incomingNonceAlreadyPresent": false,
+            "expectedStoreOutcome": "per-key-quota-exceeded",
+            "expectedCode": "per-key-quota-exceeded",
+            "expectedEvictedLiveEntries": 0
+        },
+        {
+            "id": "optional-absent-nonce",
+            "noncePolicy": "optional",
+            "noncePresent": false,
+            "otherwiseValid": true,
+            "expectedConsumeCalls": 0,
+            "expectedCode": "nonce-absent-optional",
+            "replayProtected": false
+        },
+        {
+            "id": "required-absent-nonce",
+            "noncePolicy": "required",
+            "noncePresent": false,
+            "expectedConsumeCalls": 0,
+            "expectedCode": "nonce-required"
+        },
+        {
+            "id": "optional-does-not-hide-present-nonce-replay",
+            "noncePolicy": "optional",
+            "noncePresent": true,
+            "alreadyConsumed": true,
+            "expectedCode": "replay-detected"
+        }
+    ],
+    "candidateCases": [
+        {
+            "id": "label-is-not-a-selector",
+            "inputs": [
+                {
+                    "label": "unpredictable-agent-label",
+                    "tag": "web-bot-auth"
+                },
+                {
+                    "label": "familiar-label",
+                    "tag": "other-protocol"
+                }
+            ],
+            "expectedCandidateLabels": [
+                "unpredictable-agent-label"
+            ]
+        },
+        {
+            "id": "multiple-default-invalid",
+            "inputs": [
+                {
+                    "label": "a",
+                    "tag": "web-bot-auth"
+                },
+                {
+                    "label": "b",
+                    "tag": "web-bot-auth"
+                }
+            ],
+            "candidatePolicy": "exactly-one",
+            "expectedResultLabels": [
+                "a",
+                "b"
+            ],
+            "evaluateEveryCandidate": true,
+            "automaticFirstSuccessAcceptance": false,
+            "expectedStatus": "invalid",
+            "expectedCode": "ambiguous-signatures",
+            "nonceConsumption": "pending-explicit-side-effect-contract"
+        },
+        {
+            "id": "explicit-multiple-evaluate-every-candidate",
+            "candidatePolicy": "explicit-multiple",
+            "candidateLabels": [
+                "a",
+                "b"
+            ],
+            "expectedResultLabels": [
+                "a",
+                "b"
+            ],
+            "automaticFirstSuccessAcceptance": false,
+            "topLevelVerifiedRequiresExplicitPolicy": true
+        },
+        {
+            "id": "no-matching-tag",
+            "inputs": [
+                {
+                    "label": "a",
+                    "tag": "other-protocol"
+                }
+            ],
+            "expectedStatus": "unverified",
+            "expectedCode": "no-web-bot-auth-candidate"
+        }
+    ],
+    "identityCases": [
+        {
+            "id": "manual-jwks-only",
+            "explicitBinding": false,
+            "otherwiseValid": true,
+            "expectedIdentityKind": "key-thumbprint",
+            "agentClaimBecomesVerifiedUrl": false
+        },
+        {
+            "id": "explicit-local-binding",
+            "explicitBinding": true,
+            "bindingMatches": true,
+            "otherwiseValid": true,
+            "expectedIdentityKind": "directory-url",
+            "expectedTrustSource": "local-configuration",
+            "networkProofClaimed": false
+        }
+    ],
+    "pendingDecisions": [
+        "Default ambiguous case evaluates every candidate; nonce consumption and pre-replay candidate result representation still need approval.",
+        "Explicit-multiple aggregation and nonce consumption ordering, including same-key same-nonce candidates.",
+        "Per-key quota scope across configured trust domains; replay-vs-quota-vs-global-full precedence.",
+        "Exact clock rollback/jump handling and thresholds.",
+        "Discovery types, test-key policy and secondary resource budgets not explicitly approved."
+    ]
+}

@@ -1,0 +1,23 @@
+[
+  {
+    "path": "sources/wg-protocol-00.txt",
+    "sha256": "3021fd94cdffdb2eb030dec68b1a5c968f2348502dd94c481e2085ec7ddd90a0",
+    "url": "https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.txt",
+    "license": "IETF Trust Legal Provisions; extracted Code Components: Revised BSD"
+  },
+  {
+    "path": "sources/cloudflare-2026-07-01.mdx",
+    "sha256": "c4aeeef723df97b020ecc4d9e680b77b5bfb6c214a6443b0fb7f00efd7e422f7",
+    "url": "https://raw.githubusercontent.com/cloudflare/cloudflare-docs/acfb1f2270b9473ae65a15674995e0b2f3b6ab0c/src/content/docs/bots/reference/bot-verification/web-bot-auth.mdx",
+    "commit": "acfb1f2270b9473ae65a15674995e0b2f3b6ab0c",
+    "gitBlob": "3914e02c768bd59a2a42ab82c0ea326517edb40d",
+    "license": "CC-BY-4.0"
+  },
+  {
+    "path": "sources/cloudflare-LICENSE.txt",
+    "sha256": "9e5f1b3c610b9c2da5c313bf81d577a7d1acec686bdb0384edefa6df0f90cd94",
+    "url": "https://raw.githubusercontent.com/cloudflare/cloudflare-docs/acfb1f2270b9473ae65a15674995e0b2f3b6ab0c/LICENSE",
+    "commit": "acfb1f2270b9473ae65a15674995e0b2f3b6ab0c",
+    "license": "CC-BY-4.0"
+  }
+]

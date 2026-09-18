@@ -1,0 +1,21 @@
+{
+  "kind": "agentsig-generated-cryptographic-fixture",
+  "profile": "ietf-wg-protocol-00",
+  "publicTestKey": true,
+  "now": 1800000000,
+  "method": "GET",
+  "targetUri": "https://merchant.example/items?sku=42",
+  "label": "agent",
+  "agentClaim": "https://agent.example",
+  "keyid": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+  "expected": {
+    "status": "verified",
+    "identityKind": "key-thumbprint",
+    "replayProtected": true,
+    "reason": "nonce-consumed"
+  },
+  "prerequisites": [
+    "fresh replay store",
+    "explicit test-key permission if enabled"
+  ]
+}

@@ -1,0 +1,370 @@
+{
+  "formatVersion": 1,
+  "retrievedOn": "2026-09-18",
+  "warning": "All private keys in this fixture set are PUBLIC TEST MATERIAL.",
+  "files": [
+    {
+      "path": "generated/cloudflare-docs-2026-07-01/base.txt",
+      "bytes": 332,
+      "sha256": "91a13269ef531636f7ecf1fef16b0ee38fa9ff563e4f599817201e5a566df19e",
+      "provenance": {
+        "source": "agentsig independently authored test data",
+        "license": "MIT",
+        "productionSafe": false
+      }
+    },
+    {
+      "path": "generated/cloudflare-docs-2026-07-01/case.json",
+      "bytes": 583,
+      "sha256": "960b8a6e01a8cb44d929dfe23cfed23b51776fe57d4abed7ffcb7e0dc7cdcb91",
+      "provenance": {
+        "source": "agentsig independently authored test data",
+        "license": "MIT",
+        "productionSafe": false
+      }
+    },
+    {
+      "path": "generated/cloudflare-docs-2026-07-01/headers.txt",
+      "bytes": 372,
+      "sha256": "0ef1d692990fce3a716827205622c51c1810dd26fe1af6b52a4dc73e8a711694",
+      "provenance": {
+        "source": "agentsig independently authored test data",
+        "license": "MIT",
+        "productionSafe": false
+      }
+    },
+    {
+      "path": "generated/cloudflare-docs-2026-07-01/signature.bin",
+      "bytes": 64,
+      "sha256": "82ba26db7a7ab90102615aa32b75587893a40dffe451dddb380b96888d4a8cee",
+      "provenance": {
+        "source": "agentsig independently authored test data",
+        "license": "MIT",
+        "productionSafe": false
+      }
+    },
+    {
+      "path": "generated/ietf-wg-protocol-00/base.txt",
+      "bytes": 356,
+      "sha256": "aa58e3495c65b88bcd1b052cb9ba2cf79f15fdee1b65bcf40426ac6b0e6aa60a",
+      "provenance": {
+        "source": "agentsig independently authored test data",
+        "license": "MIT",
+        "productionSafe": false
+      }
+    },
+    {
+      "path": "generated/ietf-wg-protocol-00/case.json",
+      "bytes": 576,
+      "sha256": "86d0ae786093657187c71179f313aaed47745150d9e7fed534c08616a76e08c7",
+      "provenance": {
+        "source": "agentsig independently authored test data",
+        "license": "MIT",
+        "productionSafe": false
+      }
+    },
+    {
+      "path": "generated/ietf-wg-protocol-00/headers.txt",
+      "bytes": 390,
+      "sha256": "29c3aac42cfb98bd756647d6e6547a33094b85a6c265e0bfcc38f872ee9c1b3e",
+      "provenance": {
+        "source": "agentsig independently authored test data",
+        "license": "MIT",
+        "productionSafe": false
+      }
+    },
+    {
+      "path": "generated/ietf-wg-protocol-00/signature.bin",
+      "bytes": 64,
+      "sha256": "20d1cc247ebdc8eb900be45827a8f2b7f3f9b1e8718e7ac4c9d4dcb7e335dd86",
+      "provenance": {
+        "source": "agentsig independently authored test data",
+        "license": "MIT",
+        "productionSafe": false
+      }
+    },
+    {
+      "path": "generated/jwks.json",
+      "bytes": 213,
+      "sha256": "40dce0a5feb3a8f91668bed74548a075107f250decb2b979b2581e1158eaaf74",
+      "provenance": {
+        "source": "agentsig independently authored test data",
+        "license": "MIT",
+        "productionSafe": false
+      }
+    },
+    {
+      "path": "generated/public-test-private.pem",
+      "bytes": 119,
+      "sha256": "dfdc159bef3d1c3b5da1d5b2c0f8704ab4d2f603247bc730ca57aadeb8982644",
+      "provenance": {
+        "source": "agentsig independently authored test data",
+        "license": "MIT",
+        "productionSafe": false
+      }
+    },
+    {
+      "path": "generated/public-test-public.pem",
+      "bytes": 113,
+      "sha256": "c91896a53deee899f14bb9a0d441acf0c748d01bd90eac7d6f68647550a8fe31",
+      "provenance": {
+        "source": "agentsig independently authored test data",
+        "license": "MIT",
+        "productionSafe": false
+      }
+    },
+    {
+      "path": "generated/thumbprint-input.txt",
+      "bytes": 79,
+      "sha256": "0d1ebc9ee8bdf6e925f865207f3406694dd5c2a46d02bc3efc308de0b16d63ce",
+      "provenance": {
+        "source": "agentsig independently authored test data",
+        "license": "MIT",
+        "productionSafe": false
+      }
+    },
+    {
+      "path": "policy-cases.json",
+      "bytes": 11286,
+      "sha256": "dfb3237684d691aef5264df6e15dfd6fe80c0aef97faeb280f27814f653eb43c",
+      "provenance": {
+        "source": "agentsig independently authored test data",
+        "license": "MIT",
+        "productionSafe": false,
+        "transformation": "Local authored policy data; editor CRLF converted to LF"
+      }
+    },
+    {
+      "path": "published/cloudflare/request-displayed.txt",
+      "bytes": 441,
+      "sha256": "715510ca98ad476cf9e92c5a84552020de88cf512f5c84f066cdae6f401c4e3b",
+      "provenance": {
+        "source": "sources/cloudflare-2026-07-01.mdx",
+        "section": "4.4",
+        "transformation": "Extract fenced block content; exclude fence and final LF; otherwise unchanged",
+        "license": "CC-BY-4.0"
+      }
+    },
+    {
+      "path": "published/cloudflare/request-headers.txt",
+      "bytes": 429,
+      "sha256": "3decec6e31dd88f50216966bf9db8261eeb58df2e30987d2de7116da4d4196ee",
+      "provenance": {
+        "source": "sources/cloudflare-2026-07-01.mdx",
+        "section": "4.4",
+        "transformation": "Join displayed metadata continuation lines; no other normalization; no final LF",
+        "license": "CC-BY-4.0"
+      }
+    },
+    {
+      "path": "published/rfc9421-public.pem",
+      "bytes": 113,
+      "sha256": "22ce02aa18eb1ee5f39482d0f57a6ba56f4d549f81db547f3bea2863207c8a01",
+      "provenance": {
+        "source": "packages/core/test/fixtures/rfc9421/ed25519-public.pem",
+        "section": "RFC 9421 B.1.4",
+        "transformation": "none"
+      }
+    },
+    {
+      "path": "published/wg-E.2.1/base.txt",
+      "bytes": 375,
+      "sha256": "a070a4d3058965b0d5989d9d587f32c64eaaf4561f7f552ae9f741b99198d2e1",
+      "provenance": {
+        "source": "sources/wg-protocol-00.txt",
+        "section": "E.2.1",
+        "transformation": "Extract block; unfold RFC 8792; no final LF on base/headers",
+        "license": "IETF Trust Revised BSD"
+      }
+    },
+    {
+      "path": "published/wg-E.2.1/section.txt",
+      "bytes": 1471,
+      "sha256": "c2817f8961c1908ba3f79b2a3fea98d733c5ac97fec5cd6810878316b094d4bb",
+      "provenance": {
+        "source": "sources/wg-protocol-00.txt",
+        "section": "E.2.1",
+        "transformation": "Exact source section, including publication pagination",
+        "license": "IETF Trust Revised BSD"
+      }
+    },
+    {
+      "path": "published/wg-E.2.1/signature-headers.txt",
+      "bytes": 394,
+      "sha256": "33465f79f0ef61f43af85011b7d4d6253c09ca053a3792d5fbaab2d6e1ca69c4",
+      "provenance": {
+        "source": "sources/wg-protocol-00.txt",
+        "section": "E.2.1",
+        "transformation": "Extract block; unfold RFC 8792; no final LF on base/headers",
+        "license": "IETF Trust Revised BSD"
+      }
+    },
+    {
+      "path": "published/wg-E.2.1/signature.bin",
+      "bytes": 64,
+      "sha256": "a061f4236b76de91436ffffa67298b2ea4a6247c2e44d4b43bec0c2505104850",
+      "provenance": {
+        "source": "sources/wg-protocol-00.txt",
+        "section": "E.2.1",
+        "transformation": "Extract block; unfold RFC 8792; no final LF on base/headers",
+        "license": "IETF Trust Revised BSD"
+      }
+    },
+    {
+      "path": "published/wg-E.2.2/base.txt",
+      "bytes": 349,
+      "sha256": "b62db49f6a505017d42726e5ca3b8a074675f3ba82f872f3d71988c4d1814d70",
+      "provenance": {
+        "source": "sources/wg-protocol-00.txt",
+        "section": "E.2.2",
+        "transformation": "Extract block; unfold RFC 8792; no final LF on base/headers",
+        "license": "IETF Trust Revised BSD"
+      }
+    },
+    {
+      "path": "published/wg-E.2.2/section.txt",
+      "bytes": 1524,
+      "sha256": "7c8d101c62523a49014abf7f8f288c884912c3cd5c8ca3358e7f52b5ef91d386",
+      "provenance": {
+        "source": "sources/wg-protocol-00.txt",
+        "section": "E.2.2",
+        "transformation": "Exact source section, including publication pagination",
+        "license": "IETF Trust Revised BSD"
+      }
+    },
+    {
+      "path": "published/wg-E.2.2/signature-headers.txt",
+      "bytes": 381,
+      "sha256": "07a23dce7f896d1cd8a4f35b4e8c0d3401173741117450c4856a1b2b70f745f1",
+      "provenance": {
+        "source": "sources/wg-protocol-00.txt",
+        "section": "E.2.2",
+        "transformation": "Extract block; unfold RFC 8792; no final LF on base/headers",
+        "license": "IETF Trust Revised BSD"
+      }
+    },
+    {
+      "path": "published/wg-E.2.2/signature.bin",
+      "bytes": 64,
+      "sha256": "1e9ab21be960872abf5d4e8c1939c332a5cc3dd61fb32bc3855cf1abf35588ec",
+      "provenance": {
+        "source": "sources/wg-protocol-00.txt",
+        "section": "E.2.2",
+        "transformation": "Extract block; unfold RFC 8792; no final LF on base/headers",
+        "license": "IETF Trust Revised BSD"
+      }
+    },
+    {
+      "path": "published/wg-E.2.3/base.txt",
+      "bytes": 298,
+      "sha256": "c01cc89dae75e0b45065fcc67960f0ff7dc69f5fe999f98a11632f8ce3cf4ca9",
+      "provenance": {
+        "source": "sources/wg-protocol-00.txt",
+        "section": "E.2.3",
+        "transformation": "Extract block; unfold RFC 8792; no final LF on base/headers",
+        "license": "IETF Trust Revised BSD"
+      }
+    },
+    {
+      "path": "published/wg-E.2.3/section.txt",
+      "bytes": 2272,
+      "sha256": "d8ccd04934416c01d355c83ed763c5d5cd75ab5258a3c9597ec5c0e2ee05ddaa",
+      "provenance": {
+        "source": "sources/wg-protocol-00.txt",
+        "section": "E.2.3",
+        "transformation": "Exact source section, including publication pagination",
+        "license": "IETF Trust Revised BSD"
+      }
+    },
+    {
+      "path": "published/wg-E.2.3/signature-headers.txt",
+      "bytes": 300,
+      "sha256": "355a39568b495124f44436cad803507e1d90c1c9ed39e0099658671fe5631c19",
+      "provenance": {
+        "source": "sources/wg-protocol-00.txt",
+        "section": "E.2.3",
+        "transformation": "Extract block; unfold RFC 8792; no final LF on base/headers",
+        "license": "IETF Trust Revised BSD"
+      }
+    },
+    {
+      "path": "published/wg-E.2.3/signature.bin",
+      "bytes": 64,
+      "sha256": "d6ed37f2661c28a80ea678926e910a316c8b78cb0e9555fb9de7fbeb85b453ef",
+      "provenance": {
+        "source": "sources/wg-protocol-00.txt",
+        "section": "E.2.3",
+        "transformation": "Extract block; unfold RFC 8792; no final LF on base/headers",
+        "license": "IETF Trust Revised BSD"
+      }
+    },
+    {
+      "path": "sources.json",
+      "bytes": 1125,
+      "sha256": "ffd5b11d3834006842a1f0f69275a084f56672428d8571dfab20a750a62995ea",
+      "provenance": {
+        "source": "agentsig independently authored test data",
+        "license": "MIT",
+        "productionSafe": false
+      }
+    },
+    {
+      "path": "sources/cloudflare-2026-07-01.mdx",
+      "bytes": 18525,
+      "sha256": "c4aeeef723df97b020ecc4d9e680b77b5bfb6c214a6443b0fb7f00efd7e422f7",
+      "provenance": {
+        "local": ".tmp/m2-research/cloudflare-2026-07-01.mdx",
+        "path": "sources/cloudflare-2026-07-01.mdx",
+        "sha256": "c4aeeef723df97b020ecc4d9e680b77b5bfb6c214a6443b0fb7f00efd7e422f7",
+        "url": "https://raw.githubusercontent.com/cloudflare/cloudflare-docs/acfb1f2270b9473ae65a15674995e0b2f3b6ab0c/src/content/docs/bots/reference/bot-verification/web-bot-auth.mdx",
+        "commit": "acfb1f2270b9473ae65a15674995e0b2f3b6ab0c",
+        "gitBlob": "3914e02c768bd59a2a42ab82c0ea326517edb40d",
+        "license": "CC-BY-4.0"
+      }
+    },
+    {
+      "path": "sources/cloudflare-LICENSE.txt",
+      "bytes": 18656,
+      "sha256": "9e5f1b3c610b9c2da5c313bf81d577a7d1acec686bdb0384edefa6df0f90cd94",
+      "provenance": {
+        "local": ".tmp/m2-research/cloudflare-LICENSE",
+        "path": "sources/cloudflare-LICENSE.txt",
+        "sha256": "9e5f1b3c610b9c2da5c313bf81d577a7d1acec686bdb0384edefa6df0f90cd94",
+        "url": "https://raw.githubusercontent.com/cloudflare/cloudflare-docs/acfb1f2270b9473ae65a15674995e0b2f3b6ab0c/LICENSE",
+        "commit": "acfb1f2270b9473ae65a15674995e0b2f3b6ab0c",
+        "license": "CC-BY-4.0"
+      }
+    },
+    {
+      "path": "sources/IETF-NOTICE.txt",
+      "bytes": 2102,
+      "sha256": "644dfe0a8b1df69409bbc4aaf0471e008c71015f8fbcb6df35759a15d22b75d3",
+      "provenance": {
+        "source": "packages/core/test/fixtures/rfc9421/LICENSE.txt",
+        "transformation": "Retain Revised BSD terms; extend attribution to WG-00"
+      }
+    },
+    {
+      "path": "sources/wg-protocol-00.txt",
+      "bytes": 95603,
+      "sha256": "3021fd94cdffdb2eb030dec68b1a5c968f2348502dd94c481e2085ec7ddd90a0",
+      "provenance": {
+        "local": ".tmp/m2-research/wg-protocol-00.txt",
+        "path": "sources/wg-protocol-00.txt",
+        "sha256": "3021fd94cdffdb2eb030dec68b1a5c968f2348502dd94c481e2085ec7ddd90a0",
+        "url": "https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.txt",
+        "license": "IETF Trust Legal Provisions; extracted Code Components: Revised BSD"
+      }
+    },
+    {
+      "path": "vector-inventory.json",
+      "bytes": 1257,
+      "sha256": "f1c7e2c53ae63e7fbef3370d9eff68d05aa5fc1583c6b379a797b52b441522ca",
+      "provenance": {
+        "source": "agentsig independently authored test data",
+        "license": "MIT",
+        "productionSafe": false
+      }
+    }
+  ]
+}

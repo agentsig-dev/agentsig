@@ -34,3 +34,5 @@ jobs:
         run: npm run audit:fixtures
       - name: Check pinned fixture bytes and Git line endings
         run: node --test tests/fixture-integrity.test.mjs
+      - name: Audit M2 source snapshots and independent vectors without production code
+        run: node --test tests/m2-fixture-audit.test.mjs
