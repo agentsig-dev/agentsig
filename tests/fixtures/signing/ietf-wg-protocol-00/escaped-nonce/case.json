@@ -1,0 +1,34 @@
+{
+  "id": "ietf-wg-protocol-00/escaped-nonce",
+  "profile": "ietf-wg-protocol-00",
+  "label": "custom-agent",
+  "agentOrigin": "HTTPS://AGENT.EXAMPLE:443/",
+  "request": {
+    "method": "GET",
+    "targetUri": "https://merchant.example/items?sku=42",
+    "headers": [
+      [
+        "X-Example",
+        "unchanged"
+      ]
+    ]
+  },
+  "clockMilliseconds": 1800000000999.5,
+  "nonce": "quote\"slash\\end",
+  "lifetimeSeconds": 60,
+  "allowTestKeys": true,
+  "expectedHeaders": [
+    [
+      "Signature-Input",
+      "custom-agent=(\"@method\" \"@target-uri\" \"signature-agent\";key=\"custom-agent\");created=1800000000;expires=1800000060;keyid=\"DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84\";alg=\"ed25519\";nonce=\"quote\\\"slash\\\\end\";tag=\"web-bot-auth\""
+    ],
+    [
+      "Signature",
+      "custom-agent=:RXDvPcpMj6PY6YZfRfX77Ahac80ZooGU8qduP/vC/ayqNkXmVNMCwXm7wbHHjIIpLKpJLNGFdXTwfcBSVCy9Aw==:"
+    ],
+    [
+      "Signature-Agent",
+      "custom-agent=\"https://agent.example\""
+    ]
+  ]
+}

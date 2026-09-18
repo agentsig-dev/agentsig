@@ -1,0 +1,120 @@
+{
+  "formatVersion": 1,
+  "approvedOn": "2026-09-18",
+  "warning": "Public test keys only; never production credentials.",
+  "sourceKeys": [
+    {
+      "path": "tests/fixtures/m2/generated/public-test-private.pem",
+      "sha256": "dfdc159bef3d1c3b5da1d5b2c0f8704ab4d2f603247bc730ca57aadeb8982644"
+    },
+    {
+      "path": "tests/fixtures/m2/generated/public-test-public.pem",
+      "sha256": "c91896a53deee899f14bb9a0d441acf0c748d01bd90eac7d6f68647550a8fe31"
+    }
+  ],
+  "catalogSha256": "3dafd94a40ebedfeb75671f76b93e5f274f6734e87ba64d9798f5d5eb019f207",
+  "vectors": [
+    "ietf-wg-protocol-00/default-label",
+    "ietf-wg-protocol-00/escaped-nonce",
+    "cloudflare-docs-2026-07-01/default-label",
+    "cloudflare-docs-2026-07-01/escaped-nonce"
+  ],
+  "license": "MIT, agentsig-authored expectations and deterministic M2 test material.",
+  "files": [
+    {
+      "path": "contract.json",
+      "bytes": 1972,
+      "sha256": "208d8f270f4de9bf5a045a20c5c06b059f2b89e6379f349fc7aa5a724dd9ee8b"
+    },
+    {
+      "path": "ietf-wg-protocol-00/default-label/base.txt",
+      "bytes": 348,
+      "sha256": "6222bcf23803dc742410cb1ddb40504e66630e4a13f18e6aec258b6183ab25ed"
+    },
+    {
+      "path": "ietf-wg-protocol-00/default-label/signature.bin",
+      "bytes": 64,
+      "sha256": "07fcb34f8184197f66b3025eb26df3d57bacb88b462444bb76cec40ca473730c"
+    },
+    {
+      "path": "ietf-wg-protocol-00/default-label/headers.txt",
+      "bytes": 380,
+      "sha256": "5976aac4ddfe5ae18350bf0a7919150920fce1cb8cb961dd7d91490ea721c389"
+    },
+    {
+      "path": "ietf-wg-protocol-00/default-label/case.json",
+      "bytes": 966,
+      "sha256": "14f60c44d1b0fe1a2e9992fa596dcbb71ff676e1d897e586efa98cf642b629a8"
+    },
+    {
+      "path": "ietf-wg-protocol-00/escaped-nonce/base.txt",
+      "bytes": 362,
+      "sha256": "1e6369ae60d17cba91d5ac3b6b7e0a718d52a61973ce2992afd26e8efe3b9e6d"
+    },
+    {
+      "path": "ietf-wg-protocol-00/escaped-nonce/signature.bin",
+      "bytes": 64,
+      "sha256": "872a477b9486d9fbd7218c966d9ca59bafc110de69a3614da08115a50a3bb44b"
+    },
+    {
+      "path": "ietf-wg-protocol-00/escaped-nonce/headers.txt",
+      "bytes": 410,
+      "sha256": "91333c1b09d31ea84273e7006e059f5ec16d152ee0b3d71bc91f8abf1cc313de"
+    },
+    {
+      "path": "ietf-wg-protocol-00/escaped-nonce/case.json",
+      "bytes": 1006,
+      "sha256": "bf551a344d204519a352d2d90276bda9a832f8bf8fe05cfc842a3a60be68c579"
+    },
+    {
+      "path": "cloudflare-docs-2026-07-01/default-label/base.txt",
+      "bytes": 326,
+      "sha256": "ab7eb95930fddbf57a42752f60b7f07e14c0bf9655647efdb59c402d256ebbc5"
+    },
+    {
+      "path": "cloudflare-docs-2026-07-01/default-label/signature.bin",
+      "bytes": 64,
+      "sha256": "99b98bb1957b97e905d507a8b75e4e39d454f1cd7162e4a1256a8c8f561e18f8"
+    },
+    {
+      "path": "cloudflare-docs-2026-07-01/default-label/headers.txt",
+      "bytes": 364,
+      "sha256": "d70cc3465f523d94a32cf22fb5acf1cdb7b80934e8b9b46bf85040e379435c1d"
+    },
+    {
+      "path": "cloudflare-docs-2026-07-01/default-label/case.json",
+      "bytes": 962,
+      "sha256": "27520611da718d344fecd5660c39d5f9e32e426142c45dc3e1fa483c94e0a434"
+    },
+    {
+      "path": "cloudflare-docs-2026-07-01/escaped-nonce/base.txt",
+      "bytes": 324,
+      "sha256": "9c35e7522330f07c1df5bdec133206aed8561a4d0a365a0a97cc09e920d647f6"
+    },
+    {
+      "path": "cloudflare-docs-2026-07-01/escaped-nonce/signature.bin",
+      "bytes": 64,
+      "sha256": "7f6825573f82e576c491d145dbaa2165eaac9610a6c91c0926e2f7e0ee8de695"
+    },
+    {
+      "path": "cloudflare-docs-2026-07-01/escaped-nonce/headers.txt",
+      "bytes": 378,
+      "sha256": "d6edb7440265577a2effb11b50ccab624418748bfcfbf803a877b28acc7321d4"
+    },
+    {
+      "path": "cloudflare-docs-2026-07-01/escaped-nonce/case.json",
+      "bytes": 986,
+      "sha256": "82fcd003b8b7bee6acdee412c44532e39785d120a56a7ee67ae25b6c43532d05"
+    },
+    {
+      "path": "negative-cases.json",
+      "bytes": 6974,
+      "sha256": "9d9033a037efa8feeaef25592fb71cf0ec27b1d2d09ec381307b9e8953e584b6"
+    },
+    {
+      "path": "nonce-boundaries.json",
+      "bytes": 866,
+      "sha256": "7f58164ef2df47983bf0b1e62700b035546aa798097b7dda032aa9c69349e7c0"
+    }
+  ]
+}

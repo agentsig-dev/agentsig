@@ -1,0 +1,45 @@
+{
+  "catalogVersion": 1,
+  "approvedOn": "2026-09-18",
+  "catalogFrozen": true,
+  "changePolicy": "Changes require separate approval and release notes.",
+  "separateFromVerificationCatalog": true,
+  "errorClass": "SigningError",
+  "codes": [
+    "existing-signature-headers",
+    "invalid-signing-key",
+    "test-key-disallowed",
+    "invalid-agent-origin",
+    "invalid-label",
+    "unsupported-profile",
+    "unsupported-component",
+    "invalid-request",
+    "invalid-signing-options",
+    "clock-unavailable",
+    "nonce-generation-failed",
+    "resource-limit",
+    "signing-failed"
+  ],
+  "defaults": {
+    "label": "sig1",
+    "profile": "ietf-wg-protocol-00",
+    "lifetimeSeconds": 60,
+    "clock": "Date.now; synchronous Unix milliseconds",
+    "nonce": "crypto.randomBytes(32), unpadded base64url"
+  },
+  "contract": [
+    "Return three canonical name/value pairs; never mutate request or its headers array.",
+    "Existing signature headers are detected case-insensitively, even with empty values.",
+    "Existing-header rejection precedes clock, nonce and crypto calls.",
+    "Clock output must be a finite nonnegative number; created is floor(ms/1000).",
+    "created and expires must be representable RFC 9421 SF integers.",
+    "Nonce uses the same 1–256 printable ASCII validation helper as the verifier.",
+    "Serialize nonce as SF string; never concatenate an unescaped provider result.",
+    "Use the shared origin validator, with canonical origin in newly emitted agent headers.",
+    "Provider failures expose no raw exception, nonce or key material in message/details.",
+    "Clock/nonce providers are synchronous; remote signing providers are a future interface.",
+    "Custom clock/nonce providers are test hooks; deterministic overrides are unsafe in production.",
+    "Golden acceptance is byte equality, not a signer/verifier round trip.",
+    "Full offline verified round trip is mandatory after time/replay/verifier implementation."
+  ]
+}

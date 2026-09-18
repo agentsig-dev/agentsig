@@ -1,0 +1,333 @@
+{
+  "clock": [
+    {
+      "output": {
+        "kind": "nan"
+      },
+      "expectedCode": "clock-unavailable"
+    },
+    {
+      "output": {
+        "kind": "positive-infinity"
+      },
+      "expectedCode": "clock-unavailable"
+    },
+    {
+      "output": {
+        "kind": "negative-infinity"
+      },
+      "expectedCode": "clock-unavailable"
+    },
+    {
+      "output": {
+        "kind": "number",
+        "value": -1
+      },
+      "expectedCode": "clock-unavailable"
+    },
+    {
+      "output": {
+        "kind": "number",
+        "value": -0.5
+      },
+      "expectedCode": "clock-unavailable"
+    },
+    {
+      "output": {
+        "kind": "string",
+        "value": "1800000000000"
+      },
+      "expectedCode": "clock-unavailable"
+    },
+    {
+      "output": {
+        "kind": "null"
+      },
+      "expectedCode": "clock-unavailable"
+    },
+    {
+      "output": {
+        "kind": "undefined"
+      },
+      "expectedCode": "clock-unavailable"
+    },
+    {
+      "output": {
+        "kind": "object"
+      },
+      "expectedCode": "clock-unavailable"
+    },
+    {
+      "output": {
+        "kind": "promise"
+      },
+      "expectedCode": "clock-unavailable"
+    },
+    {
+      "output": {
+        "kind": "throw",
+        "message": "PRIVATE-PROVIDER-MARKER"
+      },
+      "expectedCode": "clock-unavailable"
+    },
+    {
+      "output": {
+        "kind": "number",
+        "value": 1.7976931348623157e+308
+      },
+      "expectedCode": "clock-unavailable"
+    }
+  ],
+  "nonce": [
+    {
+      "output": {
+        "kind": "string",
+        "value": ""
+      },
+      "expectedCode": "nonce-generation-failed"
+    },
+    {
+      "output": {
+        "kind": "string",
+        "value": "\t"
+      },
+      "expectedCode": "nonce-generation-failed"
+    },
+    {
+      "output": {
+        "kind": "string",
+        "value": "\n"
+      },
+      "expectedCode": "nonce-generation-failed"
+    },
+    {
+      "output": {
+        "kind": "string",
+        "value": ""
+      },
+      "expectedCode": "nonce-generation-failed"
+    },
+    {
+      "output": {
+        "kind": "string",
+        "value": "ü"
+      },
+      "expectedCode": "nonce-generation-failed"
+    },
+    {
+      "output": {
+        "kind": "string",
+        "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "expectedCode": "nonce-generation-failed"
+    },
+    {
+      "output": {
+        "kind": "number",
+        "value": 42
+      },
+      "expectedCode": "nonce-generation-failed"
+    },
+    {
+      "output": {
+        "kind": "null"
+      },
+      "expectedCode": "nonce-generation-failed"
+    },
+    {
+      "output": {
+        "kind": "undefined"
+      },
+      "expectedCode": "nonce-generation-failed"
+    },
+    {
+      "output": {
+        "kind": "object"
+      },
+      "expectedCode": "nonce-generation-failed"
+    },
+    {
+      "output": {
+        "kind": "promise"
+      },
+      "expectedCode": "nonce-generation-failed"
+    },
+    {
+      "output": {
+        "kind": "throw",
+        "message": "PRIVATE-PROVIDER-MARKER"
+      },
+      "expectedCode": "nonce-generation-failed"
+    }
+  ],
+  "existingHeaders": [
+    {
+      "header": [
+        "Signature",
+        ""
+      ],
+      "expectedCode": "existing-signature-headers",
+      "clockCalls": 0,
+      "nonceCalls": 0
+    },
+    {
+      "header": [
+        "Signature",
+        "already-present"
+      ],
+      "expectedCode": "existing-signature-headers",
+      "clockCalls": 0,
+      "nonceCalls": 0
+    },
+    {
+      "header": [
+        "signature",
+        ""
+      ],
+      "expectedCode": "existing-signature-headers",
+      "clockCalls": 0,
+      "nonceCalls": 0
+    },
+    {
+      "header": [
+        "signature",
+        "already-present"
+      ],
+      "expectedCode": "existing-signature-headers",
+      "clockCalls": 0,
+      "nonceCalls": 0
+    },
+    {
+      "header": [
+        "SIGNATURE",
+        ""
+      ],
+      "expectedCode": "existing-signature-headers",
+      "clockCalls": 0,
+      "nonceCalls": 0
+    },
+    {
+      "header": [
+        "SIGNATURE",
+        "already-present"
+      ],
+      "expectedCode": "existing-signature-headers",
+      "clockCalls": 0,
+      "nonceCalls": 0
+    },
+    {
+      "header": [
+        "Signature-Input",
+        ""
+      ],
+      "expectedCode": "existing-signature-headers",
+      "clockCalls": 0,
+      "nonceCalls": 0
+    },
+    {
+      "header": [
+        "Signature-Input",
+        "already-present"
+      ],
+      "expectedCode": "existing-signature-headers",
+      "clockCalls": 0,
+      "nonceCalls": 0
+    },
+    {
+      "header": [
+        "signature-input",
+        ""
+      ],
+      "expectedCode": "existing-signature-headers",
+      "clockCalls": 0,
+      "nonceCalls": 0
+    },
+    {
+      "header": [
+        "signature-input",
+        "already-present"
+      ],
+      "expectedCode": "existing-signature-headers",
+      "clockCalls": 0,
+      "nonceCalls": 0
+    },
+    {
+      "header": [
+        "SIGNATURE-INPUT",
+        ""
+      ],
+      "expectedCode": "existing-signature-headers",
+      "clockCalls": 0,
+      "nonceCalls": 0
+    },
+    {
+      "header": [
+        "SIGNATURE-INPUT",
+        "already-present"
+      ],
+      "expectedCode": "existing-signature-headers",
+      "clockCalls": 0,
+      "nonceCalls": 0
+    },
+    {
+      "header": [
+        "Signature-Agent",
+        ""
+      ],
+      "expectedCode": "existing-signature-headers",
+      "clockCalls": 0,
+      "nonceCalls": 0
+    },
+    {
+      "header": [
+        "Signature-Agent",
+        "already-present"
+      ],
+      "expectedCode": "existing-signature-headers",
+      "clockCalls": 0,
+      "nonceCalls": 0
+    },
+    {
+      "header": [
+        "signature-agent",
+        ""
+      ],
+      "expectedCode": "existing-signature-headers",
+      "clockCalls": 0,
+      "nonceCalls": 0
+    },
+    {
+      "header": [
+        "signature-agent",
+        "already-present"
+      ],
+      "expectedCode": "existing-signature-headers",
+      "clockCalls": 0,
+      "nonceCalls": 0
+    },
+    {
+      "header": [
+        "SIGNATURE-AGENT",
+        ""
+      ],
+      "expectedCode": "existing-signature-headers",
+      "clockCalls": 0,
+      "nonceCalls": 0
+    },
+    {
+      "header": [
+        "SIGNATURE-AGENT",
+        "already-present"
+      ],
+      "expectedCode": "existing-signature-headers",
+      "clockCalls": 0,
+      "nonceCalls": 0
+    }
+  ],
+  "notes": [
+    "Promise output is invalid, not awaited; providers are synchronous.",
+    "Finite enormous clock output cannot become a representable signed timestamp.",
+    "Exception markers are synthetic test data and must never appear in error message/details.",
+    "Retain request object, headers-array and header-entry references across both success and failure."
+  ]
+}

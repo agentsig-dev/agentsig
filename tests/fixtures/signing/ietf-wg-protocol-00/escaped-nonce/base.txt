@@ -1,0 +1,4 @@
+"@method": GET
+"@target-uri": https://merchant.example/items?sku=42
+"signature-agent";key="custom-agent": "https://agent.example"
+"@signature-params": ("@method" "@target-uri" "signature-agent";key="custom-agent");created=1800000000;expires=1800000060;keyid="DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84";alg="ed25519";nonce="quote\"slash\\end";tag="web-bot-auth"
