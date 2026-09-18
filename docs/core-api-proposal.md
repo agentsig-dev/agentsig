@@ -1,5 +1,5 @@
 # agentsig — core API önerisi
-Durum: motor ayrımı ve nonce/zaman varsayılanları onaylandı; nihai uygulama planı onay bekliyor. İnceleme tarihi: 2026-09-18. Bu belge uygulama değildir.
+Durum: ilk motor kilometre taşı uygulandı (core-m1); aşağıdaki ilk öneri tarihsel tasarım kaydıdır. Güncel API karşılaştırması §11'dedir. M2 yalnızca [onay bekleyen plan](milestone-2-plan.md) aşamasındadır. İnceleme tarihi: 2026-09-18.
 
 ## Uygulama onayı — 2026-09-18
 Bu bölüm, aşağıdaki ilk önerilerle çelişen noktalarda önceliklidir.
@@ -45,7 +45,7 @@ Core'un saf motoru ile Node ağ erişimi kullanan dizin modülü ayrı alt giri�
 Operatör adı, kriptografiden türetilmez; doğrulanmış kimliği operatöre eşleyen uygulama hook'u tarafından sağlanır.
 
 ## 3. İlk kilometre taşı: tip düzeyindeki API
-Aşağıdaki bildirimler öneridir. İsimler ve kapsam kullanıcı onayından sonra uygulanacaktır.
+Aşağıdaki bildirimler tarihsel öneridir; doğrudan güncel API referansı değildir. Uygulanan tipler ve gerekçeli farklar §11'de karşılaştırılır.
 Başlıklar sıralı çiftlerdir: tekrarları korur; yalnızca Headers veya Record kullanımı zorunlu değildir.
 URI girdisi HTTP mesajının dışarıdan görülen hedefidir; imzalanmadan önce rastgele URL normalizasyonu yapılmaz.
 Motor Forwarded/X-Forwarded-* başlıklarına kendiliğinden güvenmez.
@@ -329,3 +329,36 @@ Bu farklar henüz uygulanmış yetenekler değil, proje hedefleridir. Resmî IET
 
 Node 20 uyumluluk hedefi korunur; destek ömrü ve güncel LTS önerisi README'de ayrı açıklanır. Araçların minimum Node sürümleri kurulumdan önce kontrol edilir.
 Dizin güvenlik limitleri, cache politikası ve WG vektör envanteri sonraki profil/dizin kilometre taşına geçiş kapılarıdır; ilk motor teslimatına ağ davranışı eklenmez.
+
+## 11. core-m1: öneri ↔ uygulanan API karşılaştırması
+
+İnceleme temeli: motor commit'i **b3b0829**, SF commit'i **584144c** ve bağımsız audit commit'i **5fd54d3**.
+Kullanıcı, **core-m1** etiketinin push edildiğini ve CI matrisinin yeşil olduğunu bildirmiştir.
+Bu kayıt sonraki yerel değişikliklerin CI sonucunu veya bir güvenlik denetimini temsil etmez.
+
+**Sonuç:** Dört işlemli motorun sorumluluk ayrımında sapma yok. İlk tip taslağına göre aşağıdaki API farkları vardır; “birebir sapma yok” iddiası yapılmaz.
+Bu karşılaştırma uygulama davranışını değiştirmez ve bütün RFC kurallarının güvenlik denetimi değildir.
+
+| Alan | İlk öneri | Uygulanan sözleşme ve gerekçe |
+| --- | --- | --- |
+| Dört işlem | Ayrıştırma, imza tabanı, imzalama, kriptografik doğrulama | **Sapma yok.** [Dışa aktarımlar](../packages/core/src/index.ts:1) aynı dört işlemi sunar; son iki işlem Promise döndürür. |
+| Ağ/saat/nonce/yetki | Saf motorun dışında | **Sapma yok.** [Kriptografik doğrulama](../packages/core/src/crypto.ts:80) yalnızca verilen açık anahtarla imzayı kontrol eder; gövde digest'ini de doğrulamaz. |
+| Başlık değerleri | Yalnızca metin | [`HeaderField`](../packages/core/src/types.ts:8) ASCII metin veya ham bayt kabul eder. Binary-wrapped alanlarda özgün oktetleri UTF-8/Latin-1 tahminiyle değiştirmemek için genişletildi. |
+| HTTP sürümü | Ayrı alan yok | [`RequestParts`](../packages/core/src/types.ts:11) ve [`HttpMessage`](../packages/core/src/types.ts:22) açık HTTP sürümü bağlamı taşıyor. Eski satır katlamasını yalnızca HTTP/1.1 bağlamında çözmek için eklendi. |
+| Ham hedef ve yanıt bağlamı | İsteğe bağlı ham hedef ve ilgili request | **Sapma yok.** Ham hedef bileşeni kullanılıyorsa ayrıca sağlanır; ilişkili request yoksa tahmin edilmez. |
+| Kaynak limitleri | Dört imza ayrıştırma limiti | [`Limits`](../packages/core/src/types.ts:52) mesaj başlıkları, URI, imza tabanı ve SF bütçesiyle genişletildi. Kullanıcının sonraki 16 KiB açık core bütçesi kararı uygulandı. |
+| Ayrıştırma çağrısı | İkinci argüman zorunlu tam limit nesnesi | [`parseSignatureHeaders()`](../packages/core/src/signature-input.ts:118) isteğe bağlı kısmi bütçe değişiklikleri alır. [`LimitOverrides`](../packages/core/src/types.ts:63) dondurulmuş açık core varsayılanlarını güvenle özelleştirir; SF varsayılanına sessiz bağımlılık yoktur. |
+| Kanonikleştirme seçenekleri | Yalnızca SF alan türleri | [`CanonicalizationOptions`](../packages/core/src/types.ts:68) çağrı başına limitleri de taşır; imza tabanı ve kodlama genişlemesini sınırlamak için eklendi. |
+| SF tiplerinin sahibi | Core taslağında yerel SF türleri | Ayrı paket kararıyla [`BareItem` ve diğer SF türleri](../packages/structured-fields/src/index.ts:16) @agentsig/structured-fields tarafından sağlanır. Core [`Parameters`](../packages/core/src/types.ts:103) türünü tekrar dışa aktarır; eski SfBare/SfParameter adları core dış API'sinde yoktur. |
+| Ret nedenleri | Beş neden | [`RejectionReason`](../packages/core/src/types.ts:86) algoritma uyuşmazlığı ve kaynak limiti nedenleriyle genişletildi. Bunlar yanlış imzadan ayrı tanı konmasını sağlar. |
+| Hata sözleşmesi | Tipli parser/base hatası, beklenen crypto ret sonucu | [`Hata sınıfları`](../packages/core/src/errors.ts:1) bunu uygular; geçersiz çağıran yapılandırması sıradan imza reddine çevrilmez. Kripto sonucunda limit ayrıntıları değil yalnızca kaynak-ret kodu döner; ayrıntılar doğrudan işlem hatasında bulunur. |
+| Çoklu imza | Etiket başına imza dizisi | [`Ayrıştırıcı`](../packages/core/src/signature-input.ts:113) tüm çiftleri işler: boş imzasız alanlar boş dizi verir, karşılığı eksik herhangi bir etiket bütün çağrıyı reddeder. Öneride belirtilmeyen bu daha katı all-pairs davranışı belgelenmiştir; tek etiket seçimi API'si yoktur. |
+| Etiket/parametre tekrarları | Ham oluşumlar korunur, RFC semantiği ayrı uygulanır | SF ham AST korunur; RFC 9421 imza etiketleri tekrarlanamaz. Core'un anlamsal sonucu ham AST'yi döndürmez. Sonradan oluşturulmuş anlamsal parametre tekrarları serileştiricide reddedilir. |
+| SF alan tür bilgisi | Çağıran tür tablosu | İmza alanları ve Content-Digest için yerleşik Dictionary bilgisi eklendi; diğer alanlar çağırandan gelir. Otomatik ağ/IANA sorgusu yoktur. |
+| Kripto çalışma şekli | Promise tabanlı API | Dönüş tipi aynı; [uygulama](../packages/core/src/crypto.ts:35) sınırlı girdi üzerinde senkrondur. Promise, worker-thread veya bloklamayan kriptografi vaadi değildir. |
+| Trailer ve algoritmalar | Trailer yok; yalnızca Ed25519 | **Sapma yok.** Açık ret davranışları ve dört bağımsız golden takımı vardır. |
+| Tam Web Bot Auth sonucu | Sonraki katmanın taslağı | §4'teki profil, zaman, ReplayStore ve VerificationResult henüz dışa aktarılmıyor. Bu bir M1 eksikliği değil, onaylanan kapsam sınırıdır; M2'de kapalı kodlara daraltılacak. |
+
+Güncel kullanım referansı: [core belgesi](../packages/core/README.md).
+GitHub metadata adresi https://github.com/agentsig-dev/agentsig; npm kapsamı @agentsig olarak kalır.
+Üç proje manifesti güncellenir; HTTP WG fixture içindeki üçüncü taraf manifest değiştirilmeyerek kaynak özeti ve provenance korunur.

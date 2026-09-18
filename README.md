@@ -1,5 +1,7 @@
 # agentsig
 
+> **Status: core engine only, pre-release, not security-reviewed**
+
 Node.js için açık kaynak HTTP Message Signatures ve Web Bot Auth araç takımı.
 
 **Mevcut teslimat:** profilden bağımsız RFC 9421 + Ed25519 motoru ve ayrı RFC 9651
@@ -8,6 +10,16 @@ uygulanmamıştır. Proje güvenlik denetiminden geçmiş değildir; resmî IETF
 Cloudflare referans uygulaması/onayı iddia edilmez.
 
 GitHub: https://github.com/agentsig-dev/agentsig
+npm organizasyonu: **agentsig** (GitHub organizasyonu: **agentsig-dev**).
+
+## Kısa yol haritası
+
+- **M1 — mevcut:** RFC 9421 + Ed25519 motoru, ayrı Structured Fields paketi ve bağımsız fixture denetimi. Kullanıcı tarafından push edilen **core-m1** etiketi için CI matrisi yeşil olarak doğrulandı.
+- **M2 — öneri, onay bekliyor:** iki sabit profil, zaman politikası, replay deposu ve elle verilen JWKS ile çevrimdışı doğrulama. [M2 planı](docs/milestone-2-plan.md).
+- **Daha sonra:** güvenli dizin fetch/cache, istemci sarmalayıcısı, framework adaptörleri ve CLI; her aşama ayrı onaya tabidir.
+
+**Profil, ağ, zaman/replay, adaptör ve CLI katmanları henüz yoktur.**
+Planın belgelenmesi bu katmanların uygulandığı veya uygulama onayının alındığı anlamına gelmez.
 
 ## Neden bu kütüphane?
 
@@ -69,6 +81,7 @@ pnpm 10.12.1 kullanılır. Depo kökünde sırasıyla:
 Komutlar [workspace manifestinde](package.json) tanımlıdır:
 - Tam kontrol: derleme → tip kontrolü → birim/golden/property testleri → tüketici/fixture testleri.
 - Birim testleri: pnpm run test:unit
+- Motordan bağımsız RFC ↔ fixture ↔ kripto denetimi: pnpm run audit:fixtures
 - Yalnızca fixture bütünlüğü: pnpm run test:fixtures
 - Geliştirme sırasında test izleme: pnpm run test:watch
 - Sürüm değişikliği kaydı: pnpm changeset
@@ -90,8 +103,13 @@ Kurulum paket yayınlamaz; otomatik yayınlama veya release workflow'u yoktur.
 [Fixture kaynakları, commit ve lisans atıfları](docs/fixture-provenance.md) ·
 [CI matrisi](.github/workflows/ci.yml)
 
-CI hedefi Node 20/22/24 × Windows/Linux'tur. Matris tanımı tüm hücrelerin
-çalıştırıldığı anlamına gelmez; yerel sonuçlar ile uzak CI sonuçları ayrı raporlanır.
+CI hedefi Node 20/22/24 × Windows/Linux'tur. Kullanıcı **core-m1** için matrisi
+yeşil olarak doğrulamıştır. Daha sonraki yerel değişiklikler için bu sonuç
+devralınmaz; her commit'in uzak CI sonucu ayrı değerlendirilir.
+[Fixture workflow'u](.github/workflows/fixtures.yml) tüm PR'larda bağımsız audit
+ve bayt bütünlüğü kontrollerini çalıştırır; fixture dizinlerini değiştiren PR'lar
+dahil hiçbir PR yol filtresiyle atlanmaz. Tarihsel fixture commit'ini incelemek
+için tam Git geçmişi alınır; audit bağımlılık kurulumu veya motor derlemesi gerektirmez.
 
 ## Protocol compatibility
 

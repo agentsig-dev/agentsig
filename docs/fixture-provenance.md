@@ -79,9 +79,22 @@ imza/anahtar dosyalarını dönüşümden muaf tutar. Bu ayarlar mevcut çalış
 kendiliğinden düzeltmediği için manifest kontrolü checkout öncesinde de gereklidir.
 
 [Fixture CI matrisi](../.github/workflows/fixtures.yml) Node 20/22/24 ve
-Windows/Linux üzerinde aynı testi çalıştırmak üzere tanımlanmıştır.
-Yerel Windows / Node 22 çalıştırmasında beş test geçmiştir; bu, diğer matris
-hücrelerinin çalıştırıldığı veya kütüphane motorunun doğrulandığı anlamına gelmez.
+Windows/Linux üzerinde çalışır. Kullanıcı, push ettiği **core-m1** etiketi için
+CI matrisinin yeşil olduğunu 2026-09-18 tarihinde doğrulamıştır. Bu bildirim
+sonraki yerel değişikliklerin CI sonucu değildir.
+
+[Motordan bağımsız audit](../scripts/audit-fixtures.mjs) RFC metni ↔ fixture ↔
+Node kriptografisi zincirini ve ilk fixture commit'inde uygulama kodu olmadığını
+kontrol eder. Kök [manifestteki](../package.json) audit:fixtures komutuyla,
+bağımlılık kurulumu veya motor derlemesi olmadan çalıştırılır.
+Betik kullanıcı tarafından **5fd54d3** commit'inde eklenmiştir; bu entegrasyon
+betiğin davranışını veya sabit fixture'ları değiştirmez.
+
+Workflow yol filtresi kullanmaz: fixture dizinlerini değiştirenler dahil tüm
+PR'larda audit ve bütünlük testi çalışır. Tarihsel commit kontrolü için tam Git
+geçmişi alınır. Audit bazı metin karşılaştırmalarında sunum normalizasyonu
+uyguladığından, dosya sonu ve tam bayt eşitliği için manifest/bütünlük testi
+ayrıca zorunludur; audit tek başına onun yerine geçmez.
 
 ## Yeniden aktarım
 
