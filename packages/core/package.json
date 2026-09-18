@@ -12,6 +12,10 @@
         "url": "https://github.com/agentsig-dev/agentsig.git",
         "directory": "packages/core"
     },
+    "homepage": "https://github.com/agentsig-dev/agentsig/tree/main/packages/core#readme",
+    "bugs": {
+        "url": "https://github.com/agentsig-dev/agentsig/issues"
+    },
     "main": "./dist/index.cjs",
     "module": "./dist/index.js",
     "types": "./dist/index.d.ts",

@@ -2,6 +2,7 @@ name: Fixture integrity
 
 on:
   push:
+  # Deliberately unfiltered: every PR, including every fixture change, is checked.
   pull_request:
   workflow_dispatch:
 
@@ -22,10 +23,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
+          # audit-fixtures checks the original fixture commit, not only HEAD.
+          fetch-depth: 0
           persist-credentials: false
       - name: Set up Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: ${{ matrix.node }}
+      - name: Audit RFC, fixture, and crypto chain independently of the engine
+        run: npm run audit:fixtures
       - name: Check pinned fixture bytes and Git line endings
         run: node --test tests/fixture-integrity.test.mjs
