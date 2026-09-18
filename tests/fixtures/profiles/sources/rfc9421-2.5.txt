@@ -1,0 +1,192 @@
+2.5.  Creating the Signature Base
+
+   The signature base is an ASCII string [ASCII] containing the
+   canonicalized HTTP message components covered by the signature.  The
+   input to the signature base creation algorithm is the ordered set of
+   covered component identifiers and their associated values, along with
+   any additional signature parameters discussed in Section 2.3.
+
+   Component identifiers are serialized using the strict serialization
+   rules defined by [STRUCTURED-FIELDS], Section 4.  The component
+   identifier has a component name, which is a String Item value
+   serialized using the sf-string ABNF rule.  The component identifier
+   MAY also include defined parameters that are serialized using the
+   parameters ABNF rule.  The signature parameters line defined in
+   Section 2.3 follows this same pattern, but the component identifier
+   is a String Item with a fixed value and no parameters, and the
+   component value is always an Inner List with optional parameters.
+
+   Note that this means the serialization of the component name itself
+   is encased in double quotes, with parameters following as a
+   semicolon-separated list, such as "cache-control", "@authority",
+   "@signature-params", or "example-dictionary";key="foo".
+
+   The output is the ordered set of bytes that form the signature base,
+   which conforms to the following ABNF:
+
+   signature-base = *( signature-base-line LF ) signature-params-line
+   signature-base-line = component-identifier ":" SP
+       ( derived-component-value / *field-content )
+       ; no obs-fold nor obs-text
+   component-identifier = component-name parameters
+   component-name = sf-string
+   derived-component-value = *( VCHAR / SP )
+   signature-params-line = DQUOTE "@signature-params" DQUOTE
+        ":" SP inner-list
+
+   To create the signature base, the signer or verifier concatenates
+   entries for each component identifier in the signature's covered
+   components (including their parameters) using the following
+   algorithm.  All errors produced as described MUST fail the algorithm
+   immediately, without outputting a signature base.
+
+   1.  Let the output be an empty string.
+
+   2.  For each message component item in the covered components set (in
+       order):
+
+       2.1.  If the component identifier (including its parameters) has
+             already been added to the signature base, produce an error.
+
+       2.2.  Append the component identifier for the covered component
+             serialized according to the component-identifier ABNF rule.
+             Note that this serialization places the component name in
+             double quotes and appends any parameters outside of the
+             quotes.
+
+       2.3.  Append a single colon (:).
+
+       2.4.  Append a single space (" ").
+
+       2.5.  Determine the component value for the component identifier.
+
+             *  If the component identifier has a parameter that is not
+                understood, produce an error.
+
+             *  If the component identifier has parameters that are
+                mutually incompatible with one another, such as bs and
+                sf, produce an error.
+
+             *  If the component identifier contains the req parameter
+                and the target message is a request, produce an error.
+
+             *  If the component identifier contains the req parameter
+                and the target message is a response, the context for
+                the component value is the related request message of
+                the target response message.  Otherwise, the context for
+                the component value is the target message.
+
+             *  If the component name starts with an "at" (@) character,
+                derive the component's value from the message according
+                to the specific rules defined for the derived component,
+                as provided in Section 2.2, including processing of any
+                known valid parameters.  If the derived component name
+                is unknown or the value cannot be derived, produce an
+                error.
+
+             *  If the component name does not start with an "at" (@)
+                character, canonicalize the HTTP field value as
+                described in Section 2.1, including processing of any
+                known valid parameters.  If the field cannot be found in
+                the message or the value cannot be obtained in the
+                context, produce an error.
+
+       2.6.  Append the covered component's canonicalized component
+             value.
+
+       2.7.  Append a single newline (\n).
+
+   3.  Append the signature parameters component (Section 2.3) according
+       to the signature-params-line rule as follows:
+
+       3.1.  Append the component identifier for the signature
+             parameters serialized according to the component-identifier
+             rule, i.e., the exact value "@signature-params" (including
+             double quotes).
+
+       3.2.  Append a single colon (:).
+
+       3.3.  Append a single space (" ").
+
+       3.4.  Append the signature parameters' canonicalized component
+             values as defined in Section 2.3, i.e., Inner List
+             Structured Field values with parameters.
+
+   4.  Produce an error if the output string contains any non-ASCII
+       characters [ASCII].
+
+   5.  Return the output string.
+
+   If covered components reference a component identifier that cannot be
+   resolved to a component value in the message, the implementation MUST
+   produce an error and not create a signature base.  Such situations
+   include, but are not limited to, the following:
+
+   *  The signer or verifier does not understand the derived component
+      name.
+
+   *  The component name identifies a field that is not present in the
+      message or whose value is malformed.
+
+   *  The component identifier includes a parameter that is unknown or
+      does not apply to the component identifier to which it is
+      attached.
+
+   *  The component identifier indicates that a Structured Field
+      serialization is used (via the sf parameter), but the field in
+      question is known to not be a Structured Field or the type of
+      Structured Field is not known to the implementation.
+
+   *  The component identifier is a Dictionary member identifier that
+      references a field that is not present in the message, that is not
+      a Dictionary Structured Field, or whose value is malformed.
+
+   *  The component identifier is a Dictionary member identifier or a
+      named query parameter identifier that references a member that is
+      not present in the component value or whose value is malformed.
+      For example, the identifier is "example-dict";key="c", and the
+      value of the Example-Dict header field is a=1, b=2, which does not
+      have the c value.
+
+   In the following non-normative example, the HTTP message being signed
+   is the following request:
+
+   NOTE: '\' line wrapping per RFC 8792
+
+   POST /foo?param=Value&Pet=dog HTTP/1.1
+   Host: example.com
+   Date: Tue, 20 Apr 2021 02:07:55 GMT
+   Content-Type: application/json
+   Content-Digest: sha-512=:WZDPaVn/7XgHaAy8pmojAkGWoRx2UFChF41A2svX+T\
+     aPm+AbwAgBWnrIiYllu7BNNyealdVLvRwEmTHWXvJwew==:
+   Content-Length: 18
+
+   {"hello": "world"}
+
+   The covered components consist of the @method, @authority, and @path
+   derived components followed by the Content-Digest, Content-Length,
+   and Content-Type HTTP header fields, in order.  The signature
+   parameters consist of a creation timestamp of 1618884473 and a key
+   identifier of test-key-rsa-pss.  Note that no explicit alg parameter
+   is given here, since the verifier is known by the application to use
+   the RSA-PSS algorithm based on the identified key.  The signature
+   base for this message with these parameters is:
+
+   NOTE: '\' line wrapping per RFC 8792
+
+   "@method": POST
+   "@authority": example.com
+   "@path": /foo
+   "content-digest": sha-512=:WZDPaVn/7XgHaAy8pmojAkGWoRx2UFChF41A2svX\
+     +TaPm+AbwAgBWnrIiYllu7BNNyealdVLvRwEmTHWXvJwew==:
+   "content-length": 18
+   "content-type": application/json
+   "@signature-params": ("@method" "@authority" "@path" \
+     "content-digest" "content-length" "content-type")\
+     ;created=1618884473;keyid="test-key-rsa-pss"
+
+               Figure 1: Non-normative Example Signature Base
+
+   Note that the example signature base above does not include the final
+   newline that ends the displayed example, nor do other example
+   signature bases displayed elsewhere in this specification.

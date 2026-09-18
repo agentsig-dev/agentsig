@@ -1,0 +1,166 @@
+{
+  "stage": "origin-validation-only",
+  "profiles": [
+    "ietf-wg-protocol-00",
+    "cloudflare-docs-2026-07-01"
+  ],
+  "notes": [
+    "Cloudflare origin-only restriction is stricter local M2 policy, not a Cloudflare requirement.",
+    "Canonical origin is for identity comparison only; never rewrite signed header bytes.",
+    "Normalize scheme/host case, remove explicit :443 and optional single trailing slash.",
+    "No non-default port, IP literal, non-ASCII host, userinfo, path, query or fragment.",
+    "No IDNA conversion. No DNS lookup. Passing origin validation is not domain ownership proof."
+  ],
+  "cases": [
+    {
+      "id": "equivalent-origin-0",
+      "value": "https://agent.example",
+      "canonicalOrigin": "https://agent.example"
+    },
+    {
+      "id": "equivalent-origin-1",
+      "value": "https://agent.example/",
+      "canonicalOrigin": "https://agent.example"
+    },
+    {
+      "id": "equivalent-origin-2",
+      "value": "HTTPS://AGENT.EXAMPLE",
+      "canonicalOrigin": "https://agent.example"
+    },
+    {
+      "id": "equivalent-origin-3",
+      "value": "hTtPs://Agent.Example/",
+      "canonicalOrigin": "https://agent.example"
+    },
+    {
+      "id": "equivalent-origin-4",
+      "value": "https://agent.example:443",
+      "canonicalOrigin": "https://agent.example"
+    },
+    {
+      "id": "equivalent-origin-5",
+      "value": "HTTPS://AGENT.EXAMPLE:443/",
+      "canonicalOrigin": "https://agent.example"
+    },
+    {
+      "id": "http",
+      "value": "http://agent.example",
+      "requestCode": "malformed-agent",
+      "configurationCode": "invalid-agent-binding"
+    },
+    {
+      "id": "path",
+      "value": "https://agent.example/path",
+      "requestCode": "malformed-agent",
+      "configurationCode": "invalid-agent-binding"
+    },
+    {
+      "id": "double-slash",
+      "value": "https://agent.example//",
+      "requestCode": "malformed-agent",
+      "configurationCode": "invalid-agent-binding"
+    },
+    {
+      "id": "dot-path",
+      "value": "https://agent.example/.",
+      "requestCode": "malformed-agent",
+      "configurationCode": "invalid-agent-binding"
+    },
+    {
+      "id": "query",
+      "value": "https://agent.example?x=1",
+      "requestCode": "malformed-agent",
+      "configurationCode": "invalid-agent-binding"
+    },
+    {
+      "id": "empty-query",
+      "value": "https://agent.example?",
+      "requestCode": "malformed-agent",
+      "configurationCode": "invalid-agent-binding"
+    },
+    {
+      "id": "fragment",
+      "value": "https://agent.example#x",
+      "requestCode": "malformed-agent",
+      "configurationCode": "invalid-agent-binding"
+    },
+    {
+      "id": "empty-fragment",
+      "value": "https://agent.example#",
+      "requestCode": "malformed-agent",
+      "configurationCode": "invalid-agent-binding"
+    },
+    {
+      "id": "userinfo",
+      "value": "https://user@agent.example",
+      "requestCode": "malformed-agent",
+      "configurationCode": "invalid-agent-binding"
+    },
+    {
+      "id": "empty-userinfo",
+      "value": "https://@agent.example",
+      "requestCode": "malformed-agent",
+      "configurationCode": "invalid-agent-binding"
+    },
+    {
+      "id": "other-port",
+      "value": "https://agent.example:8443",
+      "requestCode": "malformed-agent",
+      "configurationCode": "invalid-agent-binding"
+    },
+    {
+      "id": "ipv4",
+      "value": "https://192.0.2.1",
+      "requestCode": "malformed-agent",
+      "configurationCode": "invalid-agent-binding"
+    },
+    {
+      "id": "ipv6",
+      "value": "https://[2001:db8::1]",
+      "requestCode": "malformed-agent",
+      "configurationCode": "invalid-agent-binding"
+    },
+    {
+      "id": "ipv4-loopback",
+      "value": "https://127.0.0.1:443/",
+      "requestCode": "malformed-agent",
+      "configurationCode": "invalid-agent-binding"
+    },
+    {
+      "id": "unicode-host",
+      "value": "https://ajän.example",
+      "requestCode": "malformed-agent",
+      "configurationCode": "invalid-agent-binding"
+    },
+    {
+      "id": "empty-host",
+      "value": "https:///",
+      "requestCode": "malformed-agent",
+      "configurationCode": "invalid-agent-binding"
+    },
+    {
+      "id": "relative",
+      "value": "//agent.example",
+      "requestCode": "malformed-agent",
+      "configurationCode": "invalid-agent-binding"
+    },
+    {
+      "id": "leading-space",
+      "value": " https://agent.example",
+      "requestCode": "malformed-agent",
+      "configurationCode": "invalid-agent-binding"
+    },
+    {
+      "id": "trailing-space",
+      "value": "https://agent.example ",
+      "requestCode": "malformed-agent",
+      "configurationCode": "invalid-agent-binding"
+    },
+    {
+      "id": "backslash",
+      "value": "https://agent.example\\path",
+      "requestCode": "malformed-agent",
+      "configurationCode": "invalid-agent-binding"
+    }
+  ]
+}

@@ -1,0 +1,156 @@
+{
+  "stage": "local-identity-binding-only",
+  "notes": [
+    "Assume selected key, valid cryptography and otherwise eligible request.",
+    "Passing this stage is not a verified request result; time and replay remain separate.",
+    "No network proof, automatic URL trust or operator identity inference."
+  ],
+  "cases": [
+    {
+      "id": "manual-jwks-no-domain-trust",
+      "thumbprint": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+      "claim": "https://agent.example",
+      "requireBinding": false,
+      "bindings": [],
+      "expected": {
+        "identityKind": "key-thumbprint",
+        "thumbprint": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84"
+      }
+    },
+    {
+      "id": "canonical-binding-match-0",
+      "thumbprint": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+      "claim": "https://agent.example",
+      "requireBinding": true,
+      "bindings": [
+        {
+          "thumbprint": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+          "origin": "HTTPS://AGENT.EXAMPLE:443/"
+        }
+      ],
+      "expected": {
+        "identityKind": "directory-url",
+        "canonicalOrigin": "https://agent.example",
+        "directoryUrl": "https://agent.example/.well-known/http-message-signatures-directory",
+        "trustSource": "local-configuration"
+      }
+    },
+    {
+      "id": "canonical-binding-match-1",
+      "thumbprint": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+      "claim": "https://agent.example/",
+      "requireBinding": true,
+      "bindings": [
+        {
+          "thumbprint": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+          "origin": "HTTPS://AGENT.EXAMPLE:443/"
+        }
+      ],
+      "expected": {
+        "identityKind": "directory-url",
+        "canonicalOrigin": "https://agent.example",
+        "directoryUrl": "https://agent.example/.well-known/http-message-signatures-directory",
+        "trustSource": "local-configuration"
+      }
+    },
+    {
+      "id": "canonical-binding-match-2",
+      "thumbprint": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+      "claim": "HTTPS://AGENT.EXAMPLE",
+      "requireBinding": true,
+      "bindings": [
+        {
+          "thumbprint": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+          "origin": "HTTPS://AGENT.EXAMPLE:443/"
+        }
+      ],
+      "expected": {
+        "identityKind": "directory-url",
+        "canonicalOrigin": "https://agent.example",
+        "directoryUrl": "https://agent.example/.well-known/http-message-signatures-directory",
+        "trustSource": "local-configuration"
+      }
+    },
+    {
+      "id": "canonical-binding-match-3",
+      "thumbprint": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+      "claim": "hTtPs://Agent.Example/",
+      "requireBinding": true,
+      "bindings": [
+        {
+          "thumbprint": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+          "origin": "HTTPS://AGENT.EXAMPLE:443/"
+        }
+      ],
+      "expected": {
+        "identityKind": "directory-url",
+        "canonicalOrigin": "https://agent.example",
+        "directoryUrl": "https://agent.example/.well-known/http-message-signatures-directory",
+        "trustSource": "local-configuration"
+      }
+    },
+    {
+      "id": "canonical-binding-match-4",
+      "thumbprint": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+      "claim": "https://agent.example:443",
+      "requireBinding": true,
+      "bindings": [
+        {
+          "thumbprint": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+          "origin": "HTTPS://AGENT.EXAMPLE:443/"
+        }
+      ],
+      "expected": {
+        "identityKind": "directory-url",
+        "canonicalOrigin": "https://agent.example",
+        "directoryUrl": "https://agent.example/.well-known/http-message-signatures-directory",
+        "trustSource": "local-configuration"
+      }
+    },
+    {
+      "id": "canonical-binding-match-5",
+      "thumbprint": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+      "claim": "HTTPS://AGENT.EXAMPLE:443/",
+      "requireBinding": true,
+      "bindings": [
+        {
+          "thumbprint": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+          "origin": "HTTPS://AGENT.EXAMPLE:443/"
+        }
+      ],
+      "expected": {
+        "identityKind": "directory-url",
+        "canonicalOrigin": "https://agent.example",
+        "directoryUrl": "https://agent.example/.well-known/http-message-signatures-directory",
+        "trustSource": "local-configuration"
+      }
+    },
+    {
+      "id": "required-binding-missing",
+      "thumbprint": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+      "claim": "https://agent.example",
+      "requireBinding": true,
+      "bindings": [],
+      "expected": {
+        "status": "unverified",
+        "code": "agent-binding-missing"
+      }
+    },
+    {
+      "id": "existing-binding-mismatch",
+      "thumbprint": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+      "claim": "https://other.example",
+      "requireBinding": true,
+      "bindings": [
+        {
+          "thumbprint": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84",
+          "origin": "https://agent.example"
+        }
+      ],
+      "expected": {
+        "status": "invalid",
+        "code": "agent-binding-mismatch"
+      }
+    }
+  ]
+}

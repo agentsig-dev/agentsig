@@ -1,0 +1,90 @@
+{
+  "formatVersion": 1,
+  "approvedOn": "2026-09-18",
+  "scope": "Pre-implementation origin, duplicate and local-binding expectations",
+  "relatedNotice": "tests/fixtures/m2/sources/IETF-NOTICE.txt",
+  "files": [
+    {
+      "path": "sources/rfc9421-2.3.txt",
+      "bytes": 4474,
+      "sha256": "33bd9104d9767596fd05c20581365f1a9abdb32faa773435a10fdd4a570f567c",
+      "source": {
+        "path": "tests/fixtures/sources/rfc9421.txt",
+        "sha256": "612655786bf4293bfc486e4177571467fbb3de6e6f0eea90cb74c346a34fdf3c",
+        "start": "2.3.  Signature Parameters\n",
+        "endExclusive": "2.4.  Signing Request Components",
+        "transformation": "Exact excerpt; retain pagination and whitespace",
+        "license": "Original IETF Trust notices retained in full source"
+      }
+    },
+    {
+      "path": "sources/rfc9421-2.5.txt",
+      "bytes": 8579,
+      "sha256": "4a7bf3200cdcf548eb13a2faa1f9b7d5b9c6e7ad14a51ff92f3a967d327f4d87",
+      "source": {
+        "path": "tests/fixtures/sources/rfc9421.txt",
+        "sha256": "612655786bf4293bfc486e4177571467fbb3de6e6f0eea90cb74c346a34fdf3c",
+        "start": "2.5.  Creating the Signature Base\n",
+        "endExclusive": "3.  HTTP Message Signatures",
+        "transformation": "Exact excerpt; retain pagination and whitespace",
+        "license": "Original IETF Trust notices retained in full source"
+      }
+    },
+    {
+      "path": "sources/rfc9651-dictionary.txt",
+      "bytes": 1738,
+      "sha256": "96356dc204cf6cb88197534bb5804e9449a93884fbb76d7a0c961e90b8e209fb",
+      "source": {
+        "path": "tests/fixtures/sources/rfc9651.txt",
+        "sha256": "fe27f2ec8819911afbe4bd11f6fcb947580da4c49e5423a1fff960e252ced26d",
+        "start": "4.2.2.  Parsing a Dictionary\n",
+        "endExclusive": "4.2.3.  Parsing an Item\n",
+        "transformation": "Exact excerpt; retain pagination and whitespace",
+        "license": "Original IETF Trust notices retained in full source"
+      }
+    },
+    {
+      "path": "sources/rfc9651-parameters.txt",
+      "bytes": 1316,
+      "sha256": "da3b9d2e2419e07fb388e5809b3d6a88f089a1d043b0480a3b2a9ddc16b3e6a6",
+      "source": {
+        "path": "tests/fixtures/sources/rfc9651.txt",
+        "sha256": "fe27f2ec8819911afbe4bd11f6fcb947580da4c49e5423a1fff960e252ced26d",
+        "start": "4.2.3.2.  Parsing Parameters\n",
+        "endExclusive": "4.2.3.3.  Parsing a Key\n",
+        "transformation": "Exact excerpt; retain pagination and whitespace",
+        "license": "Original IETF Trust notices retained in full source"
+      }
+    },
+    {
+      "path": "origin-cases.json",
+      "bytes": 4862,
+      "sha256": "2cd9cc2193d36c1f3cadbe8f2f8c7db799b19a7352b0972d5af8e29b557913ea",
+      "source": {
+        "author": "agentsig",
+        "license": "MIT",
+        "derivation": "Explicit expectations; no production imports"
+      }
+    },
+    {
+      "path": "duplicate-cases.json",
+      "bytes": 5638,
+      "sha256": "a105622825a1f20c5f0e69ac3faa834add0accfe06b16878e3354a1ca94dd49a",
+      "source": {
+        "author": "agentsig",
+        "license": "MIT",
+        "derivation": "Explicit expectations; no production imports"
+      }
+    },
+    {
+      "path": "binding-cases.json",
+      "bytes": 5184,
+      "sha256": "946988674dc3314d050b209e880b4b022301a92a2c2eb25c171289b6ce17384d",
+      "source": {
+        "author": "agentsig",
+        "license": "MIT",
+        "derivation": "Explicit expectations; no production imports"
+      }
+    }
+  ]
+}

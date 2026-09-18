@@ -1,0 +1,209 @@
+{
+  "stage": "raw-duplicate-screening-only-before-tag-selection",
+  "notes": [
+    "Dummy signature bytes are syntax input, not a cryptographic fixture.",
+    "Reject even identical repeated values; diagnostics name the repeated SF key.",
+    "RFC 9421 2.5 repeated component identifier rule is distinct from repeated parameter keys.",
+    "Parameter rejection is stricter local policy to prevent parser differentials; M1 stays unchanged."
+  ],
+  "cases": [
+    {
+      "id": "signature-created",
+      "headers": [
+        [
+          "signature-input",
+          "agent=(\"@method\" \"@target-uri\" \"signature-agent\";key=\"agent\");created=1800000000;expires=1800000060;tag=\"web-bot-auth\";created=1800000001"
+        ],
+        [
+          "signature",
+          "agent=:AA==:"
+        ],
+        [
+          "signature-agent",
+          "agent=\"https://agent.example\""
+        ]
+      ],
+      "expected": {
+        "status": "invalid",
+        "code": "malformed-signature",
+        "repeatedName": "created"
+      }
+    },
+    {
+      "id": "signature-tag",
+      "headers": [
+        [
+          "signature-input",
+          "agent=(\"@method\" \"@target-uri\" \"signature-agent\";key=\"agent\");created=1800000000;expires=1800000060;tag=\"web-bot-auth\";tag=\"other\""
+        ],
+        [
+          "signature",
+          "agent=:AA==:"
+        ],
+        [
+          "signature-agent",
+          "agent=\"https://agent.example\""
+        ]
+      ],
+      "expected": {
+        "status": "invalid",
+        "code": "malformed-signature",
+        "repeatedName": "tag"
+      }
+    },
+    {
+      "id": "signature-tag-identical",
+      "headers": [
+        [
+          "signature-input",
+          "agent=(\"@method\" \"@target-uri\" \"signature-agent\";key=\"agent\");created=1800000000;expires=1800000060;tag=\"web-bot-auth\";tag=\"web-bot-auth\""
+        ],
+        [
+          "signature",
+          "agent=:AA==:"
+        ],
+        [
+          "signature-agent",
+          "agent=\"https://agent.example\""
+        ]
+      ],
+      "expected": {
+        "status": "invalid",
+        "code": "malformed-signature",
+        "repeatedName": "tag"
+      }
+    },
+    {
+      "id": "signature-extension",
+      "headers": [
+        [
+          "signature-input",
+          "agent=(\"@method\" \"@target-uri\" \"signature-agent\";key=\"agent\");created=1800000000;expires=1800000060;tag=\"web-bot-auth\";custom=1;custom=2"
+        ],
+        [
+          "signature",
+          "agent=:AA==:"
+        ],
+        [
+          "signature-agent",
+          "agent=\"https://agent.example\""
+        ]
+      ],
+      "expected": {
+        "status": "invalid",
+        "code": "malformed-signature",
+        "repeatedName": "custom"
+      }
+    },
+    {
+      "id": "component-key",
+      "headers": [
+        [
+          "signature-input",
+          "agent=(\"@method\" \"@target-uri\" \"signature-agent\";key=\"other\";key=\"agent\");created=1800000000;expires=1800000060;tag=\"web-bot-auth\""
+        ],
+        [
+          "signature",
+          "agent=:AA==:"
+        ],
+        [
+          "signature-agent",
+          "agent=\"https://agent.example\""
+        ]
+      ],
+      "expected": {
+        "status": "invalid",
+        "code": "malformed-signature",
+        "repeatedName": "key"
+      }
+    },
+    {
+      "id": "component-identical-key",
+      "headers": [
+        [
+          "signature-input",
+          "agent=(\"@method\" \"@target-uri\" \"signature-agent\";key=\"agent\";key=\"agent\");created=1800000000;expires=1800000060;tag=\"web-bot-auth\""
+        ],
+        [
+          "signature",
+          "agent=:AA==:"
+        ],
+        [
+          "signature-agent",
+          "agent=\"https://agent.example\""
+        ]
+      ],
+      "expected": {
+        "status": "invalid",
+        "code": "malformed-signature",
+        "repeatedName": "key"
+      }
+    },
+    {
+      "id": "component-extension",
+      "headers": [
+        [
+          "signature-input",
+          "agent=(\"@method\";custom=1;custom=2 \"@target-uri\" \"signature-agent\";key=\"agent\");created=1800000000;expires=1800000060;tag=\"web-bot-auth\""
+        ],
+        [
+          "signature",
+          "agent=:AA==:"
+        ],
+        [
+          "signature-agent",
+          "agent=\"https://agent.example\""
+        ]
+      ],
+      "expected": {
+        "status": "invalid",
+        "code": "malformed-signature",
+        "repeatedName": "custom"
+      }
+    },
+    {
+      "id": "agent-member",
+      "headers": [
+        [
+          "signature-input",
+          "agent=(\"@method\" \"@target-uri\" \"signature-agent\";key=\"agent\");created=1800000000;expires=1800000060;tag=\"web-bot-auth\""
+        ],
+        [
+          "signature",
+          "agent=:AA==:"
+        ],
+        [
+          "signature-agent",
+          "agent=\"https://agent.example\", agent=\"https://other.example\""
+        ]
+      ],
+      "expected": {
+        "status": "invalid",
+        "code": "malformed-agent",
+        "repeatedName": "agent"
+      }
+    },
+    {
+      "id": "agent-identical-member",
+      "headers": [
+        [
+          "signature-input",
+          "agent=(\"@method\" \"@target-uri\" \"signature-agent\";key=\"agent\");created=1800000000;expires=1800000060;tag=\"web-bot-auth\""
+        ],
+        [
+          "signature",
+          "agent=:AA==:"
+        ],
+        [
+          "signature-agent",
+          "agent=\"https://agent.example\", agent=\"https://agent.example\""
+        ]
+      ],
+      "expected": {
+        "status": "invalid",
+        "code": "malformed-agent",
+        "repeatedName": "agent"
+      }
+    }
+  ]
+}

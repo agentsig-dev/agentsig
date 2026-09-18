@@ -1,0 +1,41 @@
+4.2.3.2.  Parsing Parameters
+
+   Given an ASCII string as input_string, return an ordered map whose
+   values are bare Items. input_string is modified to remove the parsed
+   value.
+
+   1.  Let parameters be an empty, ordered map.
+
+   2.  While input_string is not empty:
+
+       1.  If the first character of input_string is not ";", exit the
+           loop.
+
+       2.  Consume the ";" character from the beginning of input_string.
+
+       3.  Discard any leading SP characters from input_string.
+
+       4.  Let param_key be the result of running Parsing a Key
+           (Section 4.2.3.3) with input_string.
+
+       5.  Let param_value be Boolean true.
+
+       6.  If the first character of input_string is "=":
+
+           1.  Consume the "=" character at the beginning of
+               input_string.
+
+           2.  Let param_value be the result of running Parsing a Bare
+               Item (Section 4.2.3.1) with input_string.
+
+       7.  If parameters already contains a key param_key (comparing
+           character for character), overwrite its value with
+           param_value.
+
+       8.  Otherwise, append key param_key with value param_value to
+           parameters.
+
+   3.  Return parameters.
+
+   Note that when duplicate parameter keys are encountered, all but the
+   last instance are ignored.
