@@ -1,9 +1,10 @@
 # M2 ortak güvenlik bağlamı: saat, dönem ve sıfırlama
 
-Durum: 2026-09-18. İç koordinatör ve yardımcıları uygulanmıştır.
-Gerçek bellek içi replay deposu, dış bağlam fabrikası ve tam çevrimdışı
-doğrulayıcı henüz tamamlanmamıştır. Depo entegrasyon testleri test dublörleri
-kullanır; bu sonuçlar üretime hazırlık veya güvenlik denetimi iddiası değildir.
+Durum: 2026-09-18. İç koordinatör, gerçek bellek içi replay deposu ve
+ortak bağlam fabrikası uygulanmıştır. Gerçek depo entegrasyonu ve ayrıca
+başarısızlık enjeksiyonu için test dublörleri sınanır. Tam çevrimdışı doğrulayıcı
+ve profil paket dışa aktarımları henüz tamamlanmadı. Bu sonuçlar üretime
+hazırlık veya güvenlik denetimi iddiası değildir.
 
 ## Zaman ve saat sağlığı
 
@@ -132,7 +133,48 @@ Tam yerel regresyonda 4.136 birim testi, mevcut entegrasyon takımı,
 54 bağımsız fixture denetimi ve M1 audit'i başarılıdır. İki paketin
 derleme ve tip kontrolleri de geçti. Mevcut ESM/CJS tüketici kontrolleri
 M1 girişlerini kapsar; profil dışa aktarımlarını henüz sınamaz.
-Gerçek bellek deposu, dış bağlam fabrikası, doğrulayıcı ve profil ESM/CJS
-tüketici testleri bekliyor. Depo koordinasyonu test dublörleriyle sınandı;
-uzak CI sonucu doğrulanmadı.
+Bu sayıların kaydedildiği koordinatör teslimatından sonra gerçek bellek deposu
+ve bağlam fabrikası da eklendi. Son hedefli çalıştırmada 25 depo, 5 gerçek
+depo/koordinatör entegrasyonu, 10 fabrika ve 25 koordinatör testi olmak üzere
+65 test ile core tip kontrolü geçti. Gerçek depo ve fabrika eklendikten sonra
+tam yerel regresyon da başarılıdır: iki paketin derleme/tip kontrolleri,
+tüm birim ve mevcut entegrasyon testleri, M1 audit'i ve 54 bağımsız fixture
+denetimi geçti. Tam doğrulayıcı, korumacı saklama süresi hesabının entegrasyonu
+ve profil ESM/CJS tüketici testleri bekliyor; uzak CI sonucu doğrulanmadı.
 Push, yayın veya WG bildirimi yapılmadı.
+
+## Gerçek bellek deposu ve ortak fabrika
+
+[Bellek deposu](../packages/core/src/profiles/memory-replay-store.ts) varsayılan
+10.000 toplam kayıt ve anahtar thumbprint'i başına 1.000 kayıt sınırı uygular.
+Kota bütün scope'ları kapsar. Karar sırası süresi dolanları temizleme, replay,
+anahtar kotası, toplam kapasite ve eklemedir. Yaşayan kayıtlar yer açmak için
+atılmaz; replay mevcut kaydın süresini kısaltmaz veya uzatmaz.
+
+Atomiklik tek JavaScript yürütme alanı içindedir; kontrol ve ekleme arasında
+bekleme veya uygulama callback'i yoktur. Depo anahtarı scope, thumbprint ve
+nonce üçlüsünün çakışmasız JSON dizi kodlamasıdır. Profil/etiket anahtara girmez.
+Otomatik temizleme zamanlayıcısı yoktur. Süre dolumu yalnızca bağlamın sağlık
+kontrolünden geçen tüketim çağrısında işlenir; salt okunur sayaçları okumak
+kayıt silmez. Ayrı süreçler ve ayrı bağlamlar replay geçmişini paylaşmaz.
+
+Depo verilen saklama sonunu uygular. Korumacı son zaman hesabı ve imzanın
+tüketim öncesi/sonrası zaman kontrolü tam doğrulayıcı entegrasyonunun işidir;
+depo başarısı tek başına doğrulanmış istek anlamına gelmez.
+
+[Ortak fabrika](../packages/core/src/profiles/security-context.ts) varsayılan
+bellek deposunu ve koordinatörü birlikte oluşturur. Operatör yüzeyi yalnızca
+sıfırlama ve salt okunur durum/sayaç erişimini sunar; ham tüketim, depo ve
+temizleme portu dışarı verilmez. İç doğrulayıcı bağlantısı nesne kimliğiyle
+saklanır; kopyalanmış bir nesne geçerli bağlam sayılmaz.
+
+Haricî depo verilirse bellek kota ayarıyla birlikte kullanımı yapılandırma
+hatasıdır; uygulanmayan kota sessizce kabul edilmez. Haricî deponun temizleme
+metodu çağrılmaz. Bağımsız saat beyanıyla yerel dönem yenilenirken geçmiş
+korunur; beyansız veya bağlamın sahip olmadığı süreç saatli depoda sıfırlama
+reddedilir. Haricî depo sayaçları bilinmediği için sayı uydurulmaz.
+
+[Gerçek depo entegrasyon testleri](../packages/core/test/profile-memory-context.test.ts)
+sağlıksız saatte tüketim/temizleme engelini, 100 eşzamanlı tüketimde tek kabulü,
+eski dönem tamamlamasının reddini ve sağlıklı sıfırlamanın replay geçmişini
+bilinçli olarak silmesini gösterir. Tam doğrulayıcı round-trip testinin yerini almaz.
