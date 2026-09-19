@@ -230,7 +230,10 @@ invalid-replay-policy before the adapter becomes usable. Correct configuration
 and restart are the recovery path for a configuration error; M3 adds no manual
 early-release API and does not change the operator error catalog.
 
-The planned recoveryHorizonSeconds(policy) helper derives a single-clock bound:
+The internal [recoveryHorizonSeconds(policy) helper](../packages/core/src/profiles/recovery-horizon.ts)
+now implements the single-clock bound below. It is not yet exported through a
+public package entry. The Redis adapter and shared quarantine remain unimplemented;
+this pure helper neither connects to Redis nor establishes recovery readiness.
 
 - At first acceptance time T, creation C satisfies C <= T + skew.
 - Every later accepted time N satisfies both N < C + maxAge + skew and
@@ -239,8 +242,9 @@ The planned recoveryHorizonSeconds(policy) helper derives a single-clock bound:
 
 Therefore the bound is min(maxAge, maxLifetime) + 2 * skew: **360 seconds**
 with existing defaults. An imprecise 330-second quarantine would reopen a
-30-second window for a maximally future-created signature. The helper must
-reject arithmetic overflow rather than clamp it. The
+30-second window for a maximally future-created signature. The helper uses exact
+integer arithmetic and rejects overflow with invalid-time-policy rather than
+clamping it. Existing time-policy configuration validation remains in force. The
 [recovery fixtures](../tests/fixtures/m3-contract/recovery-cases.json) separately
 pin signature eligibility and quarantine completion at 359, 360, and 361 seconds.
 
@@ -249,6 +253,14 @@ store, plus the distributed-clock allowance. The library cannot validate that
 operator assertion. This helper does not replace normal conservative nonce
 retention, and it does not make arbitrary Redis clock jumps or backward
 verification-clock resets safe.
+
+The [helper tests](../packages/core/test/profile-recovery-horizon.test.ts) passed
+30 checks on local Node 20.20.2 and Node 22, including the pinned 359/360/361
+signature-time boundaries and safe-integer overflow. These are not Redis
+quarantine integration tests. Normal per-consume retention is unchanged.
+Representable seconds from this helper do not guarantee representable Redis
+milliseconds or absolute deadlines; the future adapter must validate those
+additional bounds and still require an explicit operator-supplied horizon.
 
 ### Shared quarantine state
 

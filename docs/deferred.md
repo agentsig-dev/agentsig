@@ -732,3 +732,34 @@ consumers, and the maintainer-run smoke. The discovery service currently owns on
 format/network-policy partition per instance; separate instances are not proof
 of process-global admission bounds. Package versions and offline public exports
 remain unchanged. No push or publication was performed.
+
+### Recovery horizon helper implementation checkpoint
+
+The internal recoveryHorizonSeconds helper now implements the previously approved
+bound min(maxAgeSeconds, maxLifetimeSeconds) + 2 * clockSkewSeconds. The derivation
+from the verifier's exclusive acceptance inequalities is included in source
+comments. Existing time-policy validation is reused, and exact integer arithmetic
+rejects an unrepresentable result with invalid-time-policy instead of clamping.
+
+Defaults produce 360 seconds. Thirty helper tests cover the independently pinned
+examples, the actual signature-time gate at elapsed 330/359/360/361 seconds,
+accessor rejection, safe-integer boundaries, and unchanged normal nonce retention.
+The helper neither connects to Redis nor starts quarantine. Its default policy
+does not authorize an implicit Redis recovery horizon: adapter configuration must
+still require the application's explicit value, including its deployment-wide
+clock allowance. Redis millisecond and absolute-deadline bounds remain additional
+adapter checks.
+
+Final local Node 22 workspace validation passed builds, type checks, 5,269 unit
+tests across 56 files, and 13 existing integration/consumer tests. All thirty
+helper tests also passed locally on Node 20.20.2. The independent M3 contract audit
+passed thirteen checks separately. These results do not demonstrate implemented
+Redis quarantine or full network-verifier authentication.
+
+The helper remains internal until the planned public entry/export integration.
+The preceding discovery integration is recorded in **e9a4848**, following
+rotation fixtures in **785b46f**. Remaining work includes shared admission across
+profile partitions, the full network verifier and required rotation races,
+Redis adapter/quarantine/eviction admission, public consumers, and the
+maintainer-run smoke. Package versions and existing public exports are unchanged.
+No push or publication was performed.
