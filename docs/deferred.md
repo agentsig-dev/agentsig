@@ -161,19 +161,61 @@ The npm dry-run inventories for this correction are:
 
 Both contain built outputs, README, LICENSE, and the package manifest, with no
 source, tests, fixtures, or private test keys. Dry runs did not create archives
-or publish packages. Remote CI for this correction remains unconfirmed.
-Stop after the local commit sequence so the maintainer can push and publish
-0.1.1. No assistant publication or push.
+or publish packages. The maintainer subsequently confirmed that **78dedf7** and
+**53b457e** were pushed, CI is green, the repository is public, and **0.1.1**
+is published on npm with tag **v0.1.1**. These are maintainer confirmations;
+the assistant did not publish or push.
 
-## Next stage: M3 planning and source pinning
+## M3 planning and source pinning
 
-After the documentation-patch handoff, prepare alternatives with benefits/costs
-for directory fetching, SSRF and DNS rebinding defenses, redirects, cache/stale
-behavior, key rotation, timeouts, byte limits, and the Redis store contract.
+The [M3 proposal](milestone-3-plan.md) presents discovery, SSRF/DNS rebinding,
+redirect, evidence/cache/stale, rotation, resource, and Redis decisions with
+alternatives and costs. D1–D17, R1–R6, and the explicitly listed subchoices
+remain pending approval. Recommendations are not selected defaults.
 
-Pin WG §5.5, Appendix C, and the Cloudflare directory section with provenance.
-Separately pin the Appendix F.3 JSON vectors from cloudflare/web-bot-auth,
-including web_bot_auth_architecture_v2.json, with immutable commit and license
-information. Report contradictions instead of changing vectors to fit the
-implementation. This work is pending; no M3 security policy or implementation
-is introduced by the documentation patch.
+Fourteen files are pinned in the [M3 manifest](../tests/fixtures/m3/manifest.json),
+including exact excerpts of WG §5.5, Appendix C and supporting sections, and
+the Cloudflare directory section. The WG/Cloudflare documentation baseline is
+reused from the accepted M2 snapshots, not represented as a newer revision.
+
+The F.3 JSON collection and a separately identified supplementary directory
+response vector are pinned from cloudflare/web-bot-auth commit
+**c07ecb6f3e82701f297dedb414237cc2e54a0948**, with original Apache-2.0 license,
+package attribution, Git blob identities, and source-tree evidence.
+Cloudflare documentation retains its separate CC BY 4.0 license.
+
+The [independent M3 audit](../tests/m3-fixture-audit.test.mjs) initially passed
+eight tests: exact source/manifest checks, four valid request signatures
+(two RSA and two Ed25519), and a valid directory-response signature plus
+comparisons with existing fixtures. RSA is audited as source material only;
+production remains Ed25519-only.
+
+Two F.3 requests omit Signature-Agent; two retain the sig2/agent2 mismatch.
+They are not WG-00 positive acceptance vectors. The Ed25519 member example
+matches the original E.2.1 bytes and existing issue #135. Long lifetimes and
+missing method/target-URI coverage separately conflict with local M2 policy.
+The supplementary directory response shares the E.2.3 body/digest but signs
+different metadata; both signatures are valid, so different signature bytes
+are not a cryptographic contradiction.
+
+No old fixtures or production APIs are changed. The new fixture audit is wired
+into CI, but M3 remote CI has not run. Network/Redis implementation requires
+explicit security decisions and fixture-first implementation approval.
+No push, publication, or upstream issue submission is performed.
+
+### M3 preparation validation
+
+Source/vector preparation and independent audit were committed in **9697d6c**,
+before any M3 production implementation. Reimporting produced identical bytes.
+The combined seven independent audit suites passed **68 tests** locally on
+Windows / Node 22, including eight new M3 source/vector checks.
+
+All fourteen staged source/vector files matched their manifest byte lengths and
+SHA-256 digests. The exact Appendix C excerpt retains a source-derived blank
+line at EOF; only that file was excluded from the whitespace-style check, not
+from byte-integrity validation. Existing production code and earlier fixtures
+were unchanged.
+
+The decision proposal is a separate documentation delivery. No M3 security
+option is approved by committing it. Remote CI for these new commits remains
+unconfirmed, and no push or publication was performed.
