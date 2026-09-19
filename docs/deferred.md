@@ -326,8 +326,10 @@ globally reachable special-purpose exceptions. It additionally rejects IPv4
 multicast and limits IPv6 admission to 2000::/3 after exclusions. This deliberately
 sacrifices compatibility with some special-purpose services; it must not be
 described as IANA declaring every excluded prefix globally unreachable.
-Mapped and transition forms do not widen DNS admission. Neither allow-list nor
-open mode may disable these baseline restrictions.
+Mapped and transition forms do not widen DNS admission. The subsequent explicit
+exception approval below narrowly amends special-purpose admission; neither
+allow-list nor open mode may disable private-address, transition-address, TLS,
+redirect, or resource protections.
 
 The special-purpose registries are not complete allocation or routing inventories.
 An admitted address is not proven allocated, reachable, honest, or safe under
@@ -369,4 +371,42 @@ proxy handling, bounded body fetching, cache/admission coordination, Redis
 adapter and recovery helper, network verifier integration, and smoke-fetch
 script remain unfinished. No production private-address exception was added.
 The existing offline API and published package version are unchanged.
-Remote CI for these local changes is unconfirmed; no push or publication occurred.
+The maintainer subsequently confirmed that **442c2ba**, **d01b774**, and
+**5869d57** were pushed and CI passed. This confirmation does not extend to
+subsequent transport work. No assistant push or publication occurred.
+
+### Explicit special-purpose exceptions and proxy transport
+
+The maintainer approved default rejection of IANA special-purpose ranges with
+explicitly configurable exceptions. The
+[transport contract](../tests/fixtures/m3-transport/contract.json) narrows this
+to thirteen named, globally reachable, non-transition registry entries.
+There is no arbitrary CIDR override. Exceptions come only from trusted local
+configuration, never incoming claims. Private, loopback, link-local, mapped,
+translation, multicast, documentation, and reserved destinations remain denied.
+Existing default-denial fixtures remain unchanged; explicit exceptions have
+separate expectations. Selecting an exception does not change IP-literal origin
+rejection or permit a forbidden member in a mixed DNS answer set.
+
+Direct transport must connect to the selected numeric address without another
+lookup or pooling, check its socket peer, and authenticate the original hostname
+through TLS before sending HTTP request bytes.
+
+An explicitly configured proxy uses a bounded CONNECT tunnel addressed to the
+validated numeric target and port 443. Target A/AAAA validation occurs locally
+before contacting the proxy. End-to-end TLS still authenticates the original
+directory hostname. No environment proxy variables, redirect/authentication
+retry, or direct fallback are used. Credentials, if supported, belong only to
+the proxy request, never the directory request.
+
+The configured proxy is a trusted infrastructure boundary: the client cannot
+observe its remote socket and must trust it to honor the numeric CONNECT target.
+This is not the same as directly observing the target peer. The proxy endpoint
+is selected by the operator, not by request metadata. Unsupported proxy modes
+must fail configuration rather than weaken destination or TLS checks.
+
+The independent transport-contract audit passed fourteen checks before production
+implementation. This establishes source/expectation consistency only, not working
+HTTPS/proxy protection. Local success tests must use private test-only plumbing,
+not a production loopback override. The eventual smoke must distinguish that
+test plumbing from its real private-destination rejection check.

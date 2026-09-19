@@ -1,0 +1,30 @@
+{
+  "formatVersion": 1,
+  "authoredOn": "2026-09-19",
+  "productionImplementationExists": false,
+  "scope": "Explicit named address exceptions and pinned HTTPS/proxy transport expectations",
+  "compatibility": "Default admission remains unchanged; exceptions do not permit private or transition destinations",
+  "files": [
+    {
+      "path": "contract.json",
+      "bytes": 9139,
+      "sha256": "d803583b3982b6dfc0517f678abbe27d34f5f21ec2eea0162c90162c9cf2dfe5",
+      "provenance": "Independently authored before implementation following explicit maintainer approval",
+      "license": "MIT"
+    }
+  ],
+  "sources": [
+    {
+      "path": "tests/fixtures/m3-address/sources/iana-ipv4-special-registry.xml",
+      "sha256": "cf24e11f41b7d42c68debe2d18b97cac815084ec413ebb3b244f704028a16f20"
+    },
+    {
+      "path": "tests/fixtures/m3-address/sources/iana-ipv6-special-registry.xml",
+      "sha256": "c17f4380ba84fb2160dae82ebfd8bd155a5853cfab624ed3a9fd251638a8be02"
+    },
+    {
+      "path": "tests/fixtures/m3-contract/fetch-cache-cases.json",
+      "sha256": "788821c2551bea666b4b9a9868c682737852b85bc0323706b27d8e10dffebd14"
+    }
+  ]
+}

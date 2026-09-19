@@ -1,0 +1,272 @@
+{
+    "formatVersion": 1,
+    "status": "pre-implementation-expectations",
+    "authoredOn": "2026-09-19",
+    "scope": "Pinned HTTPS transport and explicitly configured special-purpose exceptions",
+    "exceptions": {
+        "default": [],
+        "selection": "Exact names from a fixed catalog of globally reachable, non-transition special-purpose prefixes; no arbitrary CIDR override",
+        "configurationSource": "Trusted application configuration only, never request metadata",
+        "originLiteralRestrictionUnchanged": true,
+        "mixedAnswerRuleUnchanged": true,
+        "catalog": [
+            {
+                "id": "pcp-anycast-v4",
+                "prefix": "192.0.0.9/32"
+            },
+            {
+                "id": "turn-anycast-v4",
+                "prefix": "192.0.0.10/32"
+            },
+            {
+                "id": "as112-v4",
+                "prefix": "192.31.196.0/24"
+            },
+            {
+                "id": "amt-v4",
+                "prefix": "192.52.193.0/24"
+            },
+            {
+                "id": "as112-direct-v4",
+                "prefix": "192.175.48.0/24"
+            },
+            {
+                "id": "pcp-anycast-v6",
+                "prefix": "2001:1::1/128"
+            },
+            {
+                "id": "turn-anycast-v6",
+                "prefix": "2001:1::2/128"
+            },
+            {
+                "id": "dnssd-anycast-v6",
+                "prefix": "2001:1::3/128"
+            },
+            {
+                "id": "amt-v6",
+                "prefix": "2001:3::/32"
+            },
+            {
+                "id": "as112-v6",
+                "prefix": "2001:4:112::/48"
+            },
+            {
+                "id": "orchid-v2",
+                "prefix": "2001:20::/28"
+            },
+            {
+                "id": "det-v6",
+                "prefix": "2001:30::/28"
+            },
+            {
+                "id": "as112-direct-v6",
+                "prefix": "2620:4f:8000::/48"
+            }
+        ],
+        "neverOverride": [
+            "Private, loopback, link-local, multicast, documentation, reserved and unspecified addresses",
+            "IPv4-mapped, IPv4-compatible, NAT64, Teredo and 6to4 destination forms",
+            "TLS certificate verification and original-hostname verification",
+            "Timeout, byte, key-count and fetch-admission limits",
+            "Redirect rejection"
+        ],
+        "cases": [
+            {
+                "address": "192.0.0.9",
+                "enabled": [],
+                "allowed": false
+            },
+            {
+                "address": "192.0.0.9",
+                "enabled": [
+                    "pcp-anycast-v4"
+                ],
+                "allowed": true
+            },
+            {
+                "address": "192.0.0.10",
+                "enabled": [
+                    "pcp-anycast-v4"
+                ],
+                "allowed": false
+            },
+            {
+                "address": "192.0.0.8",
+                "enabled": [
+                    "pcp-anycast-v4",
+                    "turn-anycast-v4"
+                ],
+                "allowed": false
+            },
+            {
+                "address": "2001:1::1",
+                "enabled": [
+                    "pcp-anycast-v6"
+                ],
+                "allowed": true
+            },
+            {
+                "address": "2001:1::4",
+                "enabled": [
+                    "pcp-anycast-v6"
+                ],
+                "allowed": false
+            },
+            {
+                "address": "192.31.196.255",
+                "enabled": [
+                    "as112-v4"
+                ],
+                "allowed": true
+            },
+            {
+                "address": "192.31.197.0",
+                "enabled": [
+                    "as112-v4"
+                ],
+                "allowed": true,
+                "note": "Ordinary address outside all special-purpose exclusions; not an exception match"
+            },
+            {
+                "address": "127.0.0.1",
+                "enabled": [
+                    "pcp-anycast-v4"
+                ],
+                "allowed": false
+            },
+            {
+                "address": "::ffff:192.0.0.9",
+                "enabled": [
+                    "pcp-anycast-v4"
+                ],
+                "allowed": false
+            }
+        ],
+        "invalidConfiguration": [
+            [
+                "0.0.0.0/0"
+            ],
+            [
+                "private"
+            ],
+            [
+                "nat64"
+            ],
+            [
+                "unknown"
+            ],
+            [
+                "pcp-anycast-v4",
+                "pcp-anycast-v4"
+            ]
+        ]
+    },
+    "directTransport": {
+        "destinationPort": 443,
+        "method": "GET",
+        "path": "/.well-known/http-message-signatures-directory",
+        "hostHeader": "Original canonical hostname",
+        "sni": "Original canonical hostname",
+        "certificateIdentity": "Original canonical hostname, never the selected IP",
+        "dial": "One validated numeric address; no implicit hostname lookup, family fallback, retry or connection pool",
+        "peerCheck": "Actual socket peer must numerically equal the admitted pin before HTTP request bytes are sent",
+        "acceptEncoding": "identity",
+        "redirectFollowups": 0,
+        "tlsVerificationDisableOption": false
+    },
+    "proxyTransport": {
+        "configuration": "Explicit trusted application configuration; no environment proxy variables",
+        "mechanism": "Bounded HTTP CONNECT tunnel to selected numeric destination and port 443",
+        "connectAuthorityV4": "1.1.1.1:443",
+        "connectAuthorityV6": "[2606:4700:4700::1111]:443",
+        "targetResolution": "Resolve and validate all target A/AAAA answers locally before connecting to proxy",
+        "proxyEndpoint": "Explicit operator-selected endpoint, not derived from an agent claim",
+        "innerTls": "Mandatory end-to-end TLS to original directory hostname; no caller-supplied hostname-check callback",
+        "credentials": "Proxy credentials, if supported, stay on the CONNECT request and never enter the directory request",
+        "trustedProxyBoundary": "A client cannot observe the proxy's remote peer. The proxy is trusted to honor the numeric CONNECT destination and not reinterpret it.",
+        "unsupportedProxyProtocol": "Reject configuration rather than fall back to direct transport",
+        "non200Connect": "Reject without redirect, authentication retry, or direct fallback",
+        "unexpectedConnectHeadBytes": "Reject rather than silently discard bytes preceding inner TLS"
+    },
+    "transportCases": [
+        {
+            "id": "second-dns-answer-private",
+            "implicitSecondLookup": false,
+            "dialOnlyInitialPin": true
+        },
+        {
+            "id": "direct-peer-mismatch",
+            "requestBytesSent": 0,
+            "accepted": false
+        },
+        {
+            "id": "wrong-tls-host",
+            "accepted": false
+        },
+        {
+            "id": "untrusted-tls-cert",
+            "accepted": false
+        },
+        {
+            "id": "proxy-private-target",
+            "proxyConnections": 0,
+            "accepted": false
+        },
+        {
+            "id": "proxy-mixed-target-answers",
+            "proxyConnections": 0,
+            "accepted": false
+        },
+        {
+            "id": "proxy-redirect",
+            "followups": 0,
+            "directFallback": false,
+            "accepted": false
+        },
+        {
+            "id": "proxy-hostname-connect-forbidden",
+            "connectUsesNumericPin": true
+        },
+        {
+            "id": "oversized-headers",
+            "accepted": false,
+            "connectionDestroyed": true
+        },
+        {
+            "id": "oversized-body-without-length",
+            "accepted": false,
+            "connectionDestroyed": true
+        },
+        {
+            "id": "compressed-response",
+            "accepted": false,
+            "decompressionAttempted": false
+        },
+        {
+            "id": "slow-body",
+            "accepted": false,
+            "connectionDestroyed": true
+        },
+        {
+            "id": "drip-body",
+            "totalDeadlineRenewed": false,
+            "accepted": false
+        },
+        {
+            "id": "cancel-before-connect",
+            "connections": 0,
+            "accepted": false
+        },
+        {
+            "id": "cancel-during-tls",
+            "connectionDestroyed": true,
+            "accepted": false
+        }
+    ],
+    "testBoundary": "Local HTTPS success uses private test-only transport plumbing, not an exported private-address override. SSRF denial tests exercise the real address gate independently and must prove zero dial calls.",
+    "sources": [
+        "tests/fixtures/m3-address/sources/iana-ipv4-special-registry.xml",
+        "tests/fixtures/m3-address/sources/iana-ipv6-special-registry.xml",
+        "tests/fixtures/m3-contract/fetch-cache-cases.json"
+    ]
+}

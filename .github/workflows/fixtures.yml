@@ -54,3 +54,5 @@ jobs:
         run: node --test tests/directory-server.test.mjs
       - name: Audit pinned IANA address sources and conservative admission expectations
         run: node --test tests/m3-address-audit.test.mjs
+      - name: Audit explicit address exceptions and pinned transport contracts
+        run: node --test tests/m3-transport-audit.test.mjs
