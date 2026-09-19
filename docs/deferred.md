@@ -601,3 +601,45 @@ tests. The historical freshness and amendment audits separately passed 27 checks
 These overlapping runs are not additive totals. No new remote CI result is
 claimed. Fetch concurrency/rate/queue coordination, Redis recovery and adapter,
 network-verifier integration, and the maintainer-run smoke remain unfinished.
+
+### Internal fetch scheduler checkpoint
+
+The internal scheduler implements one active job per canonical origin, at most
+16 active workers, at most 64 queued jobs, and at most 32 starts in a sliding
+one-second window. Each origin has a 30-second interval between starts, including
+after worker failure. Live cooldown records are not evicted to admit new origins;
+a defensive 1,000-record ceiling fails closed.
+
+One hundred concurrent same-origin calls share one promise and one worker.
+Coalesced callers inherit the original three-second deadline; queue residence
+reduces the worker's remaining budget. Individual callers leaving do not cancel
+the shared job. This bounded-completion choice avoids disrupting other callers,
+but permits the admitted work to complete without interested callers.
+
+A timeout rejects the result and signals cancellation, but an active slot and
+origin ownership remain reserved until the worker actually settles. Cancellation
+alone is not evidence that underlying work stopped. A permanently stuck worker
+therefore reduces availability rather than allowing replacement work to exceed
+the concurrency bound. Late completion cannot turn a rejected job into success.
+Clock regression latches failure instead of rebasing deadlines or rate windows.
+
+A targeted regression exposed reuse of a batch timestamp when an earlier worker
+spent time in synchronous preparation. That shortened the next origin's cooldown.
+Each dispatch now resamples the clock and rechecks expiry and the sliding window.
+The strengthened regression failed before the fix and passed afterward.
+
+The scheduler is NOT yet connected to the transport, directory cache, or verifier.
+Its worker/clock injection is an internal test seam, not a public customization API.
+Integration must admit origins before scheduling, perform only one cache commit
+per completed shared fetch, include synchronous document validation in the total
+deadline, and preserve final evidence/time/epoch checks. Workers must not commit
+late response data independently of scheduler completion. Cross-profile sharing
+and per-verification fetch budgets remain integration obligations.
+
+Local Node 22 full workspace validation passed builds, type checks, 5,205 unit
+tests across 54 files, and 13 existing integration/consumer tests. All 13 scheduler
+tests also passed locally on Node 20.20.2. Scheduler tests use controlled workers,
+clocks, and timers; they are not real-network or full authentication evidence.
+No remote CI result for this checkpoint is claimed. Redis, recovery helper,
+integrated discovery/verifier, public exports, and maintainer-run smoke remain
+unfinished. No push or publication was performed.
