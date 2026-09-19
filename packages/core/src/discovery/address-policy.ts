@@ -1,4 +1,5 @@
 import { isIP } from "node:net";
+import { ProfileConfigurationError } from "../profiles/codes.js";
 
 interface Address {
     readonly family: 4 | 6;
@@ -59,7 +60,8 @@ function prefix(text: string, bits: number): (address: Address) => boolean {
  * than IANA global reachability, not a complete allocation/routing inventory.
  * IPv4 multicast is additionally denied; IPv6 must be in 2000::/3. That envelope
  * already excludes mapped, compatible, NAT64, ULA, link-local and multicast.
- * No runtime registry download or caller-configurable exemption exists.
+ * No runtime registry download occurs. Explicit exceptions are restricted to
+ * the named non-transition catalog below, never arbitrary CIDRs or predicates.
  */
 const excluded = [
     prefix("0.0.0.0", 8), prefix("10.0.0.0", 8),
@@ -95,11 +97,91 @@ export function isDirectoryDestinationAllowed(input: unknown): boolean {
  * This comparison does not admit mapped addresses supplied as DNS candidates.
  */
 export function matchesPinnedDirectoryAddress(pinned: unknown, peer: unknown): boolean {
-    const expected = parseAddress(pinned);
-    const actual = parseAddress(peer);
-    if (!expected || !admitted(expected) || !actual) return false;
-    if (expected.family === actual.family) return expected.value === actual.value;
-    return expected.family === 4 && actual.family === 6 &&
-        (actual.value >> 32n) === 0xffffn &&
-        (actual.value & 0xffffffffn) === expected.value;
+    return defaultDirectoryAddressPolicy.matchesPeer(pinned, peer);
 }
+
+/**
+ * Names and ranges match the independently pinned transport fixture.
+ * These entries have IANA global=True, but remain opt-in local policy.
+ * No translation prefix, private range, or broad parent exception is exposed.
+ */
+const exceptionPrefixes = {
+    "pcp-anycast-v4": prefix("192.0.0.9", 32),
+    "turn-anycast-v4": prefix("192.0.0.10", 32),
+    "as112-v4": prefix("192.31.196.0", 24),
+    "amt-v4": prefix("192.52.193.0", 24),
+    "as112-direct-v4": prefix("192.175.48.0", 24),
+    "pcp-anycast-v6": prefix("2001:1::1", 128),
+    "turn-anycast-v6": prefix("2001:1::2", 128),
+    "dnssd-anycast-v6": prefix("2001:1::3", 128),
+    "amt-v6": prefix("2001:3::", 32),
+    "as112-v6": prefix("2001:4:112::", 48),
+    "orchid-v2": prefix("2001:20::", 28),
+    "det-v6": prefix("2001:30::", 28),
+    "as112-direct-v6": prefix("2620:4f:8000::", 48),
+} as const;
+
+export type DirectoryAddressException = keyof typeof exceptionPrefixes;
+
+export interface DirectoryAddressPolicy {
+    readonly exceptions: readonly DirectoryAddressException[];
+    allows(address: unknown): boolean;
+    matchesPeer(pinned: unknown, peer: unknown): boolean;
+}
+
+// Internal identity check prevents callers from supplying an arbitrary
+// allow-everything predicate in place of a validated policy.
+const ownedPolicies = new WeakSet<object>();
+
+export function assertDirectoryAddressPolicy(
+    policy: DirectoryAddressPolicy,
+): void {
+    if (!policy || typeof policy !== "object" || !ownedPolicies.has(policy)) {
+        throw new ProfileConfigurationError("invalid-agent-binding");
+    }
+}
+
+/** Snapshot trusted local configuration; reject ordinary executable accessors. */
+export function createDirectoryAddressPolicy(
+    exceptions: readonly DirectoryAddressException[] = [],
+): DirectoryAddressPolicy {
+    const invalid = (): never => {
+        throw new ProfileConfigurationError("invalid-agent-binding");
+    };
+    if (!Array.isArray(exceptions) ||
+        exceptions.length > Object.keys(exceptionPrefixes).length) return invalid();
+    const selected: DirectoryAddressException[] = [];
+    for (let index = 0; index < exceptions.length; index++) {
+        const descriptor = Object.getOwnPropertyDescriptor(exceptions, String(index));
+        if (!descriptor || !Object.hasOwn(descriptor, "value")) return invalid();
+        const name: unknown = descriptor.value;
+        if (typeof name !== "string" || !Object.hasOwn(exceptionPrefixes, name)) return invalid();
+        const id = name as DirectoryAddressException;
+        if (selected.includes(id)) return invalid();
+        selected.push(id);
+    }
+    const checks = selected.map((id) => exceptionPrefixes[id]);
+    const allowed = (address: Address): boolean =>
+        admitted(address) || checks.some((contains) => contains(address));
+    const policy: DirectoryAddressPolicy = Object.freeze({
+        exceptions: Object.freeze(selected),
+        allows(input: unknown): boolean {
+            const address = parseAddress(input);
+            return address !== undefined && allowed(address);
+        },
+        matchesPeer(pinned: unknown, peer: unknown): boolean {
+            const expected = parseAddress(pinned);
+            const actual = parseAddress(peer);
+            if (!expected || !allowed(expected) || !actual) return false;
+            if (expected.family === actual.family) return expected.value === actual.value;
+            // Comparison-only OS representation; never a DNS admission alias.
+            return expected.family === 4 && actual.family === 6 &&
+                (actual.value >> 32n) === 0xffffn &&
+                (actual.value & 0xffffffffn) === expected.value;
+        },
+    });
+    ownedPolicies.add(policy);
+    return policy;
+}
+
+export const defaultDirectoryAddressPolicy = createDirectoryAddressPolicy();

@@ -1,7 +1,10 @@
 import { Resolver } from "node:dns/promises";
 import { isIP } from "node:net";
 import { ProfileConfigurationError } from "../profiles/codes.js";
-import { isDirectoryDestinationAllowed } from "./address-policy.js";
+import {
+    assertDirectoryAddressPolicy, defaultDirectoryAddressPolicy,
+} from "./address-policy.js";
+import type { DirectoryAddressPolicy } from "./address-policy.js";
 
 /** Internal discovery diagnostics, not additions to the frozen WBA catalog. */
 export class DirectoryDnsError extends Error {
@@ -45,7 +48,9 @@ export function validateDirectoryAddresses(
     ipv4: readonly string[],
     ipv6: readonly string[],
     maximumAddresses: number = 16,
+    policy: DirectoryAddressPolicy = defaultDirectoryAddressPolicy,
 ): readonly DirectoryAddress[] {
+    assertDirectoryAddressPolicy(policy);
     if (!Number.isSafeInteger(maximumAddresses) || maximumAddresses <= 0) {
         throw new ProfileConfigurationError("invalid-resource-limits");
     }
@@ -59,7 +64,7 @@ export function validateDirectoryAddresses(
     for (const [family, addresses] of [[4, ipv4], [6, ipv6]] as const) {
         for (const address of addresses) {
             if (typeof address !== "string" || address.length > 45 ||
-                isIP(address) !== family || !isDirectoryDestinationAllowed(address)) {
+                isIP(address) !== family || !policy.allows(address)) {
                 throw new DirectoryDnsError("address-denied");
             }
             if (!result.some((entry) => entry.family === family && entry.address === address)) {
@@ -86,7 +91,11 @@ export async function resolveDirectoryAddresses(
     timeoutMilliseconds: number = 1000,
     maximumAddresses: number = 16,
     createResolver: () => DirectoryDnsResolver = () => new Resolver(),
+    policy: DirectoryAddressPolicy = defaultDirectoryAddressPolicy,
 ): Promise<readonly DirectoryAddress[]> {
+    // Reject forged policies before DNS side effects. The same owned policy
+    // must also be supplied to transport admission and peer comparison.
+    assertDirectoryAddressPolicy(policy);
     if (!Number.isSafeInteger(timeoutMilliseconds) || timeoutMilliseconds <= 0 ||
         timeoutMilliseconds > 2_147_483_647 ||
         !Number.isSafeInteger(maximumAddresses) || maximumAddresses <= 0) {
@@ -119,7 +128,7 @@ export async function resolveDirectoryAddresses(
             Promise.all([query(4), query(6)]),
             deadline,
         ]);
-        return validateDirectoryAddresses(ipv4, ipv6, maximumAddresses);
+        return validateDirectoryAddresses(ipv4, ipv6, maximumAddresses, policy);
     } finally {
         if (timer !== undefined) clearTimeout(timer);
         // Also cancel a still-pending sibling when one family failed.

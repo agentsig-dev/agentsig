@@ -410,3 +410,44 @@ implementation. This establishes source/expectation consistency only, not workin
 HTTPS/proxy protection. Local success tests must use private test-only plumbing,
 not a production loopback override. The eventual smoke must distinguish that
 test plumbing from its real private-destination rejection check.
+
+### Internal transport implementation checkpoint
+
+Following transport expectations committed in **ce2b7ea**, internal implementation
+now includes owned named-exception policies, direct numeric TCP pinning with
+pre-TLS peer checks, original-host TLS authentication, explicit HTTPS CONNECT,
+a bounded response reader, and single-fetch orchestration. These modules are
+not public exports and do not yet constitute a network verifier.
+
+Initial proxy support is HTTPS CONNECT without authentication. Plaintext HTTP,
+SOCKS, credentials, unknown proxy fields, environment configuration, TLS-disable
+options, retries, pooling, and direct fallback are unsupported. The configured
+numeric proxy endpoint may be private because it is operator-trusted infrastructure;
+the directory target still passes the same public-address policy before CONNECT.
+The proxy must honor the numeric target: its remote peer cannot be observed here.
+
+The response reader accepts only HTTP 200 and the directory media type, rejects
+non-identity encoding, and enforces header/body/deadline budgets. A real local TLS
+regression exposed Node's default header-count truncation: a trailing encoding
+field disappeared after 2,100 small fields despite fitting the byte budget.
+The reader now sets the count ceiling from the byte ceiling before sending the
+request. Every field consumes more than one byte, so the count cannot truncate
+an in-budget section; the parser's byte limit remains active. Additional tests
+preserve late restrictive cache directives and reject late duplicate encoding
+or media-type fields. Expected fixture bytes were not changed.
+
+Validation passed locally on Windows / Node 22: full workspace build, type checks,
+unit suites, and existing integration consumers; separately, **135 checks** across
+the M3 source, contract, address, and transport audits and HTTPS test harness.
+The response reader has **19 passing real local TLS tests**, and the proxy has
+**14 real local nested-TLS tests**. Direct peer/pinning tests use controlled sockets;
+single-fetch tests use controlled phase dependencies. Local proxy tests route to
+a test server and do not prove public routing or remote proxy compliance.
+Overlapping runs are not additive totals, and local results do not establish CI.
+
+Remaining M3 work includes public configuration validation/export boundaries,
+aggregate fetch admission and caching, complete remote JWKS validation and
+replacement checks, the recovery helper and Redis adapter, full network-verifier
+integration, and the maintainer-run smoke. A successful transport result is
+untrusted response bytes, not authenticated agent identity. Existing offline
+exports and package versions remain unchanged.
