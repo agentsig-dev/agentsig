@@ -2,12 +2,26 @@ import { ProfileConfigurationError } from "../profiles/codes.js";
 import { loadJwks } from "../profiles/jwks.js";
 import type { LoadedJwks } from "../profiles/jwks.js";
 import type { JwksFormat } from "../profiles/jwks-algorithm.js";
+import { InvalidJwksError } from "../profiles/jwks-error.js";
 
-/** Internal discovery diagnostic, not a configuration or verification code. */
+/** Sanitized operational detail; no remote labels or key component values. */
+export interface DirectoryDocumentDiagnostic {
+    readonly rule: string;
+    readonly keyIndex?: number;
+}
+
+/** Internal discovery diagnostic, not an operator configuration exception. */
 export class DirectoryDocumentError extends Error {
-    constructor() {
+    readonly reason = "invalid-jwks" as const;
+    readonly diagnostic: Readonly<DirectoryDocumentDiagnostic>;
+
+    constructor(diagnostic?: DirectoryDocumentDiagnostic) {
         super("Directory document rejected");
         this.name = "DirectoryDocumentError";
+        this.diagnostic = Object.freeze({
+            rule: diagnostic?.rule ?? "directory must contain bounded valid public JWKS",
+            ...(diagnostic?.keyIndex === undefined ? {} : { keyIndex: diagnostic.keyIndex }),
+        });
     }
 }
 
@@ -60,9 +74,19 @@ export function parseDirectoryDocument(
         });
         ownedDocuments.add(document);
         return document;
-    } catch {
-        // Local-loader diagnostics may contain an attacker-controlled kid.
-        // Never expose, log, retain as cause, or classify it as operator error.
+    } catch (error) {
+        // Only this owned loader's implementation-authored rule and bounded
+        // entry index may cross the remote diagnostic boundary. Never copy
+        // its message, kid, stack, cause, or complete diagnostic object.
+        // Remote invalid-jwks remains operational, not caller misconfiguration.
+        if (error instanceof InvalidJwksError) {
+            const index = error.diagnostic.keyIndex;
+            throw new DirectoryDocumentError({
+                rule: error.diagnostic.rule,
+                ...(index !== undefined && Number.isInteger(index) && index >= 0 && index < 64
+                    ? { keyIndex: index } : {}),
+            });
+        }
         throw new DirectoryDocumentError();
     }
 }

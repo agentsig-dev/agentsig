@@ -1,4 +1,6 @@
 import { readFileSync } from "node:fs";
+import { createPublicKey } from "node:crypto";
+import { assertSelectedKeyIdentity } from "../src/profiles/metadata.js";
 import { describe, expect, it } from "vitest";
 import {
     assertDirectoryDocument, DirectoryDocumentError, parseDirectoryDocument,
@@ -60,7 +62,13 @@ describe("remote document boundaries and trust separation", () => {
         expect(caught).toBeInstanceOf(DirectoryDocumentError);
         expect((caught as Error).message).toBe("Directory document rejected");
         expect(caught).not.toHaveProperty("cause");
-        expect(caught).not.toHaveProperty("diagnostic");
+        expect((caught as DirectoryDocumentError).diagnostic).toEqual({
+            keyIndex: 1,
+            rule: "public JWKS must not contain private or symmetric key material",
+        });
+        expect((caught as DirectoryDocumentError).reason).toBe("invalid-jwks");
+        expect(JSON.stringify(caught)).not.toContain("REMOTE-LABEL");
+        expect(JSON.stringify(caught)).not.toContain("PRIVATE-MARKER");
         expect(caught).not.toHaveProperty("code");
     });
 
@@ -115,6 +123,57 @@ describe("remote document boundaries and trust separation", () => {
             keys: [{ ...ed.key, nbf: "not-a-defined-key-policy", exp: 0 }],
         }), "wg-directory-00");
         expect(document.jwks.lookup(ed.thumbprint).status).toBe("found");
+    });
+
+    it("matches the pinned defensive key-identity and WG refresh rejection gates", () => {
+        const rotation = JSON.parse(readFileSync(new URL(
+            "../../../tests/fixtures/m3-rotation/cases.json", import.meta.url,
+        ), "utf8")) as {
+            keys: Record<string, {
+                jwk: { kty: string; crv: string; x: string }; thumbprint: string;
+            }>;
+            cases: {
+                id: string; signedKeyIdFrom?: string; selectedMaterialFrom?: string;
+                expected: { status: string; reason: string };
+                refreshKeys?: { materialFrom: string; kidFrom: string }[];
+                refreshExpected?: { reason: string; diagnostic: { keyIndex: number; rule: string } };
+            }[];
+        };
+        const mismatch = rotation.cases.find((row) =>
+            row.id === "c-same-keyid-different-selected-material")!;
+        const selected = createPublicKey({
+            key: rotation.keys[mismatch.selectedMaterialFrom!]!.jwk, format: "jwk",
+        });
+        expect(() => assertSelectedKeyIdentity(
+            rotation.keys[mismatch.signedKeyIdFrom!]!.thumbprint, selected,
+        )).toThrow(expect.objectContaining({ rejection: mismatch.expected }));
+
+        for (const row of rotation.cases.filter((entry) => entry.refreshExpected)) {
+            const keys = row.refreshKeys!.map((entry) => ({
+                ...rotation.keys[entry.materialFrom]!.jwk,
+                kid: rotation.keys[entry.kidFrom]!.thumbprint,
+            }));
+            let caught: unknown;
+            try { parseDirectoryDocument(encode({ keys }), "wg-directory-00"); }
+            catch (error) { caught = error; }
+            expect(caught).toBeInstanceOf(DirectoryDocumentError);
+            const error = caught as DirectoryDocumentError;
+            expect(error.reason).toBe(row.refreshExpected!.reason);
+            expect(error.diagnostic).toEqual(row.refreshExpected!.diagnostic);
+            expect(Object.isFrozen(error.diagnostic)).toBe(true);
+            expect(error.diagnostic).not.toHaveProperty("kid");
+            expect(error).not.toHaveProperty("cause");
+            // These are document/identity gates, not the full c-prime verifier outcomes.
+        }
+    });
+
+    it("omits an entry index when the document cannot be parsed", () => {
+        let caught: unknown;
+        try { parseDirectoryDocument(Buffer.from("{"), "wg-directory-00"); }
+        catch (error) { caught = error; }
+        expect(caught).toBeInstanceOf(DirectoryDocumentError);
+        expect((caught as DirectoryDocumentError).diagnostic).not.toHaveProperty("keyIndex");
+        expect(caught).not.toHaveProperty("cause");
     });
 
     it("rejects copied documents and does not infer a missing format", () => {

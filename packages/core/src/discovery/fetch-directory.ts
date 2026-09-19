@@ -1,9 +1,6 @@
 import { performance } from "node:perf_hooks";
-import { canonicalAgentOrigin, configuredAgentOrigin } from "../profiles/agent-origin.js";
-import { ProfileConfigurationError } from "../profiles/codes.js";
-import {
-    assertDirectoryAddressPolicy, defaultDirectoryAddressPolicy,
-} from "./address-policy.js";
+import { canonicalAgentOrigin } from "../profiles/agent-origin.js";
+import { snapshotDirectoryFetchOptions } from "./fetch-configuration.js";
 import type { DirectoryAddressPolicy } from "./address-policy.js";
 import { resolveDirectoryAddresses } from "./dns-resolution.js";
 import { connectPinnedDirectoryTls } from "./pinned-tls.js";
@@ -57,28 +54,10 @@ export async function fetchDirectoryOnce(
     dependencies: DirectoryFetchDependencies = production,
 ): Promise<DirectoryResponse> {
     const started = performance.now();
-    const total = options.totalMilliseconds ?? 3000;
-    const mode = options.mode ?? "allowlist";
-    const policy = options.policy ?? defaultDirectoryAddressPolicy;
-    const signal = options.signal;
-    const ca = options.ca;
-    // Copy trusted configuration before the first asynchronous stage.
-    const proxy = options.proxy === undefined ? undefined : Object.freeze({ ...options.proxy });
-    if (!Number.isSafeInteger(total) || total <= 0 || total > 3000) {
-        throw new ProfileConfigurationError("invalid-resource-limits");
-    }
-    if (mode !== "allowlist" && mode !== "open") {
-        throw new ProfileConfigurationError("invalid-agent-binding");
-    }
-    assertDirectoryAddressPolicy(policy);
-    if (ca !== undefined && (typeof ca !== "string" || !ca.length)) {
-        throw new ProfileConfigurationError("invalid-key-configuration");
-    }
-    const suppliedOrigins = options.allowedOrigins ?? [];
-    if (!Array.isArray(suppliedOrigins) || suppliedOrigins.length > 1000) {
-        throw new ProfileConfigurationError("invalid-agent-binding");
-    }
-    const allowed = suppliedOrigins.map((value) => configuredAgentOrigin(value));
+    const {
+        totalMilliseconds: total, mode, policy, signal, ca, proxy,
+        allowedOrigins: allowed,
+    } = snapshotDirectoryFetchOptions(options);
     const origin = canonicalAgentOrigin(originInput);
     if (mode === "allowlist" && !allowed.includes(origin)) {
         throw new DirectoryFetchError("origin-denied");

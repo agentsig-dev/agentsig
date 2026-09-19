@@ -94,23 +94,27 @@ describe("directory cache freshness and whole-set replacement", () => {
         expect(h.cache.recheck(old)).toBe(false);
     });
 
-    it("does not revive a selection if the same key is reintroduced", () => {
+    it("accepts current fresh evidence when the same thumbprint is reintroduced", () => {
         const h = harness();
         h.cache.replace(origin, h.response());
         const old = h.selection();
         h.cache.replace(origin, h.response([]));
-        h.cache.replace(origin, h.response());
         expect(h.cache.recheck(old)).toBe(false);
+        h.cache.replace(origin, h.response());
+        expect(h.cache.recheck(old)).toBe(true);
         expect(h.cache.recheck(h.selection())).toBe(true);
     });
 
-    it("conservatively invalidates the old generation even if its key remains", () => {
+    it("preserves selection eligibility when a refreshed set retains the thumbprint", () => {
         const h = harness();
         h.cache.replace(origin, h.response());
         const old = h.selection();
-        h.cache.replace(origin, h.response());
-        expect(h.cache.recheck(old)).toBe(false);
-        expect(h.cache.recheck(h.selection())).toBe(true);
+        h.cache.replace(origin, h.response([replacement, ed.key]));
+        const current = h.selection();
+        expect(current.key.publicKey).not.toBe(old.key.publicKey);
+        expect(current.key.thumbprint).toBe(old.key.thumbprint);
+        expect(h.cache.recheck(old)).toBe(true);
+        expect(h.cache.recheck(current)).toBe(true);
     });
 
     it("rejects a malformed full set without mutating prior evidence or counters", () => {
@@ -319,5 +323,86 @@ describe("malformed cache metadata replacement boundary", () => {
         ))).toThrow(DirectoryDocumentError);
         expect(h.cache.recheck(old)).toBe(true);
         expect(h.cache.stats.positiveEntries).toBe(1);
+    });
+});
+
+describe("pinned current-set thumbprint membership (cache gate only)", () => {
+    const rotation = JSON.parse(readFileSync(new URL(
+        "../../../tests/fixtures/m3-rotation/cases.json", import.meta.url,
+    ), "utf8")) as {
+        keys: Record<string, { jwk: Record<string, unknown>; thumbprint: string }>;
+        membershipCases: {
+            id: string; intermediateKeys?: string[]; currentKeys: string[];
+            sameOrigin: boolean; fresh: boolean; pass: boolean;
+        }[];
+    };
+    const keys = (names: string[]) => names.map((name) => rotation.keys[name]!.jwk);
+    for (const row of rotation.membershipCases) {
+        it(row.id, () => {
+            const h = harness();
+            h.cache.replace(origin, h.response(keys(["original"])));
+            const selected = h.selection();
+            if (row.intermediateKeys !== undefined) {
+                h.cache.replace(origin, h.response(keys(row.intermediateKeys)));
+            }
+            if (!row.sameOrigin) h.cache.replace(origin, h.response([]));
+            h.cache.replace(row.sameOrigin ? origin : "https://other.example",
+                h.response(keys(row.currentKeys)));
+            if (!row.fresh) h.advance(60000);
+            expect(h.cache.recheck(selected)).toBe(row.pass);
+        });
+    }
+});
+
+describe("prepare/commit boundary for deadline-aware discovery", () => {
+    it("does not replace evidence until the prepared document is committed", () => {
+        const h = harness();
+        h.cache.replace(origin, h.response());
+        const old = h.selection();
+        const before = h.cache.stats;
+        const ticket = h.cache.prepare(h.response([replacement]));
+        expect(Object.isFrozen(ticket)).toBe(true);
+        expect(h.cache.stats).toEqual(before);
+        expect(h.cache.recheck(old)).toBe(true);
+        expect(h.cache.lookup(origin, replacementThumbprint).status).toBe("missing");
+        expect(h.cache.commit(origin, ticket)).toBe(true);
+        expect(h.cache.recheck(old)).toBe(false);
+        expect(h.cache.lookup(origin, replacementThumbprint).status).toBe("found");
+    });
+
+    it("rejects foreign, copied and already consumed preparation handles", () => {
+        const h = harness();
+        const other = harness();
+        const ticket = h.cache.prepare(h.response());
+        expect(() => other.cache.commit(origin, ticket))
+            .toThrow("Invalid or consumed directory preparation");
+        expect(() => h.cache.commit(origin, { ...ticket }))
+            .toThrow("Invalid or consumed directory preparation");
+        expect(h.cache.commit(origin, ticket)).toBe(true);
+        expect(() => h.cache.commit(origin, ticket))
+            .toThrow("Invalid or consumed directory preparation");
+    });
+
+    it("does not restart response freshness at commit time", () => {
+        const h = harness();
+        const ticket = h.cache.prepare(h.response());
+        h.advance(59999);
+        expect(h.cache.commit(origin, ticket)).toBe(true);
+        const selected = h.selection();
+        h.advance(1);
+        expect(h.cache.recheck(selected)).toBe(false);
+    });
+
+    it("allows abandoning prepared data without changing prior evidence", () => {
+        const h = harness();
+        h.cache.replace(origin, h.response());
+        const old = h.selection();
+        const before = h.cache.stats;
+        h.cache.prepare(h.response([]));
+        // The coordinator must abandon this handle if its total deadline fails.
+        // This test checks cache isolation, not the scheduler integration.
+        h.advance(3000);
+        expect(h.cache.stats).toEqual(before);
+        expect(h.cache.recheck(old)).toBe(true);
     });
 });

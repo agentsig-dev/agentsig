@@ -144,3 +144,115 @@ describe("single-fetch orchestration with controlled phase dependencies", () => 
         } finally { h.socket.destroy(); }
     });
 });
+
+describe("configuration snapshot before DNS and asynchronous work", () => {
+    it("rejects an option accessor without executing it or starting DNS", async () => {
+        const h = harness();
+        let reads = 0;
+        const options = Object.defineProperty({}, "mode", {
+            get() { reads++; return "open"; },
+        });
+        try {
+            await expect(fetchDirectoryOnce(origin, options, h))
+                .rejects.toMatchObject({ code: "invalid-agent-binding" });
+            expect(reads).toBe(0);
+            expect(h.resolve).not.toHaveBeenCalled();
+            expect(h.direct).not.toHaveBeenCalled();
+        } finally { h.socket.destroy(); }
+    });
+
+    it("rejects nested proxy accessors before spreading them or starting DNS", async () => {
+        const h = harness();
+        let reads = 0;
+        const proxy = Object.defineProperty({
+            protocol: "https:" as const,
+            hostname: "proxy.example",
+            address: "127.0.0.1",
+            port: 443,
+        }, "address", {
+            enumerable: true,
+            get() { reads++; return "127.0.0.1"; },
+        });
+        try {
+            await expect(fetchDirectoryOnce(origin, { mode: "open", proxy }, h))
+                .rejects.toMatchObject({ code: "invalid-agent-binding" });
+            expect(reads).toBe(0);
+            expect(h.resolve).not.toHaveBeenCalled();
+            expect(h.proxy).not.toHaveBeenCalled();
+        } finally { h.socket.destroy(); }
+    });
+
+    it("rejects unsupported proxy fields before DNS even with a connector double", async () => {
+        const h = harness();
+        const proxy = {
+            protocol: "https:" as const,
+            hostname: "proxy.example",
+            address: "127.0.0.1",
+            port: 443,
+            rejectUnauthorized: false,
+        };
+        try {
+            await expect(fetchDirectoryOnce(origin, { mode: "open", proxy }, h))
+                .rejects.toMatchObject({ code: "invalid-agent-binding" });
+            expect(h.resolve).not.toHaveBeenCalled();
+            expect(h.proxy).not.toHaveBeenCalled();
+        } finally { h.socket.destroy(); }
+    });
+
+    it("rejects allowlist element accessors without executing them", async () => {
+        const h = harness();
+        let reads = 0;
+        const allowedOrigins = [origin];
+        Object.defineProperty(allowedOrigins, "0", {
+            get() { reads++; return origin; },
+        });
+        try {
+            await expect(fetchDirectoryOnce(origin, { allowedOrigins }, h))
+                .rejects.toMatchObject({ code: "invalid-agent-binding" });
+            expect(reads).toBe(0);
+            expect(h.resolve).not.toHaveBeenCalled();
+        } finally { h.socket.destroy(); }
+    });
+
+    it("isolates proxy, CA and allowlist configuration from mutation during DNS", async () => {
+        const h = harness();
+        const dns = deferred<Awaited<ReturnType<DirectoryFetchDependencies["resolve"]>>>();
+        h.resolve.mockImplementation(() => dns.promise);
+        const proxy = {
+            protocol: "https:" as const,
+            hostname: "proxy.example",
+            address: "127.0.0.1",
+            port: 443,
+            ca: "original-proxy-ca",
+        };
+        const options = {
+            allowedOrigins: [origin],
+            proxy,
+            ca: "original-directory-ca",
+        };
+        try {
+            const pending = fetchDirectoryOnce(origin, options, h);
+            expect(h.resolve).toHaveBeenCalledTimes(1);
+            proxy.hostname = "changed.example";
+            proxy.address = "10.0.0.1";
+            proxy.port = 8443;
+            proxy.ca = "changed-proxy-ca";
+            options.ca = "changed-directory-ca";
+            options.allowedOrigins.length = 0;
+            dns.resolve(validateDirectoryAddresses(["1.1.1.1"], []));
+            await pending;
+            expect(h.direct).not.toHaveBeenCalled();
+            expect(h.proxy).toHaveBeenCalledTimes(1);
+            expect(h.proxy.mock.calls[0]![0]).toMatchObject({
+                hostname: "directory.agentsig.test",
+                address: "1.1.1.1",
+                ca: "original-directory-ca",
+            });
+            expect(h.proxy.mock.calls[0]![1]).toEqual({
+                protocol: "https:", hostname: "proxy.example",
+                address: "127.0.0.1", port: 443, ca: "original-proxy-ca",
+            });
+            expect(Object.isFrozen(h.proxy.mock.calls[0]![1])).toBe(true);
+        } finally { h.socket.destroy(); }
+    });
+});

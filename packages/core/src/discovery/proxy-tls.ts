@@ -37,7 +37,8 @@ function hostnameValid(value: unknown): value is string {
             /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(label));
 }
 
-function snapshotProxy(input: DirectoryHttpsProxy): DirectoryHttpsProxy {
+/** Internal configuration snapshot, also used before discovery admission/DNS. */
+export function snapshotDirectoryProxy(input: DirectoryHttpsProxy): DirectoryHttpsProxy {
     const invalid = (): never => {
         throw new ProfileConfigurationError("invalid-agent-binding");
     };
@@ -82,7 +83,7 @@ export function connectDirectoryThroughProxy(
     options: PinnedDirectoryConnection,
     proxyConfiguration: DirectoryHttpsProxy,
 ): Promise<TLSSocket> {
-    const proxy = snapshotProxy(proxyConfiguration);
+    const proxy = snapshotDirectoryProxy(proxyConfiguration);
     const hostname = options.hostname;
     const address = options.address;
     const family = options.family;

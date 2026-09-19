@@ -23,6 +23,11 @@ export interface DirectoryKeySelection {
     readonly key: LoadedVerificationKey;
 }
 
+/** Opaque internal preparation handle; only its owning cache may commit it. */
+export interface PreparedDirectoryEntry {
+    readonly prepared: true;
+}
+
 interface Entry {
     readonly document: DirectoryDocument;
     readonly freshness: DirectoryFreshness;
@@ -79,7 +84,12 @@ export class DirectoryCache {
     readonly #clock: () => number;
     readonly #positive = new Map<string, Entry>();
     readonly #negative = new Map<string, number>();
-    readonly #selections = new WeakMap<DirectoryKeySelection, { origin: string; entry: Entry }>();
+    readonly #prepared = new WeakMap<PreparedDirectoryEntry, {
+        readonly document: DirectoryDocument; readonly freshness: DirectoryFreshness;
+    }>();
+    readonly #selections = new WeakMap<DirectoryKeySelection, {
+        readonly origin: string; readonly thumbprint: string;
+    }>();
     #bytes = 0;
     #lastTime = 0;
     #healthy = true;
@@ -120,14 +130,35 @@ export class DirectoryCache {
     }
 
     /**
-     * Entire document is validated before ANY mutation. No await/callback occurs
-     * between removing the old set and installing the complete replacement.
-     * Returns persistence only, not authentication or even key presence.
+     * Validate without changing cache state. The discovery coordinator checks
+     * its original total deadline AFTER this synchronous parsing/import work
+     * and BEFORE committing. A parsed document alone is not transport evidence.
      */
-    replace(originInput: string, response: DirectoryResponse): boolean {
-        const origin = configuredAgentOrigin(originInput);
+    prepare(response: DirectoryResponse): PreparedDirectoryEntry {
         const document = parseDirectoryDocument(response.body, this.#format);
         const freshness = calculateDirectoryFreshness(response, this.#options.freshness);
+        const ticket: PreparedDirectoryEntry = Object.freeze({ prepared: true });
+        this.#prepared.set(ticket, { document, freshness });
+        return ticket;
+    }
+
+    replace(originInput: string, response: DirectoryResponse): boolean {
+        const origin = configuredAgentOrigin(originInput);
+        return this.commit(origin, this.prepare(response));
+    }
+
+    /**
+     * Internal single-use commit. The coordinator serializes fetches per origin
+     * and must check its deadline immediately before calling this method.
+     * No await/callback separates removing the old set from its replacement.
+     * Returns persistence only, not authentication or even key presence.
+     */
+    commit(originInput: string, ticket: PreparedDirectoryEntry): boolean {
+        const origin = configuredAgentOrigin(originInput);
+        const prepared = this.#prepared.get(ticket);
+        if (!prepared) throw new Error("Invalid or consumed directory preparation");
+        this.#prepared.delete(ticket);
+        const { document, freshness } = prepared;
         const now = this.#now();
         if (now === undefined) return false;
         // A valid newer set is authoritative removal evidence even if no-store,
@@ -140,8 +171,8 @@ export class DirectoryCache {
             accountedBytes > this.#options.maxPositiveAccountedBytes ||
             freshness.receivedMonotonicMs > now) return false;
 
-        // FIFO eviction affects availability only. Identity-bound selections
-        // from an evicted entry fail their final recheck, even after reinsertion.
+        // FIFO eviction affects availability only. Final checks require current
+        // fresh evidence; eviction alone is not a permanent key revocation.
         while (this.#positive.size >= this.#options.maxPositiveEntries ||
             this.#bytes + accountedBytes > this.#options.maxPositiveAccountedBytes) {
             const oldest = this.#positive.keys().next().value as string | undefined;
@@ -163,7 +194,7 @@ export class DirectoryCache {
         const result = entry.document.jwks.lookup(thumbprint);
         if (result.status !== "found") return { status: "missing", reason: result.reason };
         const selection = Object.freeze({ origin, key: result.key });
-        this.#selections.set(selection, { origin, entry });
+        this.#selections.set(selection, { origin, thumbprint: result.key.thumbprint });
         return Object.freeze({ status: "found", selection });
     }
 
@@ -173,11 +204,14 @@ export class DirectoryCache {
         const now = this.#now();
         if (!selected || now === undefined) return false;
         const current = this.#positive.get(selected.origin);
-        // Conservatively reject every replaced generation, including unchanged
-        // keys. Never revive a selection by removing and later reintroducing it.
-        if (current !== selected.entry || !isDirectoryFresh(current.freshness, now)) return false;
-        const key = current.document.jwks.lookup(selection.key.thumbprint);
-        return key.status === "found" && key.key === selection.key;
+        // RFC 7638 identifies key material, not cache generations or KeyObjects.
+        // Refreshing a set that retains the selected key must not reject an
+        // otherwise valid request. Reintroduction may likewise pass, but only
+        // with current fresh, fully validated evidence at this same origin.
+        // Signature identity, crypto, time and replay remain verifier obligations.
+        if (!current || !isDirectoryFresh(current.freshness, now)) return false;
+        const key = current.document.jwks.lookup(selected.thumbprint);
+        return key.status === "found" && key.key.thumbprint === selected.thumbprint;
     }
 
     /** Operational backoff only; does not erase evidence or label crypto invalid. */

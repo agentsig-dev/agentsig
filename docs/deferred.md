@@ -683,3 +683,52 @@ revision. It validates fixture integrity, public thumbprints, and contract
 consistency, not execution of the required full network-verifier race tests.
 The fixtures and audit must be committed separately before implementation.
 Historical fixture bytes are unchanged. No push or publication was performed.
+
+### Integrated discovery service and thumbprint recheck checkpoint
+
+Following the independent rotation contract in **785b46f**, final cache checks
+now use the selected thumbprint in the current fresh selectable set at the same
+origin. Cache ownership of the selection is still required; generation and
+KeyObject equality are no longer required. The original selected key material
+remains the verifier's cryptographic input. This implements the approved cache
+gate, not yet the full network-verifier race acceptance tests.
+
+The internal discovery service composes the owned transport, scheduler, complete
+document validation, freshness calculation, and cache. Coalesced callers share
+one validation/commit path and one completion diagnostic. Invocation-owned
+single-fetch budgets also charge joining an existing fetch; fresh cache hits do
+not spend that allowance. Public verifier integration must create one budget per
+invocation and share it across every candidate.
+
+A failed WG refresh reports invalid-jwks with a bounded key index and fixed rule
+text, never the remote kid, body, key material, nonce, backend error, or cause.
+Prior evidence and its age remain unchanged. Tests distinguish old fresh evidence
+from expired evidence; the latter yields no usable key. Observer throws are
+contained and synchronous observer reentry is refused. These tests use controlled
+transport and do not substitute for the required full-verifier c-prime scenarios.
+
+Configuration is snapshotted before DNS or queueing, rejecting ordinary accessors
+and unknown fields. Proxy configuration is validated without first spreading it;
+mutation during DNS cannot change the admitted proxy, directory CA, or allowlist.
+
+Document preparation is separated from a cache-owned, single-use commit handle.
+The original total deadline is checked after synchronous validation and before
+commit. Abandoned or late preparations do not replace prior evidence. A regression
+also caught restarting the transport budget at scheduler admission: the scheduler
+now receives the service's original monotonic start, including time spent before
+queue admission. Exact 1,999/2,000 ms cancellation boundaries cover a request whose
+first 1,000 ms has already elapsed. Late worker completion cannot write cache data.
+
+Local validation passed the Node 22 workspace build, type checks, 5,239 unit tests
+across 55 files, and 13 existing integration/consumer tests. A separate Node 20.20.2
+run passed 607 related tests. The rotation contract audit passed fourteen checks.
+Overlapping runs are not additive totals, and no subsequent remote CI success is
+claimed.
+
+Remaining obligations include sharing scheduler limits across supported profile
+partitions in the final API, full network-verifier identity/time/epoch/replay
+integration and race tests, Redis recovery and its adapter, public exports and
+consumers, and the maintainer-run smoke. The discovery service currently owns one
+format/network-policy partition per instance; separate instances are not proof
+of process-global admission bounds. Package versions and offline public exports
+remain unchanged. No push or publication was performed.

@@ -77,10 +77,19 @@ export class DirectoryFetchScheduler<T> {
         }
     }
 
-    run(originInput: string): Promise<T> {
+    run(originInput: string, startedAt?: number): Promise<T> {
         const origin = configuredAgentOrigin(originInput);
         const now = this.#now();
         if (now === undefined) return Promise.reject(new DirectoryAdmissionError("clock"));
+        // Internal callers may carry admission time from the SAME monotonic
+        // clock. Never restart the total budget at this scheduling boundary.
+        const started = startedAt ?? now;
+        if (!Number.isFinite(started) || started < 0 || started > now) {
+            return Promise.reject(new DirectoryAdmissionError("clock"));
+        }
+        if (now - started >= 3000) {
+            return Promise.reject(new DirectoryAdmissionError("deadline"));
+        }
         const existing = this.#jobs.get(origin);
         if (existing) {
             if (!existing.settled && now - existing.started >= 3000) this.#fail(existing, "deadline");
@@ -103,7 +112,7 @@ export class DirectoryFetchScheduler<T> {
         // The owned job can expire before a caller attaches a handler.
         void promise.catch(() => { });
         const job: Job<T> = {
-            origin, started: now, controller: new AbortController(), promise,
+            origin, started, controller: new AbortController(), promise,
             resolve, reject, timer: undefined, active: false, settled: false,
         };
         this.#jobs.set(origin, job);
@@ -111,7 +120,7 @@ export class DirectoryFetchScheduler<T> {
         job.timer = setTimeout(() => {
             this.#fail(job, "deadline");
             this.#pump();
-        }, 3000);
+        }, Math.max(1, Math.ceil(3000 - (now - started))));
         this.#pump();
         return promise;
     }
