@@ -55,8 +55,6 @@ jobs:
           --health-interval 5s
           --health-timeout 3s
           --health-retries 12
-    env:
-      AGENTSIG_TEST_REDIS_PORT: ${{ job.services.redis.ports[6379] }}
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -73,8 +71,13 @@ jobs:
       - name: Build workspace dependencies and check types
         run: pnpm run build && pnpm run typecheck
       - name: Require an explicit real-service endpoint
+        # The job context is available in step env, not job-level env.
+        env:
+          AGENTSIG_TEST_REDIS_PORT: ${{ job.services.redis.ports[6379] }}
         run: node -e "const p=Number(process.env.AGENTSIG_TEST_REDIS_PORT); if(!Number.isInteger(p)||p<1||p>65535) throw new Error('Missing dedicated Redis service port');"
       - name: Run real Redis admission, atomic replay and recovery tests
+        env:
+          AGENTSIG_TEST_REDIS_PORT: ${{ job.services.redis.ports[6379] }}
         run: pnpm exec vitest run packages/core/test/redis-real.test.ts
       - name: Verify tracked sources and fixtures were not modified
         run: git diff --exit-code
