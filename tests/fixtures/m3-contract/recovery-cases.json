@@ -1,0 +1,219 @@
+{
+    "formatVersion": 1,
+    "status": "pre-implementation-expectations",
+    "approvedOn": "2026-09-19",
+    "scope": "Recovery after detected replay-history loss, not normal nonce retention",
+    "derivation": {
+        "assumption": "One non-regressing verification time domain; distributed clock differences and resets require an operator-supplied additional bound",
+        "firstAcceptance": "created <= firstAcceptedAt + clockSkewSeconds",
+        "lastAcceptance": "now < min(expires, created + maxAgeSeconds) + clockSkewSeconds",
+        "lifetimeBound": "expires <= created + maxLifetimeSeconds",
+        "upperBound": "now < firstAcceptedAt + min(maxAgeSeconds, maxLifetimeSeconds) + 2 * clockSkewSeconds",
+        "helperFormula": "min(maxAgeSeconds, maxLifetimeSeconds) + 2 * clockSkewSeconds",
+        "normalRetentionUnchanged": "max(consumeNow, created) + maxAgeSeconds + clockSkewSeconds",
+        "operatorResponsibility": "Supply the largest recovery horizon of all verifiers sharing the enforcement domain, plus a bounded distributed clock allowance; the library cannot validate the deployment-wide assertion"
+    },
+    "helperCases": [
+        {
+            "id": "default-policy",
+            "policy": {
+                "maxAgeSeconds": 300,
+                "maxLifetimeSeconds": 300,
+                "clockSkewSeconds": 30
+            },
+            "expectedSeconds": 360
+        },
+        {
+            "id": "age-is-tighter",
+            "policy": {
+                "maxAgeSeconds": 300,
+                "maxLifetimeSeconds": 600,
+                "clockSkewSeconds": 30
+            },
+            "expectedSeconds": 360
+        },
+        {
+            "id": "lifetime-is-tighter",
+            "policy": {
+                "maxAgeSeconds": 600,
+                "maxLifetimeSeconds": 300,
+                "clockSkewSeconds": 30
+            },
+            "expectedSeconds": 360
+        },
+        {
+            "id": "zero-skew",
+            "policy": {
+                "maxAgeSeconds": 300,
+                "maxLifetimeSeconds": 300,
+                "clockSkewSeconds": 0
+            },
+            "expectedSeconds": 300
+        },
+        {
+            "id": "shorter-lifetime",
+            "policy": {
+                "maxAgeSeconds": 300,
+                "maxLifetimeSeconds": 60,
+                "clockSkewSeconds": 30
+            },
+            "expectedSeconds": 120
+        },
+        {
+            "id": "result-overflow-is-not-clamped",
+            "policy": {
+                "maxAgeSeconds": 9007199254740960,
+                "maxLifetimeSeconds": 9007199254740960,
+                "clockSkewSeconds": 30
+            },
+            "expectedConfigurationCode": "invalid-time-policy"
+        }
+    ],
+    "signatureBoundary": {
+        "firstAcceptedAt": 1800000000,
+        "created": 1800000030,
+        "expires": 1800000330,
+        "policy": {
+            "maxAgeSeconds": 300,
+            "maxLifetimeSeconds": 300,
+            "clockSkewSeconds": 30
+        },
+        "cases": [
+            {
+                "elapsedSeconds": 330,
+                "timeEligible": true,
+                "note": "The rejected 330-second recovery proposal could reopen replay here"
+            },
+            {
+                "elapsedSeconds": 359,
+                "timeEligible": true
+            },
+            {
+                "elapsedSeconds": 360,
+                "timeEligible": false,
+                "expectedReason": "signature-expired"
+            },
+            {
+                "elapsedSeconds": 361,
+                "timeEligible": false,
+                "expectedReason": "signature-expired"
+            }
+        ],
+        "note": "Time eligibility alone is not verification. Redis must remain unavailable during quarantine."
+    },
+    "redisQuarantine": {
+        "recoveryHorizonSeconds": 360,
+        "detectedAtRedisMilliseconds": 2000000000000,
+        "quarantineUntilRedisMilliseconds": 2000000360000,
+        "clock": "Redis server time",
+        "startsAt": "Detection time, never an inferred earlier loss time",
+        "sharedState": "Epoch marker and absolute quarantine-until record stored in Redis",
+        "cases": [
+            {
+                "elapsedSeconds": 359,
+                "expectedStoreOutcome": "unavailable"
+            },
+            {
+                "elapsedSeconds": 360,
+                "quarantineComplete": true,
+                "freshTupleMayConsume": true
+            },
+            {
+                "elapsedSeconds": 361,
+                "quarantineComplete": true,
+                "freshTupleMayConsume": true
+            }
+        ],
+        "boundaryNote": "Quarantine completion does not authenticate old requests; the verifier must still reject expired signatures.",
+        "instanceRestart": "Preserve the existing shared quarantine deadline; do not restart or shorten it",
+        "bothRecordsMissing": "Atomically create a new epoch and quarantine beginning at detection",
+        "oneRecordMissing": "Treat inconsistent recovery state as loss; atomically begin a new quarantine rather than infer readiness",
+        "concurrentDetection": "All instances observe one atomically initialized recovery state; losing initializers do not extend or shorten the deadline",
+        "manualEarlyRelease": "Not supported"
+    },
+    "configurationCases": [
+        {
+            "id": "missing-horizon",
+            "input": {},
+            "expectedConfigurationCode": "invalid-replay-policy"
+        },
+        {
+            "id": "zero-horizon",
+            "input": {
+                "recoveryHorizonSeconds": 0
+            },
+            "expectedConfigurationCode": "invalid-replay-policy"
+        },
+        {
+            "id": "negative-horizon",
+            "input": {
+                "recoveryHorizonSeconds": -1
+            },
+            "expectedConfigurationCode": "invalid-replay-policy"
+        },
+        {
+            "id": "fractional-horizon",
+            "input": {
+                "recoveryHorizonSeconds": 359.5
+            },
+            "expectedConfigurationCode": "invalid-replay-policy"
+        },
+        {
+            "id": "string-horizon",
+            "input": {
+                "recoveryHorizonSeconds": "360"
+            },
+            "expectedConfigurationCode": "invalid-replay-policy"
+        }
+    ],
+    "evictionAdmissionCases": [
+        {
+            "id": "confirmed-noeviction",
+            "configGet": "noeviction",
+            "connectionAdmitted": true
+        },
+        {
+            "id": "confirmed-eviction-policy",
+            "configGet": "allkeys-lru",
+            "connectionAdmitted": false,
+            "expectedConfigurationCode": "invalid-replay-policy"
+        },
+        {
+            "id": "acknowledgement-cannot-override-contradictory-server",
+            "configGet": "allkeys-lru",
+            "acknowledgeEvictionPolicy": "noeviction",
+            "connectionAdmitted": false,
+            "expectedConfigurationCode": "invalid-replay-policy"
+        },
+        {
+            "id": "config-denied-explicit-acknowledgement",
+            "configGet": "permission-denied",
+            "acknowledgeEvictionPolicy": "noeviction",
+            "connectionAdmitted": true
+        },
+        {
+            "id": "config-denied-no-acknowledgement",
+            "configGet": "permission-denied",
+            "connectionAdmitted": false,
+            "expectedConfigurationCode": "invalid-replay-policy"
+        },
+        {
+            "id": "network-failure-not-a-permission-denial",
+            "configGet": "network-error",
+            "acknowledgeEvictionPolicy": "noeviction",
+            "connectionAdmitted": false
+        }
+    ],
+    "acceptedResidualRisks": [
+        "Manual deletion or replication rollback may remove nonce records while retaining recovery markers; marker checks cannot detect every partial loss.",
+        "noeviction prevents eviction-driven loss but does not establish durable linearizability or protect against administrative writes.",
+        "Redis clock jumps and unbounded differences between verifier clocks are not solved by an epoch marker; deployment clock bounds remain necessary."
+    ],
+    "unchangedContracts": [
+        "Normal retention is supplied by consume calls; the Redis store does not calculate signature acceptance policy.",
+        "Per-key quota spans all scopes in the shared store.",
+        "A missing recovery horizon rejects configuration; there is no silent default.",
+        "The operator error catalog is unchanged.",
+        "Store admission after quarantine is not a verified authentication result."
+    ]
+}

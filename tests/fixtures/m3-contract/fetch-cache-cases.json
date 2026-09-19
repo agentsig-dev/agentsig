@@ -1,0 +1,374 @@
+{
+    "formatVersion": 1,
+    "status": "approved-pre-implementation-expectations",
+    "approvedOn": "2026-09-19",
+    "productionImplementationExists": false,
+    "admission": {
+        "defaultMode": "allowlist",
+        "openMode": "Explicitly configured and supported in M3, not deferred",
+        "authorization": "Successful identity verification never grants access or a rate-limit exemption",
+        "mandatoryInBothModes": [
+            "HTTPS with certificate and hostname verification",
+            "Directory-only origin grammar and reserved well-known path",
+            "Globally routable destination addresses",
+            "Reject the entire DNS answer set if any candidate address is forbidden",
+            "Pin the approved address to the connection while preserving original host and SNI",
+            "No automatic redirects or environment proxy configuration",
+            "Finite timeout, byte, key-count, concurrency and fetch-start budgets",
+            "Bounded negative cache and coalescing"
+        ],
+        "openModeCannotDisableProtection": true,
+        "customCa": "Explicit configuration only; system defaults otherwise",
+        "proxy": "Explicit configuration only; never read proxy environment variables",
+        "tlsVerificationDisableOption": false,
+        "localTestBoundary": "Test-only connector/server harness is not exported by production entry points and cannot be selected by request metadata"
+    },
+    "limits": {
+        "totalDeadlineMilliseconds": 3000,
+        "dnsDeadlineMilliseconds": 1000,
+        "maxDnsAddresses": 16,
+        "connectTlsDeadlineMilliseconds": 1000,
+        "headersDeadlineMilliseconds": 1000,
+        "bodyIdleTimeoutMilliseconds": 500,
+        "maxResponseHeaderBytes": 16384,
+        "maxBodyBytes": 262144,
+        "maxKeys": 64,
+        "globalConcurrentFetches": 16,
+        "perOriginConcurrentFetches": 1,
+        "maxQueuedFetches": 64,
+        "globalFetchStartsPerSecond": 32,
+        "perOriginMinimumFetchIntervalSeconds": 30,
+        "maxPositiveEntries": 1000,
+        "maxPositiveAccountedBytes": 16777216,
+        "maxNegativeEntries": 1000,
+        "maxFetchesPerVerification": 1
+    },
+    "fetchCases": [
+        {
+            "id": "unlisted-origin-default",
+            "mode": "allowlist",
+            "allowed": false,
+            "dnsCalls": 0,
+            "connectionCalls": 0,
+            "discoveryAccepted": false
+        },
+        {
+            "id": "unlisted-origin-explicit-open",
+            "mode": "open",
+            "otherwiseValidPublicDirectory": true,
+            "discoveryAccepted": true,
+            "authorizationGranted": false
+        },
+        {
+            "id": "allowlist-does-not-exempt-private-address",
+            "mode": "allowlist",
+            "allowed": true,
+            "addresses": [
+                "10.0.0.1"
+            ],
+            "connectionCalls": 0,
+            "discoveryAccepted": false
+        },
+        {
+            "id": "private-ip",
+            "addresses": [
+                "192.168.1.1"
+            ],
+            "connectionCalls": 0,
+            "discoveryAccepted": false
+        },
+        {
+            "id": "loopback-ip",
+            "addresses": [
+                "127.0.0.1"
+            ],
+            "connectionCalls": 0,
+            "discoveryAccepted": false
+        },
+        {
+            "id": "link-local-ip",
+            "addresses": [
+                "169.254.169.254"
+            ],
+            "connectionCalls": 0,
+            "discoveryAccepted": false
+        },
+        {
+            "id": "ipv6-literal-origin",
+            "origin": "https://[::1]",
+            "dnsCalls": 0,
+            "connectionCalls": 0,
+            "discoveryAccepted": false
+        },
+        {
+            "id": "mapped-loopback-answer",
+            "addresses": [
+                "::ffff:127.0.0.1"
+            ],
+            "connectionCalls": 0,
+            "discoveryAccepted": false
+        },
+        {
+            "id": "ipv6-unique-local-answer",
+            "addresses": [
+                "fd00::1"
+            ],
+            "connectionCalls": 0,
+            "discoveryAccepted": false
+        },
+        {
+            "id": "mixed-dns-answer",
+            "addresses": [
+                "1.1.1.1",
+                "10.0.0.1"
+            ],
+            "connectionCalls": 0,
+            "discoveryAccepted": false
+        },
+        {
+            "id": "rebind-after-validation",
+            "approvedAddress": "1.1.1.1",
+            "subsequentDnsAnswer": "127.0.0.1",
+            "implicitSecondLookupAllowed": false,
+            "dialedAddress": "1.1.1.1"
+        },
+        {
+            "id": "peer-address-mismatch",
+            "approvedAddress": "1.1.1.1",
+            "actualPeer": "127.0.0.1",
+            "discoveryAccepted": false
+        },
+        {
+            "id": "redirect",
+            "status": 302,
+            "location": "https://internal.example/",
+            "followupRequests": 0,
+            "discoveryAccepted": false
+        },
+        {
+            "id": "same-origin-redirect",
+            "status": 307,
+            "location": "/other",
+            "followupRequests": 0,
+            "discoveryAccepted": false
+        },
+        {
+            "id": "cold-304",
+            "status": 304,
+            "discoveryAccepted": false
+        },
+        {
+            "id": "warm-304",
+            "status": 304,
+            "cachedEntryPresent": true,
+            "freshnessExtended": false,
+            "discoveryAccepted": false
+        },
+        {
+            "id": "large-body",
+            "bodyBytes": 262145,
+            "honestContentLengthRequiredForDetection": false,
+            "discoveryAccepted": false
+        },
+        {
+            "id": "body-size-boundary",
+            "bodyBytes": 262144,
+            "withinByteBudget": true,
+            "note": "Other validation is still required"
+        },
+        {
+            "id": "slow-body",
+            "bodyIdleMilliseconds": 501,
+            "discoveryAccepted": false,
+            "socketDestroyed": true
+        },
+        {
+            "id": "drip-feed-exceeds-total",
+            "bodyIdleMilliseconds": 100,
+            "totalMilliseconds": 3001,
+            "discoveryAccepted": false,
+            "socketDestroyed": true
+        },
+        {
+            "id": "gzip-body",
+            "requestAcceptEncoding": "identity",
+            "responseContentEncoding": "gzip",
+            "discoveryAccepted": false
+        },
+        {
+            "id": "brotli-body",
+            "responseContentEncoding": "br",
+            "discoveryAccepted": false
+        },
+        {
+            "id": "invalid-certificate",
+            "discoveryAccepted": false
+        },
+        {
+            "id": "wrong-certificate-hostname",
+            "discoveryAccepted": false
+        },
+        {
+            "id": "private-jwk-material",
+            "otherwiseValidResponse": true,
+            "keyContainsPrivateMaterial": true,
+            "discoveryAccepted": false
+        },
+        {
+            "id": "too-many-keys",
+            "keyCount": 65,
+            "discoveryAccepted": false
+        }
+    ],
+    "cachePolicy": {
+        "defaultFreshnessSecondsWithoutExplicitFreshness": 60,
+        "defaultNegativeSeconds": 60,
+        "maximumConfiguredFreshnessSeconds": 300,
+        "maximumConfiguredNegativeSeconds": 300,
+        "staleAcceptance": false,
+        "conditionalRequests": false,
+        "acceptEncoding": "identity",
+        "freshnessClock": "Elapsed monotonic time from fetch, independent of replay-context wall-clock reference resets",
+        "httpAgeAccounting": "Apply Date, Age, response delay and restrictive cache directives; fallback does not override explicit expiry or revalidation requirements",
+        "failedFetch": "Do not overwrite or evict prior key evidence; do not extend its lifetime",
+        "successfulFetch": "Atomically replace the complete validated set, including an empty set",
+        "keyRemoval": "Immediately effective on successful replacement; recheck selected-key membership after awaits before returning verified",
+        "revocationList": "None",
+        "keyTimeMetadata": "WG-00 shows nbf/exp only in an example without normative types or acceptance rules; ignore these fields for key-time decisions and document this scope",
+        "negativeCacheMeaning": "Operational throttling state, never proof of invalid cryptography"
+    },
+    "cacheCases": [
+        {
+            "id": "missing-freshness",
+            "headers": {},
+            "initialAgeSeconds": 0,
+            "expectedLifetimeSeconds": 60
+        },
+        {
+            "id": "fallback-with-age",
+            "headers": {
+                "age": "20"
+            },
+            "initialAgeSeconds": 20,
+            "expectedRemainingSeconds": 40
+        },
+        {
+            "id": "large-max-age-capped",
+            "headers": {
+                "cache-control": "max-age=86400"
+            },
+            "initialAgeSeconds": 0,
+            "expectedLifetimeSeconds": 300
+        },
+        {
+            "id": "explicit-zero-not-fallback",
+            "headers": {
+                "cache-control": "max-age=0"
+            },
+            "expectedReusableSeconds": 0
+        },
+        {
+            "id": "no-cache",
+            "headers": {
+                "cache-control": "no-cache, max-age=300"
+            },
+            "reuseWithoutFetch": false
+        },
+        {
+            "id": "no-store",
+            "headers": {
+                "cache-control": "no-store, max-age=300"
+            },
+            "persistEntry": false
+        },
+        {
+            "id": "private-response",
+            "headers": {
+                "cache-control": "private, max-age=300"
+            },
+            "persistEntry": false
+        },
+        {
+            "id": "freshness-exclusive-boundary",
+            "lifetimeSeconds": 60,
+            "elapsedSeconds": 60,
+            "usableWithoutFetch": false
+        },
+        {
+            "id": "failed-refresh-preserves-but-does-not-revive",
+            "priorEntryExpired": true,
+            "fetchOutcome": "timeout",
+            "priorEvidenceRetained": true,
+            "verifiedUsingPriorEvidence": false,
+            "negativeSeconds": 60
+        },
+        {
+            "id": "successful-empty-set",
+            "oldKeys": [
+                "old"
+            ],
+            "newKeys": [],
+            "oldKeyUsable": false
+        },
+        {
+            "id": "rotation-does-not-merge",
+            "oldKeys": [
+                "old"
+            ],
+            "newKeys": [
+                "new"
+            ],
+            "oldKeyUsable": false
+        },
+        {
+            "id": "removal-during-replay-await",
+            "selectedKey": "old",
+            "replacementKeys": [
+                "new"
+            ],
+            "mayReturnVerified": false,
+            "rollbackConsumedNonce": false
+        },
+        {
+            "id": "clock-reset-keeps-cache-age",
+            "lifetimeSeconds": 60,
+            "elapsedBeforeResetSeconds": 40,
+            "elapsedAfterResetSeconds": 21,
+            "entryDeletedByReset": false,
+            "entryFreshAfterReset": false
+        },
+        {
+            "id": "parallel-origin-fetches",
+            "concurrentRequests": 100,
+            "sameOrigin": true,
+            "networkFetchCount": 1
+        },
+        {
+            "id": "different-origin-flood",
+            "distinctOrigins": 100,
+            "globalConcurrentMaximum": 16,
+            "fetchStartsInFirstSecondMaximum": 32
+        },
+        {
+            "id": "random-keyid-negative-cache",
+            "distinctClaimedKeyIds": 100000,
+            "sameOrigin": true,
+            "unboundedPerKeyNegativeRecords": false
+        },
+        {
+            "id": "positive-ttl-over-cap",
+            "configuredSeconds": 301,
+            "configurationAccepted": false
+        },
+        {
+            "id": "negative-ttl-over-cap",
+            "configuredSeconds": 301,
+            "configurationAccepted": false
+        }
+    ],
+    "sourceReferences": [
+        "tests/fixtures/m3/sources/wg-5.5.txt",
+        "tests/fixtures/m3/sources/wg-appendix-c.txt",
+        "tests/fixtures/m3/sources/wg-6.7-6.10.txt"
+    ]
+}

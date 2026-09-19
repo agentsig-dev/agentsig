@@ -168,10 +168,10 @@ the assistant did not publish or push.
 
 ## M3 planning and source pinning
 
-The [M3 proposal](milestone-3-plan.md) presents discovery, SSRF/DNS rebinding,
-redirect, evidence/cache/stale, rotation, resource, and Redis decisions with
-alternatives and costs. D1–D17, R1–R6, and the explicitly listed subchoices
-remain pending approval. Recommendations are not selected defaults.
+The [M3 proposal](milestone-3-plan.md) preserves the original alternatives.
+The maintainer subsequently approved the restrictive A choices with the
+amendments recorded below. This approval authorizes fixture-first implementation,
+not a claim that network discovery or Redis has already been implemented.
 
 Fourteen files are pinned in the [M3 manifest](../tests/fixtures/m3/manifest.json),
 including exact excerpts of WG §5.5, Appendix C and supporting sections, and
@@ -198,10 +198,10 @@ The supplementary directory response shares the E.2.3 body/digest but signs
 different metadata; both signatures are valid, so different signature bytes
 are not a cryptographic contradiction.
 
-No old fixtures or production APIs are changed. The new fixture audit is wired
-into CI, but M3 remote CI has not run. Network/Redis implementation requires
-explicit security decisions and fixture-first implementation approval.
-No push, publication, or upstream issue submission is performed.
+No old fixtures or production APIs were changed by source preparation.
+The maintainer confirmed that **9697d6c** and **e90f155** were pushed and CI
+passed. That result does not extend to the subsequent contract or implementation
+work. No assistant push, publication, or upstream issue submission was performed.
 
 ### M3 preparation validation
 
@@ -216,6 +216,99 @@ line at EOF; only that file was excluded from the whitespace-style check, not
 from byte-integrity validation. Existing production code and earlier fixtures
 were unchanged.
 
-The decision proposal is a separate documentation delivery. No M3 security
-option is approved by committing it. Remote CI for these new commits remains
-unconfirmed, and no push or publication was performed.
+The decision proposal was a separate documentation delivery. Its later approval
+came from explicit maintainer instructions, not from committing the document.
+
+## Approved M3 amendments and fixture-first work
+
+- Allow-list admission remains the default. Explicit open discovery is a
+  first-class M3 mode, not deferred. Neither mode can disable HTTPS, certificate
+  and hostname verification, public-address filtering, mixed-DNS-answer
+  rejection, connection pinning, redirect rejection, or resource/admission bounds.
+  Verified identity is not authorization; application policy remains separate.
+- Coalesce fetches per origin, with one active fetch per origin and sixteen
+  globally. Bound different-origin fetch starts as well as concurrency.
+- Use unconditional GET and accept only HTTP 200. Request identity encoding and
+  reject compressed responses. Read no proxy environment variables. Proxy and
+  custom CA configuration must be explicit; there is no TLS-disable option.
+- Cache freshness falls back to 60 seconds when explicit freshness is absent;
+  restrictive directives and response-age accounting take precedence. Negative
+  caching defaults to 60 seconds and has bounded capacity. Configured positive
+  and negative lifetimes cannot exceed 300 seconds. Stale evidence never grants
+  verified acceptance.
+- Successful fetch replaces the complete validated key set atomically, including
+  an empty set. Removed keys become unusable immediately upon replacement,
+  including at the final check of pending verification. No separate revocation
+  list is introduced. Failed fetches neither replace evidence nor renew its age.
+- Explicit verification-clock reset does not clear the directory cache or renew
+  TTLs. Cache age uses monotonic elapsed time from fetch, independently of replay
+  clock-reference resets. Old verification leases remain invalidated as in M2.
+- WG-00 includes nbf/exp in its example but defines neither their types nor
+  acceptance inequalities. These extensions are ignored for key-time decisions;
+  no JOSE/JWT semantics are inferred. The exact example remains pinned in the
+  [WG source excerpt](../tests/fixtures/m3/sources/wg-5.5.txt).
+- **Publisher-side signed directory responses are mandatory for the Cloudflare
+  profile in M5.** M3 direct-TLS discovery does not claim to implement that
+  publisher requirement, portable response proof, or body-digest verification.
+- Architecture-v2 F.3 vectors remain negative fixtures, never WG-00 positives.
+  All four carry the protocol tag: the two missing agent headers produce
+  malformed-agent, not absence of a selected candidate. The other two produce
+  agent-label-mismatch at the agent-binding gate. Other crypto/coverage/time
+  failures remain separate.
+
+### Redis recovery approval
+
+Normal nonce retention continues to come from each consume call. The store
+does not calculate signature policy. Per-key quota spans all scopes within the
+shared enforcement domain. Callers must ensure that supplied retention covers
+every verifier that can accept the same tuple; sharing a store alone does not
+make incompatible acceptance windows safe.
+
+Recovery configuration requires a positive, representable horizon in seconds,
+supplied by the application, with no implicit default. Missing or invalid
+configuration produces invalid-replay-policy before the adapter becomes usable.
+The planned library helper derives the single-clock horizon from the acceptance
+inequalities: min(maximum age, maximum lifetime) + twice the clock skew.
+Defaults produce **360 seconds**, not 330. The 359/360/361 boundaries are pinned
+in [recovery expectations](../tests/fixtures/m3-contract/recovery-cases.json).
+
+The operator must supply the largest horizon of all verifiers sharing the
+enforcement domain, plus a bounded distributed-clock allowance. The library
+cannot establish that deployment-wide assertion. Explicit resets and Redis
+clock anomalies require the same operational clock assumptions; a marker does
+not solve arbitrary clock jumps.
+
+The epoch marker and an absolute quarantine-until timestamp live in Redis.
+Quarantine starts when loss is detected. All instances observe the same atomic
+recovery state; restarting one instance does not restart or shorten quarantine.
+Missing or inconsistent recovery markers start a new quarantine, never imply
+readiness. During quarantine, consume returns unavailable. M3 has no manual
+early-release API and introduces no operator-catalog changes.
+
+At connection setup, inspect CONFIG GET maxmemory-policy and require noeviction.
+If inspection is denied or unsupported, only explicit
+acknowledgeEvictionPolicy: "noeviction" permits relying on the operator's
+declaration. An acknowledgement cannot override a server-reported eviction
+policy or conceal an ordinary connection failure. A known policy mismatch
+prevents use and raises invalid-replay-policy; no usable adapter is returned.
+
+**Accepted residual risk:** manual deletion or replication rollback may remove
+nonce records while retaining the marker. Those partial losses cannot in general
+be detected. noeviction addresses eviction-driven loss only; it is not proof of
+durability, intact history, or linearizability. A marker and quarantine mechanism
+must not be advertised as detecting every partial history loss.
+
+### Contract validation checkpoint
+
+The [contract manifest](../tests/fixtures/m3-contract/manifest.json) pins four
+independently authored expectation files and two public TLS test files.
+The [contract audit](../tests/m3-contract-audit.test.mjs) passed thirteen checks;
+the [local HTTPS harness tests](../tests/directory-server.test.mjs) passed six.
+These nineteen checks validate expectation consistency and test infrastructure,
+not production SSRF defenses or a working Redis adapter.
+
+The local server is test-only and binds to loopback. Its certificate is trusted
+explicitly by test clients; certificate and hostname verification stay enabled.
+No production private-address exception is authorized. The eventual smoke must
+state which network-policy parts use test infrastructure rather than suggest
+that a production open resolver accepts loopback origins.

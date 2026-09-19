@@ -208,3 +208,86 @@ loss on healthy reset. They do not replace the
 [full round-trip acceptance gate](../packages/core/test/profile-verifier-roundtrip.test.ts),
 which separately passed with the real signer, identity, time, and replay chain
 for both profiles.
+
+## Approved M3 Redis recovery contract — implementation pending
+
+This section records the maintainer-approved contract, not a completed Redis
+implementation. Independent contract fixtures and the local HTTPS test harness
+do not establish production Redis or SSRF guarantees.
+
+Normal nonce retention remains supplied by each consume call. The adapter
+translates the supplied deadline minus dispatch time into a Redis-time duration;
+it does not derive signature policy. Per-key quota covers all scopes in the
+shared enforcement domain. Applications must supply retention sufficient for
+all verifiers that can accept the same tuple. The store cannot infer or validate
+those deployment-wide acceptance windows.
+
+### Recovery horizon
+
+Redis adapter configuration must explicitly supply recoveryHorizonSeconds.
+There is no default. A missing, invalid, or unrepresentable horizon produces
+invalid-replay-policy before the adapter becomes usable. Correct configuration
+and restart are the recovery path for a configuration error; M3 adds no manual
+early-release API and does not change the operator error catalog.
+
+The planned recoveryHorizonSeconds(policy) helper derives a single-clock bound:
+
+- At first acceptance time T, creation C satisfies C <= T + skew.
+- Every later accepted time N satisfies both N < C + maxAge + skew and
+  N < expires + skew.
+- Since expires <= C + maxLifetime, N < T + min(maxAge, maxLifetime) + 2 * skew.
+
+Therefore the bound is min(maxAge, maxLifetime) + 2 * skew: **360 seconds**
+with existing defaults. An imprecise 330-second quarantine would reopen a
+30-second window for a maximally future-created signature. The helper must
+reject arithmetic overflow rather than clamp it. The
+[recovery fixtures](../tests/fixtures/m3-contract/recovery-cases.json) separately
+pin signature eligibility and quarantine completion at 359, 360, and 361 seconds.
+
+The application supplies the largest horizon of all verifiers sharing the
+store, plus the distributed-clock allowance. The library cannot validate that
+operator assertion. This helper does not replace normal conservative nonce
+retention, and it does not make arbitrary Redis clock jumps or backward
+verification-clock resets safe.
+
+### Shared quarantine state
+
+The epoch marker and quarantine-until key are stored in Redis. The deadline
+is an absolute Redis timestamp measured from detection of missing history,
+not an estimated earlier loss time. Initialization and consumption gates must
+be atomic so all instances see the same recovery state.
+
+One instance restarting does not shorten, extend, or restart an existing
+quarantine. Missing or inconsistent recovery state starts a new quarantine.
+During quarantine the store returns unavailable without admitting new nonces.
+Completion only permits ordinary atomic store admission; the verifier must
+still perform signature, identity, freshness, and final epoch checks.
+
+### Eviction admission and accepted residual risk
+
+At connection setup, inspect CONFIG GET maxmemory-policy and require noeviction.
+A server-reported conflicting policy prevents use and raises
+invalid-replay-policy. No usable adapter is returned.
+
+If CONFIG inspection is denied or unsupported by a managed service, the
+application may explicitly supply acknowledgeEvictionPolicy: "noeviction".
+Without that declaration, admission is refused. The declaration must not
+override a known server-policy mismatch or disguise a network failure.
+Operators must keep the asserted policy true for the adapter's entire lifetime;
+a one-time check is not continuous configuration attestation.
+
+**Accepted residual risk:** manual DEL or replication rollback may remove nonce
+records while preserving the epoch marker. The adapter cannot detect every
+such partial loss. noeviction prevents eviction-driven loss but does not prove
+that history is intact, durable, or linearizable. Neither marker presence nor
+replication acknowledgements are a complete history-loss detector. Do not
+advertise stronger replay guarantees than this deployment contract provides.
+
+### Directory cache is a different clock domain
+
+The approved M3 directory cache retains monotonic age measured from fetch.
+An explicit verification-clock reset must neither clear the directory cache
+nor renew its TTL. Expired evidence remains unusable for acceptance; a reset
+does not make it fresh. Replay context reset retains its existing lease
+invalidation and owned-memory cleanup behavior. Independent Redis history is
+not cleared by a local verification-clock reset.

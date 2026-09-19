@@ -48,3 +48,7 @@ jobs:
         run: node --test tests/metadata-fixture-audit.test.mjs
       - name: Audit pinned M3 discovery sources and upstream JSON vectors independently
         run: node --test tests/m3-fixture-audit.test.mjs
+      - name: Audit approved M3 contracts and public TLS test material independently
+        run: node --test tests/m3-contract-audit.test.mjs
+      - name: Validate the local HTTPS directory test harness
+        run: node --test tests/directory-server.test.mjs

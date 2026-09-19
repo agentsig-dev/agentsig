@@ -1,0 +1,244 @@
+{
+    "formatVersion": 1,
+    "status": "approved-pre-implementation-expectations",
+    "approvedOn": "2026-09-19",
+    "productionImplementationExists": false,
+    "contract": {
+        "retentionClock": "independent",
+        "clientOwnership": "Application-owned client; bounded adapter operations; no mandatory Redis client dependency",
+        "topology": "One primary or one Cluster hash slot per enforcement domain",
+        "atomicOperation": "Validate recovery state, then expire -> replay -> per-key quota -> global capacity -> insert",
+        "identity": [
+            "configured-scope",
+            "verified-key-thumbprint",
+            "exact-decoded-nonce"
+        ],
+        "excludedIdentityComponents": [
+            "profile",
+            "signature-label",
+            "local-operation-epoch"
+        ],
+        "quotaBoundary": "Verified key thumbprint across all scopes in the store enforcement domain",
+        "defaultCapacity": 10000,
+        "defaultMaxPerKey": 1000,
+        "normalRetention": "Supplied retainUntilEpochSeconds minus nowEpochSeconds, translated to a duration in Redis time; never derive signature policy in the store",
+        "millisecondConversion": "Exact safe-integer arithmetic; reject overflow instead of clamping",
+        "deliveryDelay": "Apply the full supplied duration starting at Redis execution time; transport delay must not shorten retention",
+        "replayRetention": "Do not shorten, extend, delete, or refresh an existing live record",
+        "eviction": "No live eviction; check CONFIG GET maxmemory-policy or require an explicit noeviction acknowledgement only when inspection is unavailable by permission/capability",
+        "recovery": "See recovery-cases.json; mandatory operator-supplied horizon and Redis-persisted quarantine state",
+        "timeoutMilliseconds": 100,
+        "automaticCommandRetry": false,
+        "offlineCommandQueue": false,
+        "memoryFallback": false,
+        "manualEarlyRelease": false,
+        "operatorCatalogChanges": false,
+        "sharedPolicyResponsibility": "Callers must supply retention sufficient for every verifier that may accept the same tuple. Different acceptance windows do not become safe merely because they share Redis. The store neither knows nor validates those policies."
+    },
+    "consumeCases": [
+        {
+            "id": "first-fresh-tuple",
+            "recoveryReady": true,
+            "tuplePresent": false,
+            "liveRecords": 0,
+            "liveRecordsForKey": 0,
+            "expectedOutcome": "accepted",
+            "recordsInserted": 1
+        },
+        {
+            "id": "concurrent-same-tuple",
+            "recoveryReady": true,
+            "processes": 4,
+            "simultaneousAttempts": 100,
+            "sameScopeKeyNonce": true,
+            "expectedAccepted": 1,
+            "expectedReplayed": 99,
+            "recordsInserted": 1
+        },
+        {
+            "id": "cross-profile-replay",
+            "priorProfile": "ietf-wg-protocol-00",
+            "incomingProfile": "cloudflare-docs-2026-07-01",
+            "sameScopeKeyNonce": true,
+            "expectedOutcome": "replayed"
+        },
+        {
+            "id": "label-change-is-replay",
+            "priorLabel": "first",
+            "incomingLabel": "second",
+            "sameScopeKeyNonce": true,
+            "expectedOutcome": "replayed"
+        },
+        {
+            "id": "scope-separates-tuples-not-key-quota",
+            "sameKeyAndNonce": true,
+            "priorScope": "merchant-a",
+            "incomingScope": "merchant-b",
+            "quotaAvailable": true,
+            "expectedOutcome": "accepted"
+        },
+        {
+            "id": "key-separates-tuples",
+            "sameScopeAndNonce": true,
+            "differentVerifiedKey": true,
+            "quotaAvailable": true,
+            "expectedOutcome": "accepted"
+        },
+        {
+            "id": "quota-spans-scopes",
+            "liveRecordsForKeyByScope": {
+                "merchant-a": 600,
+                "merchant-b": 400
+            },
+            "incomingScope": "merchant-c",
+            "maxPerKey": 1000,
+            "tuplePresent": false,
+            "expectedOutcome": "per-key-quota-exceeded",
+            "recordsInserted": 0
+        },
+        {
+            "id": "replay-before-quota-and-capacity",
+            "tuplePresent": true,
+            "liveRecords": 10000,
+            "liveRecordsForKey": 1000,
+            "expectedOutcome": "replayed",
+            "retentionChanged": false,
+            "recordsInserted": 0
+        },
+        {
+            "id": "quota-before-global-capacity",
+            "tuplePresent": false,
+            "liveRecords": 10000,
+            "liveRecordsForKey": 1000,
+            "expectedOutcome": "per-key-quota-exceeded",
+            "recordsInserted": 0
+        },
+        {
+            "id": "global-capacity-without-live-eviction",
+            "tuplePresent": false,
+            "liveRecords": 10000,
+            "liveRecordsForKey": 0,
+            "expectedOutcome": "unavailable",
+            "liveRecordsEvicted": 0,
+            "recordsInserted": 0
+        },
+        {
+            "id": "expired-records-release-quota",
+            "capacity": 2,
+            "maxPerKey": 2,
+            "recordsBefore": 2,
+            "recordsAtOrBeforeRedisNow": 1,
+            "sameIncomingKey": true,
+            "tuplePresent": false,
+            "expectedOutcome": "accepted",
+            "recordsAfter": 2
+        },
+        {
+            "id": "cleanup-work-budget-exhausted",
+            "expiredRecordsExceedCleanupBatch": true,
+            "accurateAdmissionNotYetPossible": true,
+            "expectedOutcome": "unavailable",
+            "liveRecordsEvicted": 0,
+            "recordsInserted": 0
+        },
+        {
+            "id": "longer-replayed-retention-is-not-a-new-acceptance",
+            "tuplePresent": true,
+            "incomingRetentionLonger": true,
+            "expectedOutcome": "replayed",
+            "retentionChanged": false
+        }
+    ],
+    "retentionCases": [
+        {
+            "id": "default-duration",
+            "nowEpochSeconds": 1800000000,
+            "retainUntilEpochSeconds": 1800000330,
+            "redisExecutionMilliseconds": 2000000000000,
+            "expectedDurationMilliseconds": 330000,
+            "expectedRedisDeadlineMilliseconds": 2000000330000
+        },
+        {
+            "id": "future-created-conservative-duration",
+            "nowEpochSeconds": 1800000000,
+            "retainUntilEpochSeconds": 1800000360,
+            "redisExecutionMilliseconds": 2000000000000,
+            "expectedDurationMilliseconds": 360000,
+            "expectedRedisDeadlineMilliseconds": 2000000360000
+        },
+        {
+            "id": "deadline-not-after-dispatch",
+            "nowEpochSeconds": 1800000000,
+            "retainUntilEpochSeconds": 1800000000,
+            "expectedOutcome": "unavailable",
+            "recordsInserted": 0
+        },
+        {
+            "id": "milliseconds-overflow",
+            "nowEpochSeconds": 0,
+            "retainUntilEpochSeconds": 9007199254740991,
+            "expectedOutcome": "unavailable",
+            "recordsInserted": 0
+        }
+    ],
+    "failureCases": [
+        {
+            "id": "reply-lost-after-commit",
+            "writeCommitted": true,
+            "replyReceived": false,
+            "expectedOutcome": "unavailable",
+            "automaticRetries": 0,
+            "memoryFallback": false,
+            "laterIndependentInvocationOutcome": "replayed"
+        },
+        {
+            "id": "timeout-before-known-completion",
+            "commandCompletionKnown": false,
+            "expectedOutcome": "unavailable",
+            "mayReportAccepted": false,
+            "automaticRetries": 0
+        },
+        {
+            "id": "backend-error",
+            "expectedOutcome": "unavailable",
+            "rawErrorInResult": false,
+            "rawNonceInDiagnostic": false
+        },
+        {
+            "id": "malformed-backend-result",
+            "backendResult": "success",
+            "expectedOutcome": "unavailable"
+        },
+        {
+            "id": "reset-while-consume-pending",
+            "externalWriteMayComplete": true,
+            "storeClearedByLocalReset": false,
+            "oldVerificationMayReturnVerified": false,
+            "expectedVerificationReason": "clock-unavailable"
+        },
+        {
+            "id": "script-partial-write",
+            "redisAutomaticallyRollsBack": false,
+            "inconsistentStateDetected": true,
+            "expectedOutcome": "unavailable",
+            "mayTreatMissingIndexAsEmptyStore": false
+        },
+        {
+            "id": "recovery-quarantine-active",
+            "expectedOutcome": "unavailable",
+            "recordsInserted": 0
+        },
+        {
+            "id": "manual-delete-preserving-marker",
+            "detectionGuaranteed": false,
+            "classification": "accepted-residual-risk",
+            "note": "No claim that marker presence proves intact nonce history"
+        },
+        {
+            "id": "replication-rollback-preserving-marker",
+            "detectionGuaranteed": false,
+            "classification": "accepted-residual-risk",
+            "note": "Replication acknowledgements alone do not establish durable linearizability"
+        }
+    ]
+}

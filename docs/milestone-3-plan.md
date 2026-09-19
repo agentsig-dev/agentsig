@@ -1,13 +1,34 @@
 # M3 — network discovery and shared replay: decision proposal
 
 Date: September 19, 2026.
-Status: **source/fixture preparation and design only; security choices await approval**.
+Status: **fixture-first implementation approved with maintainer amendments;
+contract fixtures and local test infrastructure are being prepared**.
 
-No production directory client, cache, or Redis adapter is implemented by this
-delivery. Recommendations below are not defaults or implementation permission.
-The pure RFC engine and accepted M2 offline API remain unchanged. The maintainer
-confirmed that 0.1.1 is published, v0.1.1 is tagged, the repository is public, and
-CI is green for commits 78dedf7 and 53b457e. That does not establish M3 CI success.
+The option tables below preserve the original proposal. Their historical
+"pending" wording does not override the subsequent approvals recorded in
+[the decision log](deferred.md#approved-m3-amendments-and-fixture-first-work)
+and [the Redis recovery contract](security-context.md#approved-m3-redis-recovery-contract--implementation-pending).
+Those records take precedence over conflicting recommendations below.
+
+Approved amendments include first-class explicit open discovery with mandatory
+SSRF defenses; 60-second default positive/negative cache lifetimes capped at
+300 seconds; cache age independent of replay-clock resets; explicit proxy/CA
+configuration without a TLS-disable option; and ignored, undefined key-time
+extensions. Publisher-side signed directory responses are mandatory for the
+Cloudflare profile in M5.
+
+Redis recovery requires an operator-supplied horizon, shared Redis quarantine
+state, and noeviction admission. The single-clock helper bound is
+min(maxAge, maxLifetime) + 2 * skew, or 360 seconds with existing defaults.
+Normal record retention still comes from consume calls. Partial history loss
+through manual deletion or replication rollback is an accepted residual risk,
+not something the marker can always detect.
+
+No production directory client, cache, or Redis adapter has yet been implemented
+in this contract-preparation step. The pure RFC engine and M2 offline API remain
+unchanged. The maintainer confirmed publication of 0.1.1, tag v0.1.1, public
+repository visibility, and green CI for both the release and M3 planning commits
+9697d6c/e90f155. That does not establish CI success for subsequent work.
 
 ## 1. Source baseline and reproducibility
 
@@ -288,6 +309,9 @@ Fixture-first implementation order:
 7. Run golden, fixture, ESM/CommonJS, type, Node/OS, and adversarial suites.
    A source audit is not a network security audit or live Cloudflare acceptance.
 
-No production feature is authorized by copying upstream JSON. The next response
-should select decision IDs/options or explicitly defer them. No push or publication
-is performed by the assistant.
+Copying upstream JSON did not itself authorize a production feature. Subsequent
+maintainer approval authorizes implementation only after the independent
+contract-fixture commit. Unresolved questions affecting incorrect acceptance
+or SSRF exposure must still be raised; remaining details may be resolved under
+the approved fail-closed, explicit-configuration principles and documented.
+No push or publication is performed by the assistant.
