@@ -1,0 +1,251 @@
+{
+    "formatVersion": 1,
+    "authoredOn": "2026-09-19",
+    "status": "approved-pre-implementation-expectations",
+    "scope": "Thumbprint-based final membership, refresh failure diagnostics, and full network-verifier race acceptance gates",
+    "keys": {
+        "original": {
+            "jwk": {
+                "kty": "OKP",
+                "crv": "Ed25519",
+                "x": "mIcw-LSpCSET4vgWUc7pO3GTn32iCH2VXMFbiA3jACM"
+            },
+            "thumbprint": "DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84"
+        },
+        "other": {
+            "jwk": {
+                "kty": "OKP",
+                "crv": "Ed25519",
+                "x": "JrQLj5P_89iXES9-vFgrIy29clF9CC_oPPsw3c5D0bs"
+            },
+            "thumbprint": "poqkLGiymh_W0uP6PZFw-dvez3QJT5SolqXBCW38r0U"
+        }
+    },
+    "policy": {
+        "origin": "https://directory.agentsig.test",
+        "profiles": [
+            "ietf-wg-protocol-00",
+            "cloudflare-docs-2026-07-01"
+        ],
+        "finalMembership": "Selected RFC 7638 thumbprint must remain selectable in the current fresh set at the same origin",
+        "generationEqualityRequired": false,
+        "keyObjectEqualityRequired": false,
+        "selectionMustBelongToCache": true,
+        "reintroducedSameThumbprintMayPass": true,
+        "freshnessRequired": true,
+        "signatureTimeAndEpochChecksUnchanged": true,
+        "nonceRollbackAllowed": false,
+        "knownTestKeysRequireExplicitPermission": true,
+        "directoryProofClaim": false,
+        "catalogVersion": 1,
+        "supersedes": "The earlier conservative implementation rejected all replaced generations, including unchanged or reintroduced keys. Historical fixtures and decision records are not rewritten."
+    },
+    "cases": [
+        {
+            "id": "a-key-remains-during-replay-await",
+            "boundary": "full-network-verifier",
+            "initialKeys": [
+                "original"
+            ],
+            "replacementKeys": [
+                "other",
+                "original"
+            ],
+            "replaceWhile": "accepted replay-store operation is held before its reply",
+            "currentSetFresh": true,
+            "allOtherVerificationGatesPass": true,
+            "expected": {
+                "status": "verified",
+                "reason": "nonce-consumed"
+            },
+            "replayConsumptions": 1
+        },
+        {
+            "id": "b-key-removed-during-replay-await",
+            "boundary": "full-network-verifier",
+            "initialKeys": [
+                "original"
+            ],
+            "replacementKeys": [
+                "other"
+            ],
+            "replaceWhile": "accepted replay-store operation is held before its reply",
+            "currentSetFresh": true,
+            "allOtherVerificationGatesPass": true,
+            "expected": {
+                "status": "unverified",
+                "reason": "unknown-key"
+            },
+            "replayConsumptions": 1,
+            "rollbackConsumedNonce": false
+        },
+        {
+            "id": "c-same-keyid-different-selected-material",
+            "boundary": "assertSelectedKeyIdentity",
+            "signedKeyIdFrom": "original",
+            "selectedMaterialFrom": "other",
+            "expected": {
+                "status": "invalid",
+                "reason": "key-id-mismatch"
+            },
+            "normalLookupByKidPermitted": false,
+            "fullVerifierAcceptanceAsserted": false
+        },
+        {
+            "id": "c-prime-invalid-wg-refresh-old-set-fresh",
+            "boundary": "full-network-verifier-and-discovery-observer",
+            "profile": "ietf-wg-protocol-00",
+            "initialKeys": [
+                "original"
+            ],
+            "refreshKeys": [
+                {
+                    "materialFrom": "other",
+                    "kidFrom": "other"
+                },
+                {
+                    "materialFrom": "other",
+                    "kidFrom": "original"
+                }
+            ],
+            "initialFreshnessSeconds": 60,
+            "refreshAtElapsedSeconds": 30,
+            "requestSignedAtElapsedSeconds": 30,
+            "finalAtElapsedSeconds": 31,
+            "refreshExpected": {
+                "outcome": "failed",
+                "reason": "invalid-jwks",
+                "diagnostic": {
+                    "keyIndex": 1,
+                    "rule": "kid must equal the RFC 7638 thumbprint"
+                },
+                "observerEvents": 1,
+                "entireNewSetRejected": true,
+                "priorEvidenceUnchanged": true,
+                "priorFreshnessExtended": false
+            },
+            "allOtherVerificationGatesPass": true,
+            "expected": {
+                "status": "verified",
+                "reason": "nonce-consumed"
+            }
+        },
+        {
+            "id": "c-prime-invalid-wg-refresh-old-set-expired",
+            "boundary": "full-network-verifier-and-discovery-observer",
+            "profile": "ietf-wg-protocol-00",
+            "initialKeys": [
+                "original"
+            ],
+            "refreshKeys": [
+                {
+                    "materialFrom": "other",
+                    "kidFrom": "other"
+                },
+                {
+                    "materialFrom": "other",
+                    "kidFrom": "original"
+                }
+            ],
+            "initialFreshnessSeconds": 60,
+            "refreshAtElapsedSeconds": 61,
+            "requestSignedAtElapsedSeconds": 61,
+            "finalAtElapsedSeconds": 62,
+            "refreshExpected": {
+                "outcome": "failed",
+                "reason": "invalid-jwks",
+                "diagnostic": {
+                    "keyIndex": 1,
+                    "rule": "kid must equal the RFC 7638 thumbprint"
+                },
+                "observerEvents": 1,
+                "entireNewSetRejected": true,
+                "priorEvidenceUnchanged": true,
+                "priorFreshnessExtended": false
+            },
+            "allOtherVerificationGatesPass": true,
+            "expected": {
+                "status": "unverified",
+                "reason": "unknown-key"
+            },
+            "replayConsumptions": 0
+        }
+    ],
+    "membershipCases": [
+        {
+            "id": "unchanged-key-new-object",
+            "currentKeys": [
+                "original"
+            ],
+            "sameOrigin": true,
+            "fresh": true,
+            "pass": true
+        },
+        {
+            "id": "removed",
+            "currentKeys": [
+                "other"
+            ],
+            "sameOrigin": true,
+            "fresh": true,
+            "pass": false
+        },
+        {
+            "id": "empty",
+            "currentKeys": [],
+            "sameOrigin": true,
+            "fresh": true,
+            "pass": false
+        },
+        {
+            "id": "removed-then-reintroduced",
+            "intermediateKeys": [],
+            "currentKeys": [
+                "original"
+            ],
+            "sameOrigin": true,
+            "fresh": true,
+            "pass": true
+        },
+        {
+            "id": "expired-current-set",
+            "currentKeys": [
+                "original"
+            ],
+            "sameOrigin": true,
+            "fresh": false,
+            "pass": false
+        },
+        {
+            "id": "other-origin-only",
+            "currentKeys": [
+                "original"
+            ],
+            "sameOrigin": false,
+            "fresh": true,
+            "pass": false
+        }
+    ],
+    "diagnostics": {
+        "separateFromVerificationCatalog": true,
+        "remoteDocumentFailureIsNotOperatorConfigurationFailure": true,
+        "keyIdentification": "Bounded zero-based keyIndex; omit it when no key was safely parsed",
+        "rule": "Fixed implementation-authored text, never remote values",
+        "forbiddenFields": [
+            "kid",
+            "body",
+            "publicKey",
+            "privateKey",
+            "nonce",
+            "cause",
+            "backendMessage"
+        ],
+        "observerThrows": "Must not change refresh, cache, replay, or verification outcome",
+        "unknownKeyRationale": "The frozen catalog has no directory-fetch-failed result: unknown-key means no usable fresh key evidence; the separate refresh diagnostic explains invalid-jwks."
+    },
+    "sources": [
+        "tests/fixtures/jwks/public-material.json",
+        "tests/fixtures/metadata/cases.json",
+        "tests/fixtures/m3-contract/fetch-cache-cases.json"
+    ]
+}

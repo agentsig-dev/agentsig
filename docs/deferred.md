@@ -643,3 +643,43 @@ clocks, and timers; they are not real-network or full authentication evidence.
 No remote CI result for this checkpoint is claimed. Redis, recovery helper,
 integrated discovery/verifier, public exports, and maintainer-run smoke remain
 unfinished. No push or publication was performed.
+
+### Approved thumbprint membership and refresh diagnostics revision
+
+The maintainer confirmed that **90821c6**, **e5cd97d**, and **7d3a8d4** were
+pushed and CI passed. Cache limits, negative backoff, scheduler limits, and the
+malformed Cache-Control persistence restriction were approved.
+
+The maintainer explicitly replaced the earlier conservative generation-equality
+rule: final membership checks must require the originally selected RFC 7638
+thumbprint in the current fresh, selectable set at the same origin. Neither cache
+entry identity nor KeyObject identity is required. Removing and subsequently
+reintroducing the same thumbprint before the final check may pass. Selection
+ownership, freshness, signature time, epoch, cryptography, and replay gates remain
+mandatory. A removed key produces unverified/unknown-key; consumed nonces are
+never rolled back.
+
+The [rotation expectations](../tests/fixtures/m3-rotation/cases.json) distinguish:
+- (a) Retained thumbprint during a replay await: full network verification succeeds.
+- (b) Removed thumbprint during a replay await: unverified/unknown-key.
+- (c) Wrong selected material: invalid/key-id-mismatch at the defensive
+  assertSelectedKeyIdentity gate, not lookup by a remote kid label.
+- (c') A new WG document with kid/material mismatch is rejected in full.
+  One sanitized refresh diagnostic reports invalid-jwks, the zero-based key index,
+  and a fixed violated-rule description. Old evidence and its age remain unchanged.
+  Verification may continue with the old set only while it is fresh and otherwise
+  valid; once expired, the result is unverified/unknown-key.
+
+The frozen request catalog has no directory-fetch-failed result: unknown-key
+means no usable fresh key evidence; a separate refresh diagnostic explains the
+invalid-jwks failure. This is not unsupported-discovery-type or a resource-limit
+failure, and remote invalid-jwks is not an operator configuration exception.
+Diagnostics identify the entry by bounded index, never echoing remote kid values,
+key material, bodies, nonces, backend messages, or nested causes. Observer failures
+must not change cache, replay, or verification outcomes.
+
+The independent audit passed fourteen checks before implementation of this
+revision. It validates fixture integrity, public thumbprints, and contract
+consistency, not execution of the required full network-verifier race tests.
+The fixtures and audit must be committed separately before implementation.
+Historical fixture bytes are unchanged. No push or publication was performed.

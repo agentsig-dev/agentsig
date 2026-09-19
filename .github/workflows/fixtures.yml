@@ -60,3 +60,5 @@ jobs:
         run: node --test tests/m3-freshness-audit.test.mjs
       - name: Audit malformed Cache-Control persistence amendment
         run: node --test tests/m3-freshness-amendment-audit.test.mjs
+      - name: Audit thumbprint rotation and refresh diagnostic expectations
+        run: node --test tests/m3-rotation-audit.test.mjs

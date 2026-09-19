@@ -1,0 +1,29 @@
+{
+  "formatVersion": 1,
+  "authoredOn": "2026-09-19",
+  "scope": "Approved thumbprint membership and sanitized refresh diagnostic expectations",
+  "implementationStatusAtPinning": "Network verifier and revised final membership are not implemented",
+  "files": [
+    {
+      "path": "cases.json",
+      "bytes": 8578,
+      "sha256": "1fedd64e4f0f4326b9332e84e33e2e8c218aee63d8755d283e86a6673d7feef7",
+      "license": "MIT",
+      "provenance": "Independently authored from explicit maintainer rotation and diagnostic decisions"
+    }
+  ],
+  "sources": [
+    {
+      "path": "tests/fixtures/jwks/public-material.json",
+      "sha256": "1fabe06492b59696f30c90a7df6266be950bf0b450aa203a1e3a9ca7af590eb9"
+    },
+    {
+      "path": "tests/fixtures/metadata/cases.json",
+      "sha256": "e0fed9281442ad4b7a1ef839b24bc3c52b68cc872477d72a9905ed81e855ecd6"
+    },
+    {
+      "path": "tests/fixtures/m3-contract/fetch-cache-cases.json",
+      "sha256": "788821c2551bea666b4b9a9868c682737852b85bc0323706b27d8e10dffebd14"
+    }
+  ]
+}
