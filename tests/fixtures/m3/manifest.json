@@ -1,0 +1,191 @@
+{
+  "formatVersion": 1,
+  "retrievedOn": "2026-09-19",
+  "warning": "PUBLIC TEST PRIVATE KEYS. Never use in production. No M3 acceptance policy is approved.",
+  "sourceBaseline": "WG protocol-00 and pinned Cloudflare documentation reused from M2; no claim these are newer revisions",
+  "upstreamCommit": "c07ecb6f3e82701f297dedb414237cc2e54a0948",
+  "licenseReview": "Root Apache-2.0 and package declaration agree; full tree contains no NOTICE or closer license for packages/web-bot-auth/test/test_data",
+  "files": [
+    {
+      "path": "cloudflare/git-tree.json",
+      "bytes": 41170,
+      "sha256": "c8df881d55dd9b943eac96a7a14f60b0b546871e4a874e03850c29f4be4f798f",
+      "provenance": {
+        "url": "https://api.github.com/repos/cloudflare/web-bot-auth/git/trees/c07ecb6f3e82701f297dedb414237cc2e54a0948?recursive=1",
+        "commit": "c07ecb6f3e82701f297dedb414237cc2e54a0948",
+        "transformation": "none",
+        "role": "Retrieved path/blob and license-location evidence"
+      }
+    },
+    {
+      "path": "cloudflare/LICENSE.txt",
+      "bytes": 11346,
+      "sha256": "c442cd87211d2bab6c01bce90efc4e8509db3dc712eebf377e44e47f4e1ffded",
+      "provenance": {
+        "url": "https://raw.githubusercontent.com/cloudflare/web-bot-auth/c07ecb6f3e82701f297dedb414237cc2e54a0948/LICENSE",
+        "commit": "c07ecb6f3e82701f297dedb414237cc2e54a0948",
+        "upstreamPath": "LICENSE",
+        "gitBlob": "d3a3b3e6d3c0187abc5aa49487622593d761293c",
+        "license": "Apache-2.0",
+        "transformation": "none",
+        "role": "Unmodified upstream Apache-2.0 license and copyright notice"
+      }
+    },
+    {
+      "path": "cloudflare/package-source.json",
+      "bytes": 1674,
+      "sha256": "0b3faff49ffa6fa69e2f40b42a16c60a2604ca2b066d7e55756767bb48f4ac60",
+      "provenance": {
+        "url": "https://raw.githubusercontent.com/cloudflare/web-bot-auth/c07ecb6f3e82701f297dedb414237cc2e54a0948/packages/web-bot-auth/package.json",
+        "commit": "c07ecb6f3e82701f297dedb414237cc2e54a0948",
+        "upstreamPath": "packages/web-bot-auth/package.json",
+        "gitBlob": "67ffc3bc1b491cf81faa391032af716ace85c16a",
+        "license": "Apache-2.0",
+        "transformation": "none",
+        "role": "Package attribution/license declaration; not installed or executed"
+      }
+    },
+    {
+      "path": "cloudflare/web_bot_auth_architecture_v2.json",
+      "bytes": 7349,
+      "sha256": "d0c8dbb7631dcc22639d12318af2b1ac0a339e4fa5aa4ef6df67ca45b0094576",
+      "provenance": {
+        "url": "https://raw.githubusercontent.com/cloudflare/web-bot-auth/c07ecb6f3e82701f297dedb414237cc2e54a0948/packages/web-bot-auth/test/test_data/web_bot_auth_architecture_v2.json",
+        "commit": "c07ecb6f3e82701f297dedb414237cc2e54a0948",
+        "upstreamPath": "packages/web-bot-auth/test/test_data/web_bot_auth_architecture_v2.json",
+        "gitBlob": "fc3960edeb077a843b5ef8bdc6e7bee0004ca219",
+        "license": "Apache-2.0",
+        "transformation": "none",
+        "role": "Direct target of WG protocol-00 Appendix F.3"
+      }
+    },
+    {
+      "path": "cloudflare/web_bot_auth_directory_response_v1.json",
+      "bytes": 1622,
+      "sha256": "ab2226c895940f0d169433ea0485ca7938e2dd2b89090945088b931031a7a1de",
+      "provenance": {
+        "url": "https://raw.githubusercontent.com/cloudflare/web-bot-auth/c07ecb6f3e82701f297dedb414237cc2e54a0948/packages/web-bot-auth/test/test_data/web_bot_auth_directory_response_v1.json",
+        "commit": "c07ecb6f3e82701f297dedb414237cc2e54a0948",
+        "upstreamPath": "packages/web-bot-auth/test/test_data/web_bot_auth_directory_response_v1.json",
+        "gitBlob": "b46176e1ed826c22d0cb24fb07794723e4b6dca0",
+        "license": "Apache-2.0",
+        "transformation": "none",
+        "role": "Supplementary directory-response vector; not the F.3 link target"
+      }
+    },
+    {
+      "path": "sources/cloudflare-directory.mdx",
+      "bytes": 4961,
+      "sha256": "5b85f9abe935349b2a3082617fda7bc679e86d596344ac4c909916c2e852c615",
+      "provenance": {
+        "source": "tests/fixtures/m2/sources/cloudflare-2026-07-01.mdx",
+        "sourceSha256": "c4aeeef723df97b020ecc4d9e680b77b5bfb6c214a6443b0fb7f00efd7e422f7",
+        "startMarker": "\n## 2. Host a key directory",
+        "endMarker": "\n## 3. Register your bot",
+        "transformation": "Exact byte slice after leading LF through before next heading LF; pagination preserved",
+        "license": "CC-BY-4.0; Cloudflare and contributors"
+      }
+    },
+    {
+      "path": "sources/cloudflare-docs-LICENSE.txt",
+      "bytes": 18656,
+      "sha256": "9e5f1b3c610b9c2da5c313bf81d577a7d1acec686bdb0384edefa6df0f90cd94",
+      "provenance": {
+        "source": "tests/fixtures/m2/sources/cloudflare-LICENSE.txt",
+        "license": "CC-BY-4.0",
+        "transformation": "none"
+      }
+    },
+    {
+      "path": "sources/wg-4.txt",
+      "bytes": 5846,
+      "sha256": "4571d9f472d0b542514e8fbe98c5dfa0096194f1b7ec53b8d5ef3d233ec78df5",
+      "provenance": {
+        "source": "tests/fixtures/m2/sources/wg-protocol-00.txt",
+        "sourceSha256": "3021fd94cdffdb2eb030dec68b1a5c968f2348502dd94c481e2085ec7ddd90a0",
+        "startMarker": "\n4.  Identifiers and Trust Model",
+        "endMarker": "\n5.  Protocol Overview",
+        "transformation": "Exact byte slice after leading LF through before next heading LF; pagination preserved",
+        "license": "IETF Trust Legal Provisions; source notices retained in referenced full document"
+      }
+    },
+    {
+      "path": "sources/wg-5.4.txt",
+      "bytes": 1732,
+      "sha256": "636d4c73fecd8eaebe8a7bbb8026d0b4a0c7447b1e4abd27079eb6f1e6b5d88b",
+      "provenance": {
+        "source": "tests/fixtures/m2/sources/wg-protocol-00.txt",
+        "sourceSha256": "3021fd94cdffdb2eb030dec68b1a5c968f2348502dd94c481e2085ec7ddd90a0",
+        "startMarker": "\n5.4.  Validating Message Signature",
+        "endMarker": "\n5.5.  Key Distribution",
+        "transformation": "Exact byte slice after leading LF through before next heading LF; pagination preserved",
+        "license": "IETF Trust Legal Provisions; source notices retained in referenced full document"
+      }
+    },
+    {
+      "path": "sources/wg-5.5.txt",
+      "bytes": 6514,
+      "sha256": "c536323c919a3b948d5010ae6e94ff566c97f43c973949c154db26ca866a86bc",
+      "provenance": {
+        "source": "tests/fixtures/m2/sources/wg-protocol-00.txt",
+        "sourceSha256": "3021fd94cdffdb2eb030dec68b1a5c968f2348502dd94c481e2085ec7ddd90a0",
+        "startMarker": "\n5.5.  Key Distribution",
+        "endMarker": "\n5.6.  Session Considerations",
+        "transformation": "Exact byte slice after leading LF through before next heading LF; pagination preserved",
+        "license": "IETF Trust Legal Provisions; source notices retained in referenced full document"
+      }
+    },
+    {
+      "path": "sources/wg-6.7-6.10.txt",
+      "bytes": 3961,
+      "sha256": "dba831f99c4f8078081dd9d41ec54fdb45e23baf68dd754ef511357a8b480df1",
+      "provenance": {
+        "source": "tests/fixtures/m2/sources/wg-protocol-00.txt",
+        "sourceSha256": "3021fd94cdffdb2eb030dec68b1a5c968f2348502dd94c481e2085ec7ddd90a0",
+        "startMarker": "\n6.7.  Server-Side Request Forgery",
+        "endMarker": "\n6.11.  Unsigned Requests",
+        "transformation": "Exact byte slice after leading LF through before next heading LF; pagination preserved",
+        "license": "IETF Trust Legal Provisions; source notices retained in referenced full document"
+      }
+    },
+    {
+      "path": "sources/wg-appendix-b.txt",
+      "bytes": 3285,
+      "sha256": "76f850a179cad93bc95a00211d7a0eba76775bfc0147f5b202d9d1faa5ffd97b",
+      "provenance": {
+        "source": "tests/fixtures/m2/sources/wg-protocol-00.txt",
+        "sourceSha256": "3021fd94cdffdb2eb030dec68b1a5c968f2348502dd94c481e2085ec7ddd90a0",
+        "startMarker": "\nAppendix B.  Validating",
+        "endMarker": "\nAppendix C.  Deployment",
+        "transformation": "Exact byte slice after leading LF through before next heading LF; pagination preserved",
+        "license": "IETF Trust Legal Provisions; source notices retained in referenced full document"
+      }
+    },
+    {
+      "path": "sources/wg-appendix-c.txt",
+      "bytes": 7137,
+      "sha256": "470b790bc8f3332a8963d2d0a01b6eaa55ab7803aac50f9091ea2abc7b0d5ddc",
+      "provenance": {
+        "source": "tests/fixtures/m2/sources/wg-protocol-00.txt",
+        "sourceSha256": "3021fd94cdffdb2eb030dec68b1a5c968f2348502dd94c481e2085ec7ddd90a0",
+        "startMarker": "\nAppendix C.  Deployment",
+        "endMarker": "\nAppendix D.  Examples",
+        "transformation": "Exact byte slice after leading LF through before next heading LF; pagination preserved",
+        "license": "IETF Trust Legal Provisions; source notices retained in referenced full document"
+      }
+    },
+    {
+      "path": "sources/wg-f.3.txt",
+      "bytes": 181,
+      "sha256": "682683f4012c890f2c6f60fd799b855abef424e4862c51ca6cd3f585b1e45e4f",
+      "provenance": {
+        "source": "tests/fixtures/m2/sources/wg-protocol-00.txt",
+        "sourceSha256": "3021fd94cdffdb2eb030dec68b1a5c968f2348502dd94c481e2085ec7ddd90a0",
+        "startMarker": "\nF.3.  Test Vectors",
+        "endMarker": "\nAcknowledgments",
+        "transformation": "Exact byte slice after leading LF through before next heading LF; pagination preserved",
+        "license": "IETF Trust Legal Provisions; source notices retained in referenced full document"
+      }
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+Appendix B.  Validating the Domain Binding
+
+   This appendix describes what a verifier checks when it wants the
+   domain a key is published under, rather than the URL on its own.  It
+   applies to the directory type in Section 5.5.  Verification,
+   rotation, and continuity do not depend on any of it, and a verifier
+   that only needs the URL as an identifier can skip the whole appendix.
+
+   Authority over the domain comes from the TLS connection to the
+   directory.  Nothing below adds to that.
+
+B.1.  Possession Proof on the Directory Response
+
+   It is RECOMMENDED that a directory server construct and include one
+   HTTP Message Signature per key with the response, as defined in
+   [HTTP-MESSAGE-SIGNATURES].  Each key SHOULD be used to provide one
+   signature.  These signatures prove possession of the advertised keys
+   and, by covering @authority, prevent the key set from being re-served
+   under a different authority.  This matters for a domain-bound
+   identifier, where the verifier is about to consume information it
+   holds against the name: it distinguishes a key set the key holders
+   assembled from one that was copied.
+
+   Directory server MUST include the following covered components:
+
+   @authority  as defined in Section 2.2.3 of [HTTP-MESSAGE-SIGNATURES].
+      req flag defined in Section 2.4 of [HTTP-MESSAGE-SIGNATURES] MUST
+      be set.
+
+   content-digest  as defined in [DIGEST-FIELDS].
+
+   Directory server MUST include the following @signature-params as
+   defined in Section 2.3 of [HTTP-MESSAGE-SIGNATURES]
+
+   created  as defined in Section 2.3 of [HTTP-MESSAGE-SIGNATURES]
+
+   expires  as defined in Section 2.3 of [HTTP-MESSAGE-SIGNATURES]
+
+   Without them the signature is a permanent assertion that these keys
+   were bound to this authority at some unstated time, of no use to a
+   verifier consuming it through Section 5.5.3.
+
+
+
+
+Meunier & Major           Expires 5 March 2027                 [Page 28]
+
+Internet-Draft      HTTP Message Signatures for Bots      September 2026
+
+
+   keyid  MUST be a base64url JWK SHA-256 Thumbprint as defined in
+      Section 3.2 of [JWK-THUMBPRINT] for RSA and EC, and in
+      Appendix A.3 of [JWK-OKP] for ed25519.
+
+   tag  MUST be http-message-signatures-directory
+
+   A verifier using a corresponding directory response signature as
+   proof MUST validate it using the key provided by the directory and
+   MUST validate the Content-Digest field against the response body.  If
+   either validation fails, the proof is invalid.  A verifier MAY use a
+   key obtained by resolving the directory itself whether or not it has
+   valid proof.  Attribution from redistributed key material is governed
+   by Section 5.5.3.  A verifier MUST reject a directory response
+   signature whose created is in the future, as it would a certificate
+   that is not yet valid.  Section 4.4 orders competing evidence by
+   created, so a future-dated signature would outrank every later fetch.
+
+B.2.  What the Binding Attaches To
+
+   The binding is not exclusive.  Several domains may publish the same
+   key, and the binding attaches to the pair the verifier validated, not
+   to the key on its own.  A verifier that recognises a key under one
+   domain has learned nothing about the same key served under another.

@@ -1,0 +1,199 @@
+Appendix C.  Deployment Guidance
+
+   This appendix is operational guidance.  It does not define new
+   protocol requirements.
+
+C.1.  Verifier Outcomes
+
+   Verifiers should keep three outcomes distinct:
+
+   verified  the signature and key material validate.
+
+   invalid  the signature, covered components, key, or freshness checks
+      fail.
+
+   unverified  the verifier cannot obtain enough information to decide,
+      for example because directory discovery failed or the key is
+      unknown.
+
+   Origins can apply local policy to each outcome.  During deployment,
+   treating unverified as one bot-management signal is safer than
+   treating it as either verified or invalid.
+
+
+
+
+
+
+Meunier & Major           Expires 5 March 2027                 [Page 29]
+
+Internet-Draft      HTTP Message Signatures for Bots      September 2026
+
+
+C.2.  Directory Availability
+
+   Directory resources are bootstrap material.  Operators serving a
+   directory should make it reachable without requiring Web Bot Auth on
+   the directory request.  They should also avoid bot protection rules
+   that block ordinary verifier fetches of the well-known resource.
+
+   The directory endpoint should support GET.  Supporting HEAD, ETag,
+   Last-Modified, Cache-Control, and conditional requests can reduce
+   fetch load.  Cache is specifically discussed in Appendix C.4.
+
+C.3.  Bounded Directory Fetches
+
+   Verifiers fetch directories named by untrusted requests, and should
+   bound those fetches as described in Section 6.7.
+
+   Verifiers should also coalesce concurrent fetches for the same
+   directory and apply per-directory or per-origin concurrency limits.
+   This avoids a fetch storm when many requests reference the same
+   uncached directory.
+
+C.4.  Cache Behaviour
+
+   Verifiers should use normal HTTP caching semantics [HTTP-CACHE] for
+   key directories.  In particular, verifiers should respect Cache-
+   Control, Expires, Date, ETag, and Last-Modified when present.
+
+   A verifier should not fetch the directory for every request.  It
+   should refresh cached directories when they become stale, and can use
+   background refresh with jitter to avoid synchronized refetches.
+
+C.5.  Negative Caching and Retry
+
+   Verifiers can cache unsuccessful discovery outcomes for a short
+   period to reduce repeated fetches.  Negative cache entries should
+   expire after no more than five minutes.  They are operational
+   throttling state, not proof that a signature is invalid.
+
+   Network failures, TLS failures, and 5xx responses should be treated
+   as transient unless local policy says otherwise.  Verifiers should
+   retry with bounded exponential backoff and jitter.  When a directory
+   response includes Retry-After, verifiers should respect it as
+   described by [HTTP] and [HTTP-BEST-PRACTICES].
+
+
+
+
+
+
+
+
+Meunier & Major           Expires 5 March 2027                 [Page 30]
+
+Internet-Draft      HTTP Message Signatures for Bots      September 2026
+
+
+C.6.  Freshness and Replay
+
+   Shorter signature lifetimes reduce replay risk but increase
+   sensitivity to clock skew and signing failures.  Whether a verifier
+   requires and enforces nonces is deployment policy.  Rejecting
+   duplicate nonces requires an atomic check-and-record across the
+   enforcement scope.  Verifiers need to bound retention and admission
+   of nonce state.  If that state is unavailable, the verifier should
+   not treat signature validation as evidence that replay was detected
+   or prevented.  Replay protection is described in Section 7.2.2 of
+   [HTTP-MESSAGE-SIGNATURES].
+
+   Verifiers should avoid accepting signatures with freshness windows
+   longer than their risk model permits.
+
+C.7.  Field Compression
+
+   Covering per-request components costs bytes when a connection is
+   reused.  HPACK [HPACK] and QPACK [QPACK] can index a repeated
+   Signature, Signature-Input, or Signature-Agent value, so a signature
+   reused across requests on one connection is sent once and referenced
+   afterwards.  A per-request value cannot be referenced; it is sent as
+   a literal every time.  Huffman coding and an indexed field name
+   reduce that literal, they do not replace the reference.
+
+   This is not a reason to widen the covered components.  The bytes
+   saved are the bytes of a credential anyone who observes it can replay
+   until expires (Section 5.2), and one static signature for many
+   requests is an anti-pattern (Appendix C.12).  An encoder that treats
+   a signature as a credential may also decline to index it
+   (Section 7.1.3 of [HPACK]).
+
+C.8.  Directory Response Signature Lifetimes
+
+   Where the key set is redistributed, revocation latency is already
+   floored by how often the redistributor republishes, so a short
+   expires on a directory response signature (Appendix B) buys nothing
+   and costs availability: at expiry every consumer drops that
+   operator's keys to unverified at once, with no serving stale.
+   Operators should set expires well beyond the republication interval
+   of any list they expect to appear in.  The lever for faster
+   revocation is publishing more often, not signing shorter.
+
+
+
+
+
+
+
+
+
+Meunier & Major           Expires 5 March 2027                 [Page 31]
+
+Internet-Draft      HTTP Message Signatures for Bots      September 2026
+
+
+C.9.  Rollout and Fallback
+
+   Web Bot Auth deployments will coexist with existing bot
+   identification signals during rollout.  Verifiers can continue to use
+   existing methods such as IP-based checks, forward-confirmed reverse
+   DNS, local allowlists, and reputation systems.
+
+   Fallback should not turn an unsupported or unverifiable Web Bot Auth
+   signature into a trusted identity.  It should leave the request in
+   the origin's existing bot-management path.
+
+C.10.  Proxies and Intermediaries
+
+   Proxies and intermediaries need to preserve the fields covered by a
+   signature if the origin will verify that signature.  If a proxy
+   rewrites the authority, path, or signed header fields, the origin may
+   no longer see the message that was signed.
+
+   A deployment can instead verify at the proxy and pass the result to
+   the origin through a deployment-local trusted channel.  That
+   assertion is local policy; it is not a replacement for the original
+   HTTP Message Signature.
+
+C.11.  CORS
+
+   Key directories contain public key material.  If browser-based
+   verifiers need to fetch them cross-origin, a directory server can use
+   a permissive CORS policy such as Access-Control-Allow-Origin: *
+   without credentials.  CORS is not key authentication and does not
+   replace signature validation.
+
+C.12.  Deployment Anti-Patterns
+
+   Deployments should avoid:
+
+   *  using test or demonstration keys in production
+
+   *  issuing one static signature for many requests
+
+   *  asking users to copy long-lived signatures into third-party tools
+
+   *  sharing one signing key across unrelated agents or purposes
+
+   *  relying on manual key rotation as the only revocation mechanism
+
+
+
+
+
+
+
+Meunier & Major           Expires 5 March 2027                 [Page 32]
+
+Internet-Draft      HTTP Message Signatures for Bots      September 2026
+

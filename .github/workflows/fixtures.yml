@@ -46,3 +46,5 @@ jobs:
         run: node --test tests/reset-fixture-audit.test.mjs
       - name: Audit metadata classification and pinned protocol attribution independently
         run: node --test tests/metadata-fixture-audit.test.mjs
+      - name: Audit pinned M3 discovery sources and upstream JSON vectors independently
+        run: node --test tests/m3-fixture-audit.test.mjs

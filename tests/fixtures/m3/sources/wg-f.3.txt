@@ -1,0 +1,5 @@
+F.3.  Test Vectors
+
+   *  In JSON format (https://github.com/cloudflare/web-bot-
+      auth/blob/main/packages/web-bot-auth/test/test_data/
+      web_bot_auth_architecture_v2.json)

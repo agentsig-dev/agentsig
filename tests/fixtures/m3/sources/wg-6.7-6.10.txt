@@ -1,0 +1,94 @@
+6.7.  Server-Side Request Forgery (SSRF)
+
+   As described in Section 5.5, verifiers may fetch key directories
+   based on the value conveyed in Signature-Agent when included in a
+   request.  Since clients control the Signature-Agent header value,
+   this introduces a risk of server-side request forgery (SSRF) attacks
+   by malicious clients.
+
+   Verifiers SHOULD take appropriate precautions as follows:
+
+   Response size  a directory can be arbitrarily large.  Verifiers
+      SHOULD reject responses exceeding a defined byte limit after
+      content decoding.
+
+   Key count  a JWKS with many keys forces O(n) key search.  Verifiers
+      SHOULD enforce a maximum key count.
+
+   Fetch latency  no timeout allows slowloris-style exhaustion.
+      Verifiers SHOULD apply a wall-clock timeout to directory fetches.
+
+   Redirect chains  unbounded HTTP redirects can be used to amplify
+      requests.  Verifiers SHOULD limit redirect depth.
+
+   Network address ranges  no address filtering can target internal
+      services.  Verifiers SHOULD prevent directory fetches to private,
+      loopback, and link-local address ranges.
+
+
+
+
+Meunier & Major           Expires 5 March 2027                 [Page 20]
+
+Internet-Draft      HTTP Message Signatures for Bots      September 2026
+
+
+   Further recommendations can be found in the Open Worldwide
+   Application Security Project (OWASP) SSRF Prevention Cheat Sheet
+   [OWASP-SSRF].
+
+6.8.  Test and Demonstration Keys
+
+   Test keys, including the example keys in [HTTP-MESSAGE-SIGNATURES],
+   MUST NOT be used in production.  Verifiers SHOULD reject known test
+   keys when they are detected in key directories or out-of-band
+   configuration.
+
+6.9.  Static Signatures
+
+   Deployments MUST NOT treat a precomputed Web Bot Auth signature as a
+   long-lived access credential.  A reusable static signature has
+   bearer-token semantics and can be replayed until the covered
+   signature parameters, key, or verifier policy make it unusable.
+
+   Agents SHOULD generate signatures for the request being sent, with
+   bounded created and expires values.  Long expiration windows increase
+   replay risk.
+
+6.10.  Discovery Failure
+
+   Resolving a Signature-Agent URL can fail in several ways: the name
+   does not resolve, the connection or TLS handshake fails, the response
+   is not a directory or contains no key matching keyid, or the fetch is
+   refused by the verifier's own limits (Section 6.7).  All have the
+   same outcome for the request in hand.  The verifier holds no
+   association between that URL and the signing key, so under
+   Section 4.4 it MUST NOT attribute the request to that URL.  It may
+   still verify the signature if it holds the key by other means, in
+   which case the identifier is the thumbprint (Section 4.3); otherwise
+   the request is unverified.
+
+   They differ in what they say about cached state, and verifiers MUST
+   keep them apart.  A directory that resolves and does not contain the
+   key is evidence: it is newer than whatever the verifier holds, and
+   under Section 4.4 replaces it.  That is how a removed key stops
+   verifying.  A directory that fails to resolve is not evidence and
+   MUST NOT evict a cached entry, or an operator's outage revokes its
+   keys at every verifier at once.
+
+   A failed fetch says nothing about the signer.  It does not prove the
+   signer is malicious, and it does not make the request trusted.  What
+   an origin does with an unverified request is local policy, and
+   treating it as a distinct outcome rather than as success or failure
+   is discussed in Appendix C.1.  Verifiers should also expect failures
+
+
+
+Meunier & Major           Expires 5 March 2027                 [Page 21]
+
+Internet-Draft      HTTP Message Signatures for Bots      September 2026
+
+
+   to be correlated: a single operator's directory going down takes out
+   every request naming it at once, across every verifier whose cache
+   expires in the same window.

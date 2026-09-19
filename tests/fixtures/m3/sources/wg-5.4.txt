@@ -1,0 +1,42 @@
+5.4.  Validating Message Signature
+
+   Upon receiving an HTTP request, the origin has to verify the
+   signature.  The algorithm is provided in Section 3.2 of
+   [HTTP-MESSAGE-SIGNATURES].  Similar to a regular User-Agent check,
+   this happens at the HTTP layer, once headers are received.
+
+   Additional requirements are placed on this validation:
+
+
+
+
+
+Meunier & Major           Expires 5 March 2027                 [Page 14]
+
+Internet-Draft      HTTP Message Signatures for Bots      September 2026
+
+
+   *  During step 1 to 3 included, if the Origin fails to parse the
+      provided Signature, Signature-Input, or Signature-Agent headers,
+      it MAY respond with status code 400 Bad Request as defined in
+      Section 15.5.1 of [HTTP].
+
+   *  During step 4, the Origin MAY discard signatures for which the tag
+      is not set to web-bot-auth.
+
+   *  During step 5, the Origin MAY discard signatures for which it does
+      not know the keyid for the Signature-Agent URL the signature
+      covers.
+
+   *  During step 5, if the keyid is not known for that URL, the Origin
+      MAY fetch key material as indicated by the Signature-Agent header
+      defined in Section 5.2.1.  Fetching key material affects only
+      whether verification is possible, not what a valid signature means
+      (Section 4.4).
+
+   Key lookup MUST be keyed on the (URL, key) pair, not on the key
+   alone.  A verifier that indexes by keyid alone will verify a request
+   as coming from one URL that provides a key it learned from another,
+   and attribute that request to the URL the client asserted.  The party
+   whose URL is asserted cannot detect or stop this: its own directory
+   is never fetched, so no rotation or removal has any effect.

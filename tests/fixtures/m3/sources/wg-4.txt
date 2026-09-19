@@ -1,0 +1,149 @@
+4.  Identifiers and Trust Model
+
+   This section defines the identifiers produced by this protocol and
+   what a verifier can conclude from a valid signature.
+
+
+
+
+
+
+
+
+
+
+
+Meunier & Major           Expires 5 March 2027                  [Page 6]
+
+Internet-Draft      HTTP Message Signatures for Bots      September 2026
+
+
+4.1.  The Signature-Agent URL is the identifier
+
+   An Agent identifies itself with the HTTPS URL it publishes its keys
+   at, carried in Signature-Agent (Section 5.2.1).  A verifier resolves
+   that member value (Section 5.5) and checks the signature against the
+   keys it returns.  The identifier is the URL the verifier fetched,
+   which for a directory member is the well-known URI rather than the
+   value the client sent.  What the verifier ends up with is a pair:
+   that URL, and a key the URL provides.  Origins can log, rate limit,
+   allowlist, or block the URL the way they do IP addresses and User-
+   Agent today.
+
+   The URL on its own carries nothing.  A client picks the value it
+   sends, so an unresolved Signature-Agent is a claim rather than an
+   identity.  It becomes an identifier once the verifier fetches it and
+   finds that it provides a key that verifies the request (Section 4.4).
+   Until then, verifiers MUST NOT attach policy to it.
+
+   A valid signature over a resolved URL proves that a holder of a key
+   that URL publishes signed the covered message.  The message can still
+   be replayed.  Signature lifetimes and covered components bound the
+   duration and scope of that replay (Section 5.2).  It says nothing
+   about who operates the Agent, whether the Agent is benign, or whether
+   the request is authorized.  Those are origin policy.
+
+   Nothing stops an Agent from abandoning a URL and standing up another
+   one, and the protocol does not try to prevent this.  It targets
+   honest clients that want to be recognised across requests.
+
+4.2.  Rotation
+
+   Because the identifier is the URL and not the key, an Agent can
+   rotate keys without losing continuity.  It publishes the new key
+   alongside the old one, then drops the old one (Section 5.5.2).  The
+   URL does not change, so a verifier that recognised it before still
+   recognises it after.  No name and no third party are involved.
+
+   keyid selects which key verifies a given request.  Verifiers cannot
+   use it to carry continuity across a rotation, as that value is
+   derived from the key material.
+
+
+
+
+
+
+
+
+
+
+
+Meunier & Major           Expires 5 March 2027                  [Page 7]
+
+Internet-Draft      HTTP Message Signatures for Bots      September 2026
+
+
+4.3.  When No URL Is Available
+
+   A signed request MUST carry Signature-Agent (Section 5.2.1).  A
+   verifier can still be left with no URL to attribute to: discovery
+   failed with nothing cached (Section 6.10), redistributed material
+   carried no proof (Section 5.5.3), or the header is absent.  The
+   identifier is then the keyid thumbprint defined in Section 5.2.  A
+   verifier that already holds that key verifies the request, and
+   attributes it no further than the holder of that key.
+
+   This mode has no rotation.  A new key is a new identifier, and the
+   verifier has no way to connect the two.
+
+4.4.  What the URL Endorses
+
+   Resolving a Signature-Agent URL over TLS establishes that the host
+   named in the URL served this key set at fetch time.  Whoever controls
+   that URL says this key signs for it.  That is what makes the URL
+   usable as an identifier, and all it gives you.  It does not say that
+   the operator of that URL is honest, or that it is the same party
+   everyone knows about.
+
+   What matters is the association between a URL and the keys published
+   there.  A verifier that already holds the keys does not need to fetch
+   it.  A verifier MUST NOT attribute a request to a Signature-Agent URL
+   unless it made this association.  This can be either by resolving the
+   URL itself, at request time or ahead of it, or from Section 5.5.3.
+   Verifiers may refetch a URL to handle key additions and removals,
+   bounded by Appendix C.4.
+
+   Where a verifier obtains the same pair from more than one source, the
+   newer pair wins, including when it omits a key that older resolution
+   included.  Pairs are ordered by when they were produced, not when the
+   verifier obtained them: the created parameter for a directory
+   response signature (Appendix B), and the time of the fetch for a
+   directory the verifier resolved itself.
+
+4.5.  Binding a Key to a Web Origin
+
+   A well-known URL is a special case of the above.  When a Signature-
+   Agent value resolves through the directory type (Section 5.5), the
+   identifier is still the URL, but that URL now names a domain rather
+   than an arbitrary path on one.  [WELLKNOWN-URI] reserves the path, so
+   the domain operator stands behind the key set.
+
+
+
+
+
+
+
+Meunier & Major           Expires 5 March 2027                  [Page 8]
+
+Internet-Draft      HTTP Message Signatures for Bots      September 2026
+
+
+   In practice, this is meant to allow additional information to be
+   carried against a name.  That mechanism lives in Appendix B.  A
+   verifier that wants to use this case may also recognise the shape of
+   the URL and apply those checks itself.
+
+4.6.  Out of Scope
+
+   This protocol does not authenticate human users, does not provide
+   anonymous authentication, and does not define authorization or
+   delegation.  It does not define how trust is accrued, held, or
+   exchanged, and it defines no mechanism for one origin to convey an
+   opinion about an Agent to another.  See Section 7.
+
+   A client has a choice whether to sign its requests, and an origin has
+   a choice how it treats signed and unsigned requests.  Multiple
+   factors could influence either decision, but the decisions themselves
+   are outside the scope of this document.
