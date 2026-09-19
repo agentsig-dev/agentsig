@@ -480,3 +480,21 @@ Transport implementation was recorded in **d64b6f2** after its full local
 regression. The freshness importer, manifest, independent audit, and fixture
 workflow step are a separate pre-implementation delivery. No earlier fixture
 bytes or production code were changed by this freshness preparation.
+
+### Node 20 response-test compatibility correction
+
+The maintainer reported three response-reader test failures on both Windows and
+Ubuntu with Node 20. A local Node 20.20.2 diagnostic reproduced the cause in the
+test server: calling setHeader before writeHead with a flat header array collapsed
+repeated fields. The intended 2,100 occurrences became one before transmission;
+repeated Cache-Control and encoding/media-type fields were also overwritten.
+
+The test harness now skips its default Content-Type preset for the four raw-header
+cases. Those cases supply their own complete header arrays, preserving repetitions
+on the wire. Expected occurrence counts and rejection outcomes are unchanged.
+Production code, byte limits, TLS checks, and pinned fixtures are unchanged.
+
+Local Windows validation passed all 4,559 unit tests across 50 files on Node
+20.20.2. The 19 response-reader tests also passed on Node 22, and core type checking
+passed. These results do not establish that the corrected Ubuntu or remote CI
+jobs have passed. No push or publication was performed.

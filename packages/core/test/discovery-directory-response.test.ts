@@ -19,7 +19,10 @@ const body = '{"keys":[]}';
 
 // Real TLS reader tests, not public-address admission tests. The loopback dial
 // is test code only and keeps certificate and hostname verification enabled.
-async function harness(handler: (response: ServerResponse) => void) {
+async function harness(
+    handler: (response: ServerResponse) => void,
+    presetContentType = true,
+) {
     const requests: { host: string | undefined; encoding: string | undefined; path: string | undefined }[] = [];
     const server = createServer({ key, cert: certificate }, (request, response) => {
         requests.push({
@@ -27,7 +30,10 @@ async function harness(handler: (response: ServerResponse) => void) {
             encoding: request.headers["accept-encoding"],
             path: request.url,
         });
-        response.setHeader("Content-Type", media);
+        // Node 20 merges writeHead's array into previously set headers, losing
+        // duplicate occurrences. Raw-header tests must bypass this preset so
+        // the intended repeated fields actually reach the TLS wire unchanged.
+        if (presetContentType) response.setHeader("Content-Type", media);
         handler(response);
     });
     await new Promise<void>((resolve, reject) => {
@@ -198,7 +204,7 @@ describe("response header occurrence preservation", () => {
             headers.push("Content-Encoding", "gzip");
             response.writeHead(200, headers);
             response.end(gzipSync(body));
-        });
+        }, false);
         try {
             // The complete header section fits the approved 16 KiB budget.
             // Node's default count limit must not hide security-relevant fields.
@@ -217,7 +223,7 @@ describe("security-relevant fields beyond the default header-count boundary", ()
             headers.push("Cache-Control", "no-store", "Age", "120");
             response.writeHead(200, headers);
             response.end(body);
-        });
+        }, false);
         try {
             const result = await readDirectoryResponse(h.socket, hostname, {
                 remainingMilliseconds: 2000,
@@ -241,7 +247,7 @@ describe("security-relevant fields beyond the default header-count boundary", ()
                 headers.push(name, value);
                 response.writeHead(200, headers);
                 response.end(body);
-            });
+            }, false);
             try {
                 await expect(readDirectoryResponse(h.socket, hostname, {
                     remainingMilliseconds: 2000,
