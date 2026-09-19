@@ -451,3 +451,32 @@ replacement checks, the recovery helper and Redis adapter, full network-verifier
 integration, and the maintainer-run smoke. A successful transport result is
 untrusted response bytes, not authenticated agent identity. Existing offline
 exports and package versions remain unchanged.
+
+### Freshness expectations before cache implementation
+
+The separate [freshness fixtures](../tests/fixtures/m3-freshness/cases.json) pin
+36 expectations before implementing reusable freshness. Their independent audit
+passed 24 checks locally. This is fixture consistency and arithmetic validation,
+not a working cache or network-authentication acceptance gate.
+
+Under the approved fail-closed implementation discretion, ambiguous repeated
+freshness fields and malformed explicit metadata grant no reusable freshness;
+they never trigger the 60-second fallback. The initial date parser will accept
+canonical IMF-fixdate only, including weekday/calendar consistency. Obsolete date
+spellings sacrifice compatibility rather than permit parser repair to grant reuse.
+When both max-age and s-maxage occur, the shorter lifetime applies. The 300-second
+local cap applies before subtracting corrected initial age, not to the remaining
+duration afterward. Response delay and subsequent monotonic residence count
+against freshness; the exact expiry boundary is not fresh.
+
+These are conservative implementation choices, not newly claimed maintainer
+approvals or universal HTTP-cache semantics. They do not decide authentication
+from a newly fetched non-reusable response. No-store/private responses cannot
+persist a key set; nevertheless a successfully validated replacement must
+invalidate older evidence. Full cache/admission coordination, replacement races,
+and network-verifier integration remain unfinished.
+
+Transport implementation was recorded in **d64b6f2** after its full local
+regression. The freshness importer, manifest, independent audit, and fixture
+workflow step are a separate pre-implementation delivery. No earlier fixture
+bytes or production code were changed by this freshness preparation.

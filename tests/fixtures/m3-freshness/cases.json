@@ -1,0 +1,431 @@
+{
+    "formatVersion": 1,
+    "authoredOn": "2026-09-19",
+    "status": "pre-implementation-expectations",
+    "scope": "Conservative reusable freshness only; not current-invocation authentication or a cache implementation",
+    "decisionBasis": "Approved bounded freshness and fail-closed implementation discretion; not new maintainer approvals",
+    "defaults": {
+        "fallbackSeconds": 60,
+        "maximumLifetimeSeconds": 300,
+        "requestStartedMonotonicMs": 1000,
+        "responseReceivedMonotonicMs": 1000,
+        "responseReceivedWallMs": 784111777000
+    },
+    "rules": {
+        "age": "corrected initial age = max(max(0, response wall time - Date), Age + monotonic response delay)",
+        "remaining": "max(0, min(explicit lifetime or fallback, local maximum) - corrected initial age - monotonic residence)",
+        "boundary": "Fresh only while elapsed residence is strictly less than remaining lifetime at receipt",
+        "invalidMetadata": "No reusable freshness; never replace invalid explicit information with fallback",
+        "duplicates": "Repeated max-age, s-maxage, Date, Age or Expires is ambiguous even if equal: no reusable freshness",
+        "sharedRestrictions": "Use the shorter of max-age and s-maxage when both exist; private and no-store prohibit persistence",
+        "dateParsing": "Initial local policy accepts canonical IMF-fixdate only, with matching weekday and valid calendar; obsolete or repaired dates do not grant reuse",
+        "expires": "Use Expires minus Date only when max-age and s-maxage are absent; without Date decline reusable freshness",
+        "revalidation": "no-cache grants no reuse; must-revalidate does not prohibit otherwise fresh reuse; stale extensions never grant stale acceptance",
+        "clock": "Invalid, regressing or non-finite timing samples grant no reusable freshness",
+        "noStore": "No persistent key set; a successful validated replacement must still invalidate older evidence",
+        "unknownExtensions": "Well-formed unknown directives do not grant freshness or override restrictions"
+    },
+    "cases": [
+        {
+            "id": "missing",
+            "headers": [],
+            "expectedRemainingMs": 60000,
+            "persist": true
+        },
+        {
+            "id": "age",
+            "headers": [
+                [
+                    "age",
+                    "20"
+                ]
+            ],
+            "expectedRemainingMs": 40000,
+            "persist": true
+        },
+        {
+            "id": "delay",
+            "headers": [
+                [
+                    "age",
+                    "20"
+                ]
+            ],
+            "responseReceivedMonotonicMs": 2000,
+            "expectedRemainingMs": 39000,
+            "persist": true
+        },
+        {
+            "id": "apparent-age-dominates",
+            "headers": [
+                [
+                    "date",
+                    "Sun, 06 Nov 1994 08:49:07 GMT"
+                ],
+                [
+                    "age",
+                    "20"
+                ]
+            ],
+            "responseReceivedMonotonicMs": 2000,
+            "expectedRemainingMs": 30000,
+            "persist": true
+        },
+        {
+            "id": "future-date-no-negative-age",
+            "headers": [
+                [
+                    "date",
+                    "Sun, 06 Nov 1994 08:50:37 GMT"
+                ]
+            ],
+            "responseReceivedMonotonicMs": 2000,
+            "expectedRemainingMs": 59000,
+            "persist": true
+        },
+        {
+            "id": "cap-before-subtracting-age",
+            "headers": [
+                [
+                    "cache-control",
+                    "max-age=86400"
+                ],
+                [
+                    "age",
+                    "250"
+                ]
+            ],
+            "expectedRemainingMs": 50000,
+            "persist": true
+        },
+        {
+            "id": "cap-already-aged-out",
+            "headers": [
+                [
+                    "cache-control",
+                    "max-age=86400"
+                ],
+                [
+                    "age",
+                    "300"
+                ]
+            ],
+            "expectedRemainingMs": 0,
+            "persist": true
+        },
+        {
+            "id": "explicit-zero",
+            "headers": [
+                [
+                    "cache-control",
+                    "max-age=0"
+                ]
+            ],
+            "expectedRemainingMs": 0,
+            "persist": true
+        },
+        {
+            "id": "quoted-delta",
+            "headers": [
+                [
+                    "cache-control",
+                    "max-age=\"60\""
+                ]
+            ],
+            "expectedRemainingMs": 60000,
+            "persist": true
+        },
+        {
+            "id": "shared-shorter",
+            "headers": [
+                [
+                    "cache-control",
+                    "max-age=120, s-maxage=30"
+                ]
+            ],
+            "expectedRemainingMs": 30000,
+            "persist": true
+        },
+        {
+            "id": "shared-cannot-extend-local-choice",
+            "headers": [
+                [
+                    "cache-control",
+                    "max-age=30, s-maxage=120"
+                ]
+            ],
+            "expectedRemainingMs": 30000,
+            "persist": true
+        },
+        {
+            "id": "no-cache",
+            "headers": [
+                [
+                    "cache-control",
+                    "no-cache, max-age=300"
+                ]
+            ],
+            "expectedRemainingMs": 0,
+            "persist": true
+        },
+        {
+            "id": "qualified-no-cache",
+            "headers": [
+                [
+                    "cache-control",
+                    "no-cache=\"x\", max-age=300"
+                ]
+            ],
+            "expectedRemainingMs": 0,
+            "persist": true
+        },
+        {
+            "id": "no-store",
+            "headers": [
+                [
+                    "cache-control",
+                    "max-age=300"
+                ],
+                [
+                    "cache-control",
+                    "no-store"
+                ]
+            ],
+            "expectedRemainingMs": 0,
+            "persist": false
+        },
+        {
+            "id": "private",
+            "headers": [
+                [
+                    "cache-control",
+                    "private=\"x\", max-age=300"
+                ]
+            ],
+            "expectedRemainingMs": 0,
+            "persist": false
+        },
+        {
+            "id": "must-revalidate-fresh",
+            "headers": [
+                [
+                    "cache-control",
+                    "must-revalidate, max-age=60"
+                ]
+            ],
+            "expectedRemainingMs": 60000,
+            "persist": true
+        },
+        {
+            "id": "stale-extension-not-freshness",
+            "headers": [
+                [
+                    "cache-control",
+                    "max-age=0, stale-if-error=600, stale-while-revalidate=600"
+                ]
+            ],
+            "expectedRemainingMs": 0,
+            "persist": true
+        },
+        {
+            "id": "expires",
+            "headers": [
+                [
+                    "date",
+                    "Sun, 06 Nov 1994 08:49:37 GMT"
+                ],
+                [
+                    "expires",
+                    "Sun, 06 Nov 1994 08:50:37 GMT"
+                ]
+            ],
+            "expectedRemainingMs": 60000,
+            "persist": true
+        },
+        {
+            "id": "expired",
+            "headers": [
+                [
+                    "date",
+                    "Sun, 06 Nov 1994 08:49:37 GMT"
+                ],
+                [
+                    "expires",
+                    "Sun, 06 Nov 1994 08:49:07 GMT"
+                ]
+            ],
+            "expectedRemainingMs": 0,
+            "persist": true
+        },
+        {
+            "id": "expires-without-date",
+            "headers": [
+                [
+                    "expires",
+                    "Sun, 06 Nov 1994 08:50:37 GMT"
+                ]
+            ],
+            "expectedRemainingMs": 0,
+            "persist": true
+        },
+        {
+            "id": "duplicate-max-age",
+            "headers": [
+                [
+                    "cache-control",
+                    "max-age=60"
+                ],
+                [
+                    "cache-control",
+                    "max-age=60"
+                ]
+            ],
+            "expectedRemainingMs": 0,
+            "persist": true
+        },
+        {
+            "id": "duplicate-age",
+            "headers": [
+                [
+                    "age",
+                    "0"
+                ],
+                [
+                    "age",
+                    "0"
+                ]
+            ],
+            "expectedRemainingMs": 0,
+            "persist": true
+        },
+        {
+            "id": "invalid-age",
+            "headers": [
+                [
+                    "age",
+                    "-1"
+                ]
+            ],
+            "expectedRemainingMs": 0,
+            "persist": true
+        },
+        {
+            "id": "fractional-max-age",
+            "headers": [
+                [
+                    "cache-control",
+                    "max-age=60.5"
+                ]
+            ],
+            "expectedRemainingMs": 0,
+            "persist": true
+        },
+        {
+            "id": "invalid-date",
+            "headers": [
+                [
+                    "date",
+                    "tomorrow"
+                ]
+            ],
+            "expectedRemainingMs": 0,
+            "persist": true
+        },
+        {
+            "id": "wrong-weekday",
+            "headers": [
+                [
+                    "date",
+                    "Mon, 06 Nov 1994 08:49:37 GMT"
+                ]
+            ],
+            "expectedRemainingMs": 0,
+            "persist": true
+        },
+        {
+            "id": "invalid-calendar",
+            "headers": [
+                [
+                    "date",
+                    "Thu, 31 Nov 1994 08:49:37 GMT"
+                ]
+            ],
+            "expectedRemainingMs": 0,
+            "persist": true
+        },
+        {
+            "id": "monotonic-regression",
+            "headers": [],
+            "responseReceivedMonotonicMs": 999,
+            "expectedRemainingMs": 0,
+            "persist": true
+        },
+        {
+            "id": "fractional-delay",
+            "headers": [],
+            "responseReceivedMonotonicMs": 1000.5,
+            "expectedRemainingMs": 59999.5,
+            "persist": true
+        },
+        {
+            "id": "unknown-quoted-comma",
+            "headers": [
+                [
+                    "cache-control",
+                    "extension=\"a,b\", max-age=60"
+                ]
+            ],
+            "expectedRemainingMs": 60000,
+            "persist": true
+        },
+        {
+            "id": "unterminated-quoted-directive",
+            "headers": [
+                [
+                    "cache-control",
+                    "extension=\"a, max-age=60"
+                ]
+            ],
+            "expectedRemainingMs": 0,
+            "persist": true
+        }
+    ],
+    "residenceCases": [
+        {
+            "id": "before-expiry",
+            "remainingAtReceiptMs": 60000,
+            "elapsedMs": 59999,
+            "fresh": true
+        },
+        {
+            "id": "exact-expiry",
+            "remainingAtReceiptMs": 60000,
+            "elapsedMs": 60000,
+            "fresh": false
+        },
+        {
+            "id": "after-expiry",
+            "remainingAtReceiptMs": 60000,
+            "elapsedMs": 60001,
+            "fresh": false
+        },
+        {
+            "id": "reset-does-not-renew",
+            "remainingAtReceiptMs": 60000,
+            "elapsedBeforeResetMs": 40000,
+            "elapsedAfterResetMs": 21000,
+            "elapsedMs": 61000,
+            "fresh": false
+        },
+        {
+            "id": "negative-residence",
+            "remainingAtReceiptMs": 60000,
+            "elapsedMs": -1,
+            "fresh": false
+        }
+    ],
+    "sources": [
+        "tests/fixtures/m3-contract/fetch-cache-cases.json",
+        "tests/fixtures/m3/sources/wg-appendix-c.txt"
+    ]
+}
