@@ -376,3 +376,95 @@ These deadline and commit tests use controlled timing/transport dependencies;
 they do not establish live-network authentication. The maintainer confirmed
 push and green CI for **785b46f**, **e9a4848**, and **87e9998**. That confirmation
 does not cover subsequent network-verifier or Redis implementation work.
+
+## Internal Redis adapter implementation checkpoint
+
+This section supersedes the earlier implementation-pending wording for the
+internal adapter, not for public exports or production readiness. The adapter
+now implements mandatory explicit recovery-horizon configuration, setup-time
+eviction admission, Redis-resident recovery state, and atomic replay consumption.
+It remains unexported pending public API and packaging review.
+
+### Atomic representation and operational cost
+
+Each enforcement namespace uses three keys in one Cluster hash slot: epoch,
+absolute quarantine-until, and a bounded state document. Lua validates the stored
+document and computes a complete replacement before a single MSET mutates all
+three keys. There are no independently updated quota or expiry indexes whose
+partial mutation could be mistaken for an empty store. Redis does not generally
+roll back earlier script writes; minimizing the mutation surface is intentional.
+
+The initial implementation scans at most 10,000 records and accepts at most
+32 MiB of encoded state. Capacity and per-key quota configuration cannot exceed
+10,000. Every accepted insertion rewrites the bounded document: this is an O(n)
+design that prioritizes a small atomic mutation surface over throughput.
+No full-capacity latency, throughput, or memory benchmark has yet established
+suitability for high-volume deployments. A 100 ms client deadline does not stop
+a script already executing in Redis.
+
+Expiry is logical, based on per-record Redis-time deadlines. Recovery keys have
+no TTL; an idle namespace or application restart must not erase recovery state.
+Expired records can remain physically stored until an accepted insertion rewrites
+the live set. Reads, replay rejections, and quota rejections do not renew a nonce's
+deadline. The namespace remains physically present without an administrative
+cleanup process; no destructive cleanup API is exposed.
+
+Tuple members use reversible base64url encoding of a JSON scope/thumbprint/nonce
+array. This preserves distinct tuples without hashing collisions, but is not
+encryption: Redis readers can recover the nonce. Neither nonce values nor encoded
+tuple members appear in Redis key names or adapter diagnostics. Namespace encoding
+is likewise injective and supplies the common Cluster hash tag.
+
+### Quarantine, time rounding, and failure outcomes
+
+Missing or structurally inconsistent recovery state starts quarantine from
+detection. The new epoch, deadline and empty recovery state are written atomically.
+Recreating an adapter does not renew an existing consistent quarantine. Conflicting
+horizon or quota configuration for an existing namespace is rejected rather than
+shortening its protection. Quarantine completion never substitutes for signature
+time or identity validation.
+
+Redis TIME supplies the clock. New retention and quarantine deadlines use
+upper-rounded milliseconds so the requested duration is not shortened. Expiry
+and quarantine completion compare against lower-rounded observation milliseconds.
+A regression demonstrated that upper-rounding the observation could accept a
+replay or end quarantine just before its deadline; deterministic-time tests in
+the actual Redis Lua engine failed before this correction and passed afterward.
+No production time-override API is exposed.
+
+All commands have a 100 ms adapter deadline, no automatic retry, and no in-memory
+fallback. A lost reply after a real committed insertion returns unavailable;
+a later independent consume returns replayed. Timeout means unknown completion,
+not cancellation or rollback. The application-owned client must actually disable
+retries and offline queues; its declarations are operator assertions, not attestation.
+
+CONFIG GET maxmemory-policy must return noeviction. An explicit noeviction
+acknowledgement is accepted only for recognized CONFIG permission/capability
+failures, never for a conflicting server reply, authentication failure, or
+network failure. The operator remains responsible for preserving this policy,
+TLS/authentication, ACL isolation, clock assumptions, persistence and failover
+requirements throughout deployment.
+
+### Evidence and remaining validation limits
+
+Local tests used Redis 7.4.8 in a dedicated Docker container, not an emulated
+backend. They cover actual ACL denial, eviction-policy mismatch, shared quarantine,
+missing/corrupt recovery data, quota precedence, expiry, ambiguous reply loss,
+and exactly one acceptance among 100 consumes across four independent Node
+processes. A real 360-second deadline was initialized and checked for shared
+persistence; tests did not wait 360 seconds of live wall time. Two boundary tests
+replace only TIME in a test copy of the Lua script and execute it in real Redis.
+Other live-time tests use an explicit one-second test horizon, not a production
+recommendation or implicit default.
+
+A digest-pinned Redis service-container CI job is configured for Linux with
+Node 20/22/24. Remote success is not established by the local runs. Cluster routing,
+actual server restart/failover, replication loss, OOM under maximum load, and
+full-capacity performance are not proven by the current suite. ACL rejection of
+the atomic write is tested, but is not an OOM or process-crash test.
+
+The previously accepted residual risks remain: valid-looking partial history
+loss or replication rollback may be undetectable, noeviction is not durability
+or linearizability, and arbitrary clock jumps are not solved by recovery markers.
+Public export/consumer validation and the maintainer-run network smoke remain
+separate pending acceptance gates.

@@ -35,3 +35,46 @@ jobs:
         run: pnpm run check
       - name: Verify tests did not modify tracked fixtures or sources
         run: git diff --exit-code
+
+  redis-integration:
+    name: Real Redis / Node ${{ matrix.node }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["20", "22", "24"]
+    services:
+      redis:
+        # Redis 7.4.8, matching the locally inspected integration-test image.
+        image: redis@sha256:8b81dd37ff027bec4e516d41acfbe9fe2460070dc6d4a4570a2ac5b9d59df065
+        ports:
+          - 6379/tcp
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 12
+    env:
+      AGENTSIG_TEST_REDIS_PORT: ${{ job.services.redis.ports[6379] }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Install pinned workspace package manager
+        run: npm install --global pnpm@10.12.1 --ignore-scripts
+      - name: Install locked dependencies without lifecycle scripts
+        run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Build workspace dependencies and check types
+        run: pnpm run build && pnpm run typecheck
+      - name: Require an explicit real-service endpoint
+        run: node -e "const p=Number(process.env.AGENTSIG_TEST_REDIS_PORT); if(!Number.isInteger(p)||p<1||p>65535) throw new Error('Missing dedicated Redis service port');"
+      - name: Run real Redis admission, atomic replay and recovery tests
+        run: pnpm exec vitest run packages/core/test/redis-real.test.ts
+      - name: Verify tracked sources and fixtures were not modified
+        run: git diff --exit-code

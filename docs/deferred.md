@@ -893,3 +893,66 @@ The earlier network-verifier implementation is recorded in **de12391**.
 Redis adapter/quarantine/eviction admission, real Redis service-container CI,
 public discovery exports, and the maintainer-run smoke remain unfinished.
 No push or publication was performed.
+
+### Internal Redis replay adapter and real-service CI checkpoint
+
+The internal Redis adapter implements explicit mandatory recovery horizon,
+noeviction setup admission with narrowly scoped acknowledgement, independent
+Redis-time retention, shared quarantine, and atomic replay/quota decisions.
+Normal retention remains the exact consume deadline minus dispatch time;
+profile and signature label do not partition replay. No retries, offline
+queueing, memory fallback, reset, or early-release API are introduced.
+
+The initial representation is a bounded state document plus epoch and absolute
+quarantine-until keys in one Cluster hash slot. Lua prepares the replacement
+before one MSET writes all three keys. This avoids partially updated quota/expiry
+indexes, at the cost of O(n) scans and document rewrites. Capacity and per-key
+quota are capped at 10,000; encoded state is capped at 32 MiB. These bounds do not
+establish full-capacity performance. Expiry is logical, and recovery keys do not
+expire automatically. The security document records storage, privacy, operational
+cost, and accepted residual-risk details.
+
+Two deterministic-time regressions executed in real Redis exposed early
+quarantine completion and early nonce expiry when observation time was rounded
+up. Observation now rounds down; new deadlines round up. Expectations were not
+weakened. The test-only script copies replace TIME, not other production logic;
+no production clock-override option exists.
+
+Local validation used a dedicated Redis 7.4.8 Docker container pinned to
+sha256:8b81dd37ff027bec4e516d41acfbe9fe2460070dc6d4a4570a2ac5b9d59df065.
+Twenty-two Redis integration tests passed, including four independent Node
+processes issuing 100 identical consumes with exactly one acceptance and 99
+replays, actual ACL restrictions, conflicting eviction policy, missing/corrupt
+state, preserved quarantine across adapter recreation, and reply loss after a
+real committed insertion. Two of those tests use deterministic TIME samples.
+One-second live quarantine tests are test policy only; a separate test verifies
+the real shared 360-second deadline without waiting six minutes.
+
+An initial connection-per-command concurrency run returned no accepted reply;
+later identical runs passed. The exact cause of that first failure was not
+established. Concurrency tests now use a preconnected, bounded test RESP client
+to separate connection-setup load from atomic consumption. The 100 ms adapter
+deadline and exact one-acceptance expectation remain unchanged. The test client
+is not shipped or presented as a production Redis client.
+
+The multiprocess test initially exposed tsup declaration issues, then Node 20
+Windows entry-path/output-extension differences. The test now invokes the existing
+CLI with an explicit working directory and relative input, verifies the emitted
+worker, and normalizes its CommonJS extension. Strict TypeScript checking was not
+relaxed and no dependency was added.
+
+The Node 22 workspace check passed builds, type checks, 5,355 tests and 13 existing
+integration/consumer checks; 22 real-service tests were explicitly skipped in that
+ordinary run and executed separately. Following the Windows test-runner fix,
+Node 20.20.2 passed all 74 Redis-related checks: 52 controlled admission/input tests
+and 22 real-service tests. These overlapping totals are not additive.
+
+A dedicated Linux GitHub Actions job now uses the same digest-pinned Redis service
+with Node 20/22/24, requires a valid service port, and executes the real suite.
+Remote CI has not yet run for this delivery. Actual Redis restart/failover,
+Cluster routing, replication rollback, full-capacity performance and OOM testing
+remain unproven; ACL rejection is not a substitute for those tests.
+
+Public exports and consumers, release metadata, and the maintainer-run three-case
+network smoke remain pending. The adapter is internal and not security-reviewed.
+No push or publication was performed.
