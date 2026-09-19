@@ -551,3 +551,53 @@ The historical and amendment audits passed 27 checks before applying the fix.
 The amendment is committed separately before its implementation. The initial
 cache, document validator, and freshness implementation remain work in progress;
 three persistence regression tests are expected to fail until that fix lands.
+
+### Internal document, freshness, and cache implementation checkpoint
+
+Following the persistence amendment in **90821c6**, the internal document validator,
+freshness calculator, and bounded directory cache are implemented. They are not
+public exports and are not yet connected to a network verifier or fetch scheduler.
+
+Remote documents reuse the existing bounded JWKS material/metadata validation
+without creating local agent bindings. All entries are checked before replacement;
+malformed entries reject the whole set. Existing approved unsupported-key policy
+is preserved, so this is not a claim of complete WG conformance for skipped
+algorithms. Remote failures expose only a fixed diagnostic, without attacker-chosen
+labels, key components, or nested local-loader errors. Loading a known test key
+does not grant permission to authenticate with it.
+
+Positive freshness defaults to 60 seconds when explicit freshness is absent and
+is capped at a 300-second total lifetime before response-age subtraction. Negative
+backoff defaults to 60 seconds and cannot be configured above 300 seconds. Existing
+restrictive metadata and monotonic age rules remain active. Malformed Cache-Control
+list syntax now prohibits persistence under the separately pinned amendment.
+
+Positive storage is bounded independently by 1,000 entries and 16 MiB of accounted
+bytes. Accounting charges encoded document size, per-key and per-entry allowances,
+and origin storage; it does not claim an exact JavaScript/native heap measurement.
+FIFO eviction invalidates outstanding selections rather than extending evidence.
+Negative state contains at most 1,000 origin records, never one record per claimed
+key identifier. If live negative capacity is exhausted, one scalar global backoff
+covers overflow instead of evicting live origin backoff. This fail-closed choice
+can reduce availability for unrelated origins during a flood.
+
+A successfully validated response atomically replaces the old complete set,
+including empty sets. A valid replacement that cannot be persisted still
+invalidates older evidence; malformed documents do not. Failed refresh backoff
+does not mutate prior positive evidence or renew its lifetime. Final selection
+checks are synchronous and identity-bound to this cache and its exact entry.
+The initial conservative policy rejects every replaced generation, even when
+the selected key remains in the new set. Removing and later reintroducing a key
+cannot revive an old selection. The eventual verifier must call this check after
+awaited work and before constructing success; that integration is still pending.
+
+The cache has an independent monotonic reference, no verification-clock reset API,
+and latches clock regression rather than rebasing. Cache-level asynchronous
+replacement tests are not full replay-await or network-authentication tests.
+
+Validation passed locally: 633 targeted tests on Node 20.20.2; full Node 22
+workspace build/type checks, 5,192 unit tests, and 13 existing integration/consumer
+tests. The historical freshness and amendment audits separately passed 27 checks.
+These overlapping runs are not additive totals. No new remote CI result is
+claimed. Fetch concurrency/rate/queue coordination, Redis recovery and adapter,
+network-verifier integration, and the maintainer-run smoke remain unfinished.
