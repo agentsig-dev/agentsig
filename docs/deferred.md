@@ -763,3 +763,83 @@ profile partitions, the full network verifier and required rotation races,
 Redis adapter/quarantine/eviction admission, public consumers, and the
 maintainer-run smoke. Package versions and existing public exports are unchanged.
 No push or publication was performed.
+
+### Maintainer-confirmed discovery delivery and next implementation order
+
+The maintainer confirmed push and green CI for **785b46f**, **e9a4848**, and
+**87e9998**. The next delivery sequence is:
+1. Full network verification and the pinned (a), (b), and (c-prime) race tests.
+2. One security-context-associated fetch coordinator shared across profile partitions.
+3. Redis replay adapter, Redis-persisted quarantine, eviction-policy inspection,
+   explicit acknowledgement where inspection is denied/unsupported, and mandatory
+   operator-supplied recovery horizon.
+4. Public discovery exports and the maintainer-run three-scenario network smoke.
+
+The original admission timestamp must cross service/scheduler/transport boundaries;
+no layer may restart the discovery budget. The regression that passed 3,000 ms to
+transport after 1,000 ms had already elapsed is fixed. Document validation is also
+charged to the original deadline: preparation is side-effect-free, and a timed-out
+preparation must never commit, replace prior evidence, or renew cache freshness.
+The detailed rationale is recorded in
+[the security document](security-context.md#m3-discovery-deadline-and-cache-commit-boundary).
+
+The network verifier must not wrap a completed offline success and then attach
+discovery evidence afterward. Discovery identity, replay admission, current
+thumbprint membership, and final clock/epoch checks belong to one authentication
+operation. Remote directory evidence must never be labeled local-configuration.
+
+Redis integration tests must use a real Redis GitHub Actions service container
+in a Linux job. Controlled backend tests may supplement but cannot replace that
+gate. The eventual smoke must demonstrate successful verification after a pinned
+local test-directory fetch, private-destination rejection with an unverified
+result, and unknown-key after a second fetch confirms key removal. Test-only
+local routing must be explicit; no production private-address override is added.
+The assistant will not run the maintainer-owned smoke without authorization.
+
+These requirements authorize continued implementation, not claims that these
+remaining gates have passed. Stop after every three local commits; no push or
+publication is performed by the assistant.
+
+### Internal full network verifier and rotation race checkpoint
+
+The internal network verifier now uses the same authentication lifecycle as the
+offline verifier, rather than adding discovery after an offline success. The
+shared engine preserves all-pairs parsing, tagged-candidate counting, exactly-one
+ambiguity without replay consumption, invocation-local replay groups, aggregate
+policy, and final context/time checks. Network candidates additionally check
+current same-origin thumbprint membership before replay and after awaited replay
+work. Remote identity uses directory-https, never local-configuration; this means
+HTTPS origin/key association, not publisher-signed directory proof or authorization.
+
+Network discovery is preceded by profile, component, coverage, metadata and
+signature-time checks. Its completion rechecks the operation epoch/time before
+cryptography and replay. An invocation owns one discovery budget across all its
+candidates. Known test keys remain disallowed unless explicitly permitted.
+Offline keys, manual bindings, and application transport injection are rejected
+as network-verifier configuration fields. Internal test dependencies remain
+outside public exports.
+
+The independently pinned (a)/(b) races now execute full verification for both
+profiles, with a real memory-store insertion held before its response while a
+second directory fetch retains or removes the key. Retained thumbprints verify;
+removed thumbprints yield unverified/unknown-key without rolling back the nonce.
+Reintroduction permits key lookup but a repeated signed request remains replayed.
+The two WG (c-prime) cases report one sanitized invalid-jwks refresh failure:
+old fresh evidence still permits full authentication, while expired evidence
+yields unverified/unknown-key without consuming replay.
+
+Seven tests use actual local HTTPS directory responses and nested TLS CONNECT,
+including private-address rejection before contacting the proxy. DNS answers
+and the proxy's loopback routing are explicitly test-controlled. They prove the
+tested authentication and local transport paths, not direct public-address
+routing or public-network pinning. Twelve additional boundary tests use controlled
+transport with real signatures and contexts, covering unsigned/expired input,
+test-key denial, tampering, profile rejection, reset during discovery, one
+acceptance among 100 identical requests, and expiry during replay consumption.
+
+Local Node 22 full validation passed builds, type checks, 5,288 unit tests across
+58 files, and 13 existing integration/consumer tests. The nineteen new network
+tests also passed on local Node 20.20.2. No remote CI success is claimed for these
+changes. The network verifier remains internal: context-associated shared
+admission across profile partitions, Redis integration, public exports, and the
+maintainer-run smoke are still pending.

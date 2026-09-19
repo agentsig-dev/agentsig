@@ -336,3 +336,43 @@ specific transport paths, not full request authentication. The planned
 maintainer-run network smoke must separately demonstrate full verification and
 private-address rejection, explicitly identifying any test-only routing.
 No production private-address bypass is authorized by that smoke requirement.
+
+## M3 discovery deadline and cache commit boundary
+
+The three-second discovery budget starts at service admission, not when DNS,
+the scheduler, or the transport begins. The same monotonic start is carried
+through queue admission; queueing and synchronous preparation consume the
+original budget. Each transport phase receives only the remaining duration.
+Starting a fresh budget at a layer boundary would permit aggregate work beyond
+the configured limit even if each individual phase appeared bounded.
+
+A regression demonstrated this boundary: after 1,000 ms elapsed before scheduler
+admission, transport incorrectly received 3,000 ms instead of 2,000 ms.
+The scheduler now accepts the original service start. Tests assert the remaining
+budget and cancellation at 2,000 ms, with no cancellation at 1,999 ms.
+Monotonic checks remain necessary because event-loop delays can postpone timers.
+
+A transport response is not permission to update trusted cache evidence.
+The service checks the original deadline after transport and again after
+synchronous JSON/key validation. Validation produces an owned, single-use
+preparation handle without changing the cache. Only a still-in-budget operation
+may commit that handle, with no await or observer callback between the final
+deadline check and the atomic replacement. An expired preparation is abandoned.
+
+Consequently, a timed-out fetch cannot replace a key set, resurrect a removed
+key, or renew prior evidence's freshness through a late completion. Failed
+refresh backoff does not change the prior positive set or its original age.
+Successfully validated, timely replacement still applies complete-set semantics;
+a valid new set that prohibits persistence invalidates the older evidence.
+
+Cancellation is not proof that underlying work has stopped. The scheduler keeps
+active capacity and origin ownership until the worker actually settles, while
+rejecting the timed-out result immediately. A stuck worker reduces availability
+rather than permitting concurrency beyond the configured bound.
+
+See the [discovery service tests](../packages/core/test/discovery-directory-service.test.ts)
+and [scheduler tests](../packages/core/test/discovery-fetch-scheduler.test.ts).
+These deadline and commit tests use controlled timing/transport dependencies;
+they do not establish live-network authentication. The maintainer confirmed
+push and green CI for **785b46f**, **e9a4848**, and **87e9998**. That confirmation
+does not cover subsequent network-verifier or Redis implementation work.

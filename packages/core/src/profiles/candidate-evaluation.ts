@@ -17,7 +17,9 @@ import type { VerificationConfiguration } from "./verification-config.js";
 import type { RejectedCandidate } from "./verification-types.js";
 
 /** Internal eligibility only: NEVER export through the public package entry. */
-export type CandidateEvaluation =
+export type CandidateEvaluation<
+    Identity extends { readonly thumbprint: string } = LocalIdentityProposal,
+> =
     | { readonly kind: "rejected"; readonly result: RejectedCandidate }
     | {
         readonly kind: "eligible";
@@ -25,7 +27,7 @@ export type CandidateEvaluation =
         readonly profile: WebBotAuthProfile;
         readonly signature: ParsedSignature;
         readonly metadata: CandidateMetadata;
-        readonly identity: LocalIdentityProposal;
+        readonly identity: Identity;
         readonly claimedAgent: string;
         readonly time: SignatureTimePolicy;
     };

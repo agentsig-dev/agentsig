@@ -22,11 +22,11 @@ export type VerifiedIdentity =
         readonly trustSource: "local-configuration";
     };
 
-export type VerifiedCandidate = {
+export type VerifiedCandidate<Identity extends { readonly thumbprint: string } = VerifiedIdentity> = {
     readonly status: "verified";
     readonly label: string;
     readonly profile: WebBotAuthProfile;
-    readonly identity: VerifiedIdentity;
+    readonly identity: Identity;
     /** Signed claim, not independently established operator ownership. */
     readonly claimedAgent: string;
     readonly coveredComponents: readonly CoveredComponent[];
@@ -43,7 +43,8 @@ export type RejectedCandidate = ProfileRejection & {
     readonly message?: string;
 };
 
-export type CandidateResult = VerifiedCandidate | RejectedCandidate;
+export type CandidateResult<Identity extends { readonly thumbprint: string } = VerifiedIdentity> =
+    VerifiedCandidate<Identity> | RejectedCandidate;
 
 /**
  * Exactly the four approved external states. Pre-replay eligibility is an
@@ -53,7 +54,7 @@ export type CandidateResult = VerifiedCandidate | RejectedCandidate;
  * A failed aggregate may contain a successful candidate; that does not grant
  * aggregate acceptance or put an identity on the failed aggregate itself.
  */
-export type VerificationResult =
+export type VerificationResult<Identity extends { readonly thumbprint: string } = VerifiedIdentity> =
     | {
         readonly status: "unsigned";
         readonly reason: UnsignedCode;
@@ -62,11 +63,11 @@ export type VerificationResult =
     | {
         readonly status: "verified";
         readonly reason: VerifiedCode;
-        readonly candidates: readonly CandidateResult[];
-        readonly verifiedCandidates: readonly [VerifiedCandidate, ...VerifiedCandidate[]];
+        readonly candidates: readonly CandidateResult<Identity>[];
+        readonly verifiedCandidates: readonly [VerifiedCandidate<Identity>, ...VerifiedCandidate<Identity>[]];
     }
     | (ProfileRejection & {
-        readonly candidates: readonly CandidateResult[];
+        readonly candidates: readonly CandidateResult<Identity>[];
         readonly message?: string;
     });
 

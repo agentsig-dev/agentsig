@@ -1,10 +1,13 @@
 import type { CandidateEvaluation } from "./candidate-evaluation.js";
+import type { LocalIdentityProposal } from "./agent-bindings.js";
 import { CandidateRejection } from "./codes.js";
 import type { ProfileRejection, StoreOutcome } from "./codes.js";
 import type { OperationLease } from "./operation-epochs.js";
 import type { VerificationConfiguration } from "./verification-config.js";
 
-export type EligibleCandidate = Extract<CandidateEvaluation, { readonly kind: "eligible" }>;
+export type EligibleCandidate<
+    Identity extends { readonly thumbprint: string } = LocalIdentityProposal,
+> = Extract<CandidateEvaluation<Identity>, { readonly kind: "eligible" }>;
 
 /** Internal outcomes only; accepted storage is not a verified request. */
 export type CandidateReplayOutcome = "accepted" | "optional" | ProfileRejection;
@@ -26,13 +29,15 @@ function storeRejection(outcome: Exclude<StoreOutcome, "accepted">): ProfileReje
  * No public success is constructed here. The caller must perform a FINAL
  * epoch/health and per-candidate time check after all groups have completed.
  */
-export async function consumeCandidateGroups(
-    candidates: readonly EligibleCandidate[],
-    config: VerificationConfiguration,
+export async function consumeCandidateGroups<
+    Candidate extends EligibleCandidate<{ readonly thumbprint: string }>,
+>(
+    candidates: readonly Candidate[],
+    config: Pick<VerificationConfiguration, "scope" | "controller">,
     lease: OperationLease,
-): Promise<ReadonlyMap<EligibleCandidate, CandidateReplayOutcome>> {
-    const outcomes = new Map<EligibleCandidate, CandidateReplayOutcome>();
-    const groups = new Map<string, EligibleCandidate[]>();
+): Promise<ReadonlyMap<Candidate, CandidateReplayOutcome>> {
+    const outcomes = new Map<Candidate, CandidateReplayOutcome>();
+    const groups = new Map<string, Candidate[]>();
     for (const candidate of candidates) {
         const nonce = candidate.metadata.nonce;
         if (nonce === undefined) {
@@ -49,7 +54,7 @@ export async function consumeCandidateGroups(
     }
 
     for (const group of groups.values()) {
-        const ready: EligibleCandidate[] = [];
+        const ready: Candidate[] = [];
         try {
             const outcome = await config.controller.consume(lease, (now) => {
                 let retainUntil = 0;
