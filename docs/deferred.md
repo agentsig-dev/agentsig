@@ -312,3 +312,30 @@ explicitly by test clients; certificate and hostname verification stay enabled.
 No production private-address exception is authorized. The eventual smoke must
 state which network-policy parts use test infrastructure rather than suggest
 that a production open resolver accepts loopback origins.
+
+### Conservative directory destination policy
+
+Before implementing the production address classifier, two IANA special-purpose
+registry snapshots and 92 independently authored address expectations were
+recorded in the [address manifest](../tests/fixtures/m3-address/manifest.json).
+Both registries report an update date of 2025-10-09 and were retrieved on
+2026-09-19. Original XML bytes, including whitespace, are preserved.
+
+The initial local policy rejects every prefix in those snapshots, including
+globally reachable special-purpose exceptions. It additionally rejects IPv4
+multicast and limits IPv6 admission to 2000::/3 after exclusions. This deliberately
+sacrifices compatibility with some special-purpose services; it must not be
+described as IANA declaring every excluded prefix globally unreachable.
+Mapped and transition forms do not widen DNS admission. Neither allow-list nor
+open mode may disable these baseline restrictions.
+
+The special-purpose registries are not complete allocation or routing inventories.
+An admitted address is not proven allocated, reachable, honest, or safe under
+deployment-local routing. Custom translation prefixes and sensitive public
+destinations still require deployment egress controls.
+
+The independent address audit passed 94 checks: 92 address expectations and
+two source/policy checks. An initial audit defect used one Node BlockList for
+both families; its mapped-IPv6 matching also rejected native IPv4. Separate
+family lists fixed the audit without changing expected outcomes or source bytes.
+This audit is not evidence of implemented production SSRF or DNS-rebinding defense.

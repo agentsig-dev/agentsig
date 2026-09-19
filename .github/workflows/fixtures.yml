@@ -52,3 +52,5 @@ jobs:
         run: node --test tests/m3-contract-audit.test.mjs
       - name: Validate the local HTTPS directory test harness
         run: node --test tests/directory-server.test.mjs
+      - name: Audit pinned IANA address sources and conservative admission expectations
+        run: node --test tests/m3-address-audit.test.mjs

@@ -1,0 +1,396 @@
+{
+    "formatVersion": 1,
+    "status": "pre-implementation-expectations",
+    "authoredOn": "2026-09-19",
+    "policy": {
+        "purpose": "Conservative destination admission for HTTPS directory discovery, not a general Internet routing classifier",
+        "specialPurpose": "Reject every prefix in the two pinned IANA special-purpose registries, including globally reachable special-purpose services and nested exceptions",
+        "ipv4AdditionalExclusions": [
+            "224.0.0.0/4"
+        ],
+        "ipv6AdmissionEnvelope": "2000::/3, minus all pinned special-purpose prefixes",
+        "ipv6TransitionMechanisms": "Reject mapped, compatible, NAT64 well-known, Teredo and 6to4 forms; do not decode an embedded address and silently widen admission",
+        "representation": "Accept unbracketed strict IP address text from trusted DNS resolution only; reject zone identifiers, surrounding whitespace, ports, CIDR notation and noncanonical IPv4 numeric spellings",
+        "originRuleSeparate": "M2 origin grammar rejects all IP-literal origins, even when an address would otherwise pass destination classification",
+        "mixedAnswers": "Reject the entire bounded DNS candidate set if any address is invalid or forbidden",
+        "peerRule": "Compare the actual connected address numerically to the pinned destination; an OS-mapped representation of an already approved IPv4 peer is comparison-only, not a DNS admission exception",
+        "limitations": [
+            "This conservative policy can reject globally reachable special-purpose services; that restriction is intentional and must not be attributed to an IANA global=False flag.",
+            "Passing classification does not prove an address is allocated, reachable, honest, or safe under deployment-local routing.",
+            "Custom NAT64 prefixes, unusual routing and network-specific sensitive public destinations require deployment egress controls.",
+            "No production option may disable the baseline exclusions in allowlist or open mode.",
+            "The registry snapshots must be reviewed and updated explicitly; runtime requests never fetch classification rules."
+        ]
+    },
+    "cases": [
+        {
+            "address": "1.1.1.1",
+            "allowed": true
+        },
+        {
+            "address": "8.8.8.8",
+            "allowed": true
+        },
+        {
+            "address": "9.255.255.255",
+            "allowed": true
+        },
+        {
+            "address": "10.0.0.0",
+            "allowed": false
+        },
+        {
+            "address": "10.255.255.255",
+            "allowed": false
+        },
+        {
+            "address": "11.0.0.0",
+            "allowed": true
+        },
+        {
+            "address": "0.0.0.0",
+            "allowed": false
+        },
+        {
+            "address": "0.255.255.255",
+            "allowed": false
+        },
+        {
+            "address": "100.63.255.255",
+            "allowed": true
+        },
+        {
+            "address": "100.64.0.0",
+            "allowed": false
+        },
+        {
+            "address": "100.127.255.255",
+            "allowed": false
+        },
+        {
+            "address": "100.128.0.0",
+            "allowed": true
+        },
+        {
+            "address": "127.0.0.1",
+            "allowed": false
+        },
+        {
+            "address": "127.255.255.255",
+            "allowed": false
+        },
+        {
+            "address": "169.254.169.254",
+            "allowed": false
+        },
+        {
+            "address": "172.15.255.255",
+            "allowed": true
+        },
+        {
+            "address": "172.16.0.0",
+            "allowed": false
+        },
+        {
+            "address": "172.31.255.255",
+            "allowed": false
+        },
+        {
+            "address": "172.32.0.0",
+            "allowed": true
+        },
+        {
+            "address": "192.0.0.9",
+            "allowed": false,
+            "reason": "Local exclusion despite IANA globally reachable exception"
+        },
+        {
+            "address": "192.0.0.10",
+            "allowed": false
+        },
+        {
+            "address": "192.0.0.170",
+            "allowed": false
+        },
+        {
+            "address": "192.0.2.1",
+            "allowed": false
+        },
+        {
+            "address": "192.31.196.1",
+            "allowed": false
+        },
+        {
+            "address": "192.52.193.1",
+            "allowed": false
+        },
+        {
+            "address": "192.88.99.2",
+            "allowed": false
+        },
+        {
+            "address": "192.168.1.1",
+            "allowed": false
+        },
+        {
+            "address": "192.175.48.1",
+            "allowed": false
+        },
+        {
+            "address": "198.18.0.0",
+            "allowed": false
+        },
+        {
+            "address": "198.19.255.255",
+            "allowed": false
+        },
+        {
+            "address": "198.20.0.0",
+            "allowed": true
+        },
+        {
+            "address": "198.51.100.1",
+            "allowed": false
+        },
+        {
+            "address": "203.0.113.1",
+            "allowed": false
+        },
+        {
+            "address": "223.255.255.255",
+            "allowed": true
+        },
+        {
+            "address": "224.0.0.0",
+            "allowed": false
+        },
+        {
+            "address": "239.255.255.255",
+            "allowed": false
+        },
+        {
+            "address": "240.0.0.0",
+            "allowed": false
+        },
+        {
+            "address": "255.255.255.255",
+            "allowed": false
+        },
+        {
+            "address": "2001:4860:4860::8888",
+            "allowed": true
+        },
+        {
+            "address": "2606:4700:4700::1111",
+            "allowed": true
+        },
+        {
+            "address": "2606:4700:4700:0:0:0:0:1111",
+            "allowed": true
+        },
+        {
+            "address": "2606:4700:4700::ABCD",
+            "allowed": true
+        },
+        {
+            "address": "::",
+            "allowed": false
+        },
+        {
+            "address": "::1",
+            "allowed": false
+        },
+        {
+            "address": "::ffff:127.0.0.1",
+            "allowed": false
+        },
+        {
+            "address": "::ffff:7f00:1",
+            "allowed": false
+        },
+        {
+            "address": "::ffff:8.8.8.8",
+            "allowed": false
+        },
+        {
+            "address": "::8.8.8.8",
+            "allowed": false
+        },
+        {
+            "address": "64:ff9b::7f00:1",
+            "allowed": false
+        },
+        {
+            "address": "64:ff9b::808:808",
+            "allowed": false
+        },
+        {
+            "address": "64:ff9b:1::1",
+            "allowed": false
+        },
+        {
+            "address": "100::1",
+            "allowed": false
+        },
+        {
+            "address": "100:0:0:1::1",
+            "allowed": false
+        },
+        {
+            "address": "2001::1",
+            "allowed": false
+        },
+        {
+            "address": "2001:1::1",
+            "allowed": false
+        },
+        {
+            "address": "2001:1::2",
+            "allowed": false
+        },
+        {
+            "address": "2001:1::3",
+            "allowed": false
+        },
+        {
+            "address": "2001:2::1",
+            "allowed": false
+        },
+        {
+            "address": "2001:3::1",
+            "allowed": false
+        },
+        {
+            "address": "2001:4:112::1",
+            "allowed": false
+        },
+        {
+            "address": "2001:20::1",
+            "allowed": false
+        },
+        {
+            "address": "2001:30::1",
+            "allowed": false
+        },
+        {
+            "address": "2001:1ff:ffff:ffff:ffff:ffff:ffff:ffff",
+            "allowed": false
+        },
+        {
+            "address": "2001:200::1",
+            "allowed": true
+        },
+        {
+            "address": "2001:db8::1",
+            "allowed": false
+        },
+        {
+            "address": "2002:7f00:1::",
+            "allowed": false
+        },
+        {
+            "address": "2620:4f:8000::1",
+            "allowed": false
+        },
+        {
+            "address": "3fff::1",
+            "allowed": false
+        },
+        {
+            "address": "3fff:fff:ffff:ffff:ffff:ffff:ffff:ffff",
+            "allowed": false
+        },
+        {
+            "address": "3fff:1000::1",
+            "allowed": true
+        },
+        {
+            "address": "4000::1",
+            "allowed": false
+        },
+        {
+            "address": "5f00::1",
+            "allowed": false
+        },
+        {
+            "address": "fc00::1",
+            "allowed": false
+        },
+        {
+            "address": "fd00::1",
+            "allowed": false
+        },
+        {
+            "address": "fe80::1",
+            "allowed": false
+        },
+        {
+            "address": "ff02::1",
+            "allowed": false
+        },
+        {
+            "address": "",
+            "allowed": false
+        },
+        {
+            "address": "localhost",
+            "allowed": false
+        },
+        {
+            "address": "127.1",
+            "allowed": false
+        },
+        {
+            "address": "2130706433",
+            "allowed": false
+        },
+        {
+            "address": "0x7f000001",
+            "allowed": false
+        },
+        {
+            "address": "0177.0.0.1",
+            "allowed": false
+        },
+        {
+            "address": "001.1.1.1",
+            "allowed": false
+        },
+        {
+            "address": "1.1.1.1 ",
+            "allowed": false
+        },
+        {
+            "address": " 1.1.1.1",
+            "allowed": false
+        },
+        {
+            "address": "1.1.1.1:443",
+            "allowed": false
+        },
+        {
+            "address": "1.1.1.1/32",
+            "allowed": false
+        },
+        {
+            "address": "256.1.1.1",
+            "allowed": false
+        },
+        {
+            "address": "[2606:4700:4700::1111]",
+            "allowed": false
+        },
+        {
+            "address": "fe80::1%eth0",
+            "allowed": false
+        },
+        {
+            "address": "2606:4700::1%1",
+            "allowed": false
+        },
+        {
+            "address": "2001:::1",
+            "allowed": false
+        }
+    ]
+}

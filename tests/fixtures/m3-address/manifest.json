@@ -1,0 +1,46 @@
+{
+  "formatVersion": 1,
+  "authoredOn": "2026-09-19",
+  "productionImplementationExists": false,
+  "warning": "Registry classification is not proof of reachability or safety under local routing.",
+  "policy": "Reject all pinned special-purpose prefixes, including globally reachable exceptions; reject IPv4 multicast; admit IPv6 only within 2000::/3 after exclusions.",
+  "sourceScope": "Special-purpose registries, not a complete allocation or route inventory",
+  "files": [
+    {
+      "path": "sources/iana-ipv4-special-registry.xml",
+      "bytes": 13459,
+      "sha256": "cf24e11f41b7d42c68debe2d18b97cac815084ec413ebb3b244f704028a16f20",
+      "provenance": {
+        "url": "https://www.iana.org/assignments/iana-ipv4-special-registry/iana-ipv4-special-registry.xml",
+        "retrievedAt": "2026-09-19T17:31:34.618Z",
+        "registryUpdated": "2025-10-09",
+        "attribution": "Internet Assigned Numbers Authority (IANA)",
+        "transformation": "none",
+        "rights": "Original IANA registry data; not relicensed as agentsig MIT code"
+      }
+    },
+    {
+      "path": "sources/iana-ipv6-special-registry.xml",
+      "bytes": 13431,
+      "sha256": "c17f4380ba84fb2160dae82ebfd8bd155a5853cfab624ed3a9fd251638a8be02",
+      "provenance": {
+        "url": "https://www.iana.org/assignments/iana-ipv6-special-registry/iana-ipv6-special-registry.xml",
+        "retrievedAt": "2026-09-19T17:31:35.058Z",
+        "registryUpdated": "2025-10-09",
+        "attribution": "Internet Assigned Numbers Authority (IANA)",
+        "transformation": "none",
+        "rights": "Original IANA registry data; not relicensed as agentsig MIT code"
+      }
+    },
+    {
+      "path": "address-cases.json",
+      "bytes": 10417,
+      "sha256": "c7e2faabae4680ce1d31e5dd8f87d185f70cf1414cb6148ae6c2c8e08b97a977",
+      "provenance": {
+        "attribution": "agentsig independently authored local-policy expectations",
+        "license": "MIT",
+        "transformation": "Local editor CRLF converted to LF; no outcome changes"
+      }
+    }
+  ]
+}
