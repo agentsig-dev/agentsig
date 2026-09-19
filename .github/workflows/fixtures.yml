@@ -58,3 +58,5 @@ jobs:
         run: node --test tests/m3-transport-audit.test.mjs
       - name: Audit bounded freshness arithmetic and restrictive metadata expectations
         run: node --test tests/m3-freshness-audit.test.mjs
+      - name: Audit malformed Cache-Control persistence amendment
+        run: node --test tests/m3-freshness-amendment-audit.test.mjs

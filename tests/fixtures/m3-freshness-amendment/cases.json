@@ -1,0 +1,67 @@
+{
+    "formatVersion": 1,
+    "authoredOn": "2026-09-19",
+    "status": "pre-implementation-security-amendment",
+    "decisionBasis": "Approved fail-closed implementation discretion; no new authentication permission",
+    "reason": "An unparseable Cache-Control list cannot establish that persistence restrictions are absent. Reject reuse and persistence rather than retain a document whose no-store or private directive might have been lost by all-or-nothing parsing.",
+    "scope": "Malformed Cache-Control directive-list syntax only. Invalid Date, Age or numeric freshness values retain their existing separate expectations.",
+    "historicalFixture": "tests/fixtures/m3-freshness/cases.json",
+    "historicalBytesMustRemainUnchanged": true,
+    "supersedes": [
+        {
+            "id": "unterminated-quoted-directive",
+            "field": "persist",
+            "previousExpected": true,
+            "replacementExpected": false,
+            "remainingAtReceiptMsUnchanged": 0
+        }
+    ],
+    "cases": [
+        {
+            "id": "unterminated-quoted-directive",
+            "headers": [
+                [
+                    "cache-control",
+                    "extension=\"a, max-age=60"
+                ]
+            ],
+            "persist": false,
+            "expectedRemainingMs": 0
+        },
+        {
+            "id": "no-store-before-malformed-extension",
+            "headers": [
+                [
+                    "cache-control",
+                    "no-store, extension=\"unterminated"
+                ]
+            ],
+            "persist": false,
+            "expectedRemainingMs": 0
+        },
+        {
+            "id": "restriction-inside-ambiguous-quoted-tail",
+            "headers": [
+                [
+                    "cache-control",
+                    "extension=\"unterminated, no-store"
+                ]
+            ],
+            "persist": false,
+            "expectedRemainingMs": 0
+        },
+        {
+            "id": "private-before-malformed-assignment",
+            "headers": [
+                [
+                    "cache-control",
+                    "private, max-age=60, invalid==value"
+                ]
+            ],
+            "persist": false,
+            "expectedRemainingMs": 0
+        }
+    ],
+    "replacementRule": "A successfully validated new key set still invalidates older cached evidence even when the new response cannot be persisted. Malformed JWKS is not successful replacement evidence.",
+    "authenticationEffect": "No additional verified outcome is permitted. This amendment does not define current-invocation use of non-reusable evidence."
+}

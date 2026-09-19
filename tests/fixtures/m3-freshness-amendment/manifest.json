@@ -1,0 +1,20 @@
+{
+  "formatVersion": 1,
+  "authoredOn": "2026-09-19",
+  "scope": "Malformed Cache-Control persistence correction, independently pinned before the fix",
+  "files": [
+    {
+      "path": "cases.json",
+      "bytes": 2636,
+      "sha256": "64efd330094baa977f8267791705b347fbe7cdf78e17bf6f62ade4bcd56c4a99",
+      "license": "MIT",
+      "provenance": "Authored regression expectations under approved fail-closed implementation discretion"
+    }
+  ],
+  "sources": [
+    {
+      "path": "tests/fixtures/m3-freshness/cases.json",
+      "sha256": "8a0a57c499c5710b5beed7586f8daccbec4444cc26b44f76d73fd455984cfb93"
+    }
+  ]
+}

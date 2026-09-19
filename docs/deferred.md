@@ -498,3 +498,56 @@ Local Windows validation passed all 4,559 unit tests across 50 files on Node
 20.20.2. The 19 response-reader tests also passed on Node 22, and core type checking
 passed. These results do not establish that the corrected Ubuntu or remote CI
 jobs have passed. No push or publication was performed.
+
+### Maintainer-confirmed transport correction and continued M3 work
+
+The maintainer confirmed green CI following **ac2dcf8** and authorized continued
+M3 implementation. This confirmation supersedes the pending-CI status above for
+that correction only; it does not establish success for subsequent changes.
+
+The header-truncation finding and its security rationale are also recorded in
+[the security document](security-context.md#m3-directory-response-header-completeness).
+Silent count-based truncation can conceal encoding restrictions, duplicate fields,
+or restrictive cache directives even when the response fits the header-byte
+budget. The count ceiling is therefore derived from the byte ceiling while
+retaining the parser's hard byte limit. The separate Node 20 test-server correction
+preserves intended wire duplicates rather than weakening rejection expectations.
+
+Continued work retains the approved 60-second fallback and negative-cache defaults,
+300-second lifetime caps, bounded cache memory, one active fetch per origin and
+sixteen globally, and bounded different-origin fetch starts. Complete validated
+sets replace prior evidence atomically; removed keys must be checked again before
+final authentication. Redis recovery and the full network verifier remain pending.
+
+The requested maintainer-run smoke must demonstrate full verified acceptance after
+a directory fetch and an unverified/unknown-key outcome when a host resolves to a
+private destination. It must identify test-only local routing explicitly, preserve
+TLS identity checks, and not introduce a production private-address override.
+Controlled socket tests remain distinct from real transport and authentication
+evidence. No push or publication is authorized.
+
+### Malformed Cache-Control persistence amendment
+
+Before committing the cache implementation, three new regression tests exposed
+a persistence-policy gap: an unparseable directive list granted zero reusable
+freshness but still permitted storage. All-or-nothing parsing could therefore
+lose a no-store/private restriction in that same field. This is a retention
+problem even though the evidence cannot currently grant fresh authentication.
+
+The separate [security amendment](../tests/fixtures/m3-freshness-amendment/cases.json)
+requires both no reuse and no persistence for malformed Cache-Control list syntax.
+It explicitly supersedes only the persist expectation of the historical
+unterminated-quoted-directive case. Historical fixture bytes and hashes remain
+unchanged; the old audit records historical consistency, while the amendment
+defines the stricter current expectation. Invalid Date/Age or numeric freshness
+values remain separate cases, not silently reclassified by this amendment.
+
+This narrowing follows approved fail-closed implementation discretion and adds
+no authentication permission. A valid newer key set must still invalidate older
+evidence when the new response cannot be retained. Malformed JWKS does not
+constitute valid replacement evidence.
+
+The historical and amendment audits passed 27 checks before applying the fix.
+The amendment is committed separately before its implementation. The initial
+cache, document validator, and freshness implementation remain work in progress;
+three persistence regression tests are expected to fail until that fix lands.

@@ -291,3 +291,36 @@ nor renew its TTL. Expired evidence remains unusable for acceptance; a reset
 does not make it fresh. Replay context reset retains its existing lease
 invalidation and owned-memory cleanup behavior. Independent Redis history is
 not cleared by a local verification-clock reset.
+
+## M3 directory response header completeness
+
+The internal [directory reader](../packages/core/src/discovery/directory-response.ts)
+must inspect every received header occurrence within its byte budget. Node's
+default response header-count ceiling can silently truncate rawHeaders without
+rejecting the response. A local TLS regression demonstrated that 2,100 small
+fields could hide a trailing Content-Encoding while remaining within 16 KiB.
+The same mechanism could hide restrictive Cache-Control directives or duplicate
+media-type fields. A byte limit alone therefore does not establish complete
+application-level inspection.
+
+Before sending the request, the reader sets maxHeadersCount to the configured
+header-byte ceiling. Every field occupies more than one byte, so no section
+within that byte budget can reach the count ceiling. The HTTP parser continues
+to enforce maxHeaderSize; body and time budgets remain independent and active.
+This does not increase the permitted header-byte budget or introduce an
+unbounded-header mode. Raw occurrences remain available for duplicate rejection
+and conservative freshness calculations.
+
+A separate Node 20 test-server issue collapsed duplicate fields when setHeader
+preceded writeHead with a flat array. Raw-header test cases now bypass that
+preset, preserving the intended wire occurrences. Expected counts and rejection
+outcomes were not relaxed; this test correction did not change production policy.
+See the [response-reader regressions](../packages/core/test/discovery-directory-response.test.ts).
+
+The maintainer confirmed green CI after correction **ac2dcf8**. Controlled socket
+tests establish behavior under their simulated conditions, not real-network
+destination pinning. Local TLS reader and nested-proxy tests establish their
+specific transport paths, not full request authentication. The planned
+maintainer-run network smoke must separately demonstrate full verification and
+private-address rejection, explicitly identifying any test-only routing.
+No production private-address bypass is authorized by that smoke requirement.
