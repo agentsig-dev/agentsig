@@ -1,5 +1,15 @@
 # @agentsig/structured-fields
 
+## 0.1.1
+
+### Patch Changes
+
+- 78dedf7: Documentation-only release correction; no library runtime or protocol behavior changes.
+
+  - Translate project documentation, comments, and development-script diagnostics into English while preserving immutable upstream fixtures and deliberate Unicode test inputs.
+  - Correct package-specific status banners, remove obsolete pre-publication README wording, and add npm badges and installation instructions.
+  - Add package-local test scripts as development metadata and reference the reported WG E.2.1 issue without modifying its published vectors.
+
 ## 0.1.0
 
 ### Minor Changes

@@ -1,77 +1,80 @@
-# M2 profil imzalayanı
+# M2 profile signer
 
-Durum: 2026-09-18. Kaynak uygulaması, golden testleri, profil paket girişi ve
-tam çevrimdışı doğrulayıcı entegrasyonu mevcut; yerel kabul testleri geçti.
-Güvenlik incelemesinden geçmiş veya üretime hazır olduğu iddia edilmez.
-[Çevrimdışı doğrulama rehberi](offline-verification.md) güncel API ve güven
-sınırlarını açıklar.
+Updated September 19, 2026. The signer, golden tests, profile package entry,
+and full offline verifier integration are implemented. Local acceptance tests
+passed; the maintainer subsequently confirmed the core-m2 CI/fixture workflows.
+This is not a security-review or production-readiness claim.
+The [offline verification guide](offline-verification.md) describes the current
+API and trust boundaries.
 
-## Sözleşme
+## Contract
 
-[İmzalayan fabrikası](../packages/core/src/profiles/signer.ts) güvenilir yerel
-yapılandırmadan bir imzalayan oluşturur. Her çağrı temiz bir istek tanımı alır;
-kanonik adlarıyla Signature-Input, Signature ve Signature-Agent başlıklarını
-sıralı, değişmez ad/değer çiftleri olarak döndürür. Başlıkları isteğe eklemek
-çağıranın sorumluluğudur.
+The [signer factory](../packages/core/src/profiles/signer.ts) creates a signer
+from trusted local configuration. Each call receives a clean request descriptor
+and returns three immutable, ordered name/value tuples with canonical names:
+Signature-Input, Signature, and Signature-Agent. Applying these headers to the
+request is the caller's responsibility.
 
-Varsayılan profil WG-00, varsayılan etiket sig1 ve imzalama ömrü 60 saniyedir.
-Cloudflare doküman profili açıkça seçilir; otomatik downgrade veya yeniden
-deneme yoktur. WG ajan Dictionary üyesinin anahtarı imza etiketiyle aynıdır.
-Cloudflare ajan başlığı tek String olduğundan etiketi içermez.
+The default profile is WG-00, the default label is sig1, and the signing lifetime
+is 60 seconds. The Cloudflare documentation profile requires explicit selection;
+there is no automatic downgrade or retry. In WG form, the agent Dictionary
+member key equals the signature label. The Cloudflare agent header is a single
+String and therefore does not contain the label.
 
-Zorunlu kapsam yöntem, tam hedef URI ve profile özgü ajan bileşenidir.
-Ek bileşenler bu kapsamı kaldıramaz. Gövde bütünlüğü kontrol edilmez;
-Content-Digest alanını kapsamak gövdenin digest ile karşılaştırıldığı anlamına gelmez.
+Required coverage is method, complete target URI, and the profile-specific agent
+component. Additional components cannot remove this coverage. Body integrity is
+not checked: covering Content-Digest does not compare its value with body bytes.
 
-[Ortak origin doğrulaması](../packages/core/src/profiles/agent-origin.ts)
-imzalayanda da kullanılır. Yeni oluşturulan ajan başlığı kanonik origin taşır.
-Buna karşılık doğrulayıcı gelen imzalı başlığı yeniden yazmaz.
+The signer uses the [shared origin validation](../packages/core/src/profiles/agent-origin.ts).
+It generates a new agent header containing the canonical origin. The verifier,
+in contrast, never rewrites an incoming signed header.
 
-## Mevcut başlıklar ve mutasyon
+## Existing headers and mutation
 
-Signature, Signature-Input veya Signature-Agent başlıklarından herhangi biri
-mevcutsa imzalama reddedilir. İsim kontrolü harf büyüklüğünden bağımsızdır;
-boş değer de başlığın mevcut olduğu anlamına gelir. Birleştirme veya sessiz
-üzerine yazma yoktur. Bu yerel M2 imzalayan sınırı, doğrulayıcının bağımsız
-çoklu aday desteğini kaldırmaz.
+Signing rejects a request if any Signature, Signature-Input, or Signature-Agent
+header is already present. Name matching is case-insensitive; an empty value
+still counts as an existing field. There is no merging or silent overwrite.
+This local M2 signer boundary does not remove the verifier's independent
+multiple-candidate support.
 
-[İstek kopyası](../packages/core/src/profiles/signing-request.ts) sağlayıcılar
-çağrılmadan oluşturulur. Özgün istek, başlık dizisi, başlık çiftleri ve bayt
-dizileri değiştirilmez. Sağlayıcının kapalı değişkenler üzerinden özgün isteği
-değiştirmesi kopyalanmış imza girdisini değiştiremez. Dönen başlıkların aynı
-isteğe uygulanması ve gönderime kadar isteğin korunması çağıranın sorumluluğudur.
+The [request snapshot](../packages/core/src/profiles/signing-request.ts) is
+created before invoking providers. The original request, header array, tuples,
+and byte arrays are not mutated. A provider that changes the original request
+through a closure cannot change the owned signing input. The caller must apply
+the returned headers to the same request and preserve it until transmission.
 
-## Saat ve nonce sağlayıcıları
+## Clock and nonce providers
 
-[Senkron sağlayıcı sözleşmesi](../packages/core/src/profiles/signing-providers.ts)
-Unix milisaniyesi döndüren saat ve metin döndüren nonce üreteci kullanır.
-Varsayılan saat platform duvar saatidir; varsayılan nonce 32 kriptografik
-rastgele baytın padding içermeyen base64url kodlamasıdır.
+The [synchronous provider contract](../packages/core/src/profiles/signing-providers.ts)
+uses a clock returning Unix milliseconds and a nonce generator returning text.
+The default clock is the platform wall clock. The default nonce is 32
+cryptographically random bytes encoded as unpadded base64url.
 
-Saat çıktısı sonlu, negatif olmayan sayı olmalıdır. Oluşturma zamanı
-milisaniyenin 1000'e bölümünün aşağı yuvarlanmasıdır; sona erme zamanı buna
-yapılandırılmış ömrün eklenmesidir. Her ikisi de SF Integer aralığında olmalıdır.
-Bu duvar saati sağlayıcısı, sonraki doğrulayıcının monoton saat sağlık
-mekanizmasının yerine geçmez.
+Clock output must be a finite, nonnegative number. Creation time is the floor
+of milliseconds divided by 1,000; expiration adds the configured lifetime.
+Both timestamps must fit the SF Integer range. This wall-clock provider does
+not replace the verifier's monotonic-reference clock-health mechanism.
 
-[Ortak nonce yardımcısı](../packages/core/src/profiles/nonce.ts) varsayılan
-1–256 printable ASCII kuralını uygular; boşluk, tırnak ve ters eğik çizgi
-geçerlidir. Değer kırpılmaz veya normalize edilmez. İmzalayan nonce'u SF String
-olarak serileştirir; sağlayıcı çıktısını ham başlık metnine birleştirmez.
+The [shared nonce helper](../packages/core/src/profiles/nonce.ts) enforces the
+default length of 1–256 printable ASCII bytes. Space, quotation marks, and
+backslashes are valid. Values are neither trimmed nor normalized. The signer
+serializes the nonce as an SF String rather than concatenating provider output
+into raw header syntax.
 
-**Sabit saat ve deterministik nonce sağlayıcıları test içindir. Üretimde
-kullanımları eski zaman damgaları veya tekrar eden nonce değerleri üretebilir.**
-Varsayılan üretici her çağrıda güvenli rastgele kaynağı kullanır; deterministik
-bir geri dönüş yolu yoktur. Sağlayıcı çıktısının sözdizimi entropiyi kanıtlamaz.
+**Fixed clocks and deterministic nonce providers are for tests. Production use
+can generate stale timestamps or repeated nonces.** The default generator uses
+a cryptographically secure random source on every call, with no deterministic
+fallback. Valid nonce syntax does not prove entropy.
 
-Asenkron sağlayıcı çıktıları kabul edilmez veya beklenmez. Uzak anahtar
-servisleri ileride ayrı imza sağlayıcısı arayüzü gerektirir. Dönüşün asenkron
-arayüzü, mevcut kriptografinin worker üzerinde çalıştığı anlamına gelmez.
+Asynchronous provider results are neither accepted nor awaited. Remote signing
+services require a future, separate signing-provider interface. A Promise-based
+signing API does not mean that current cryptography runs on a worker.
 
-## Ayrı kapalı hata kataloğu
+## Separate closed error catalog
 
-[İmzalayan hataları](../packages/core/src/profiles/signing-errors.ts) tek sınıf,
-kararlı kod ve boş, değişmez ayrıntı alanı kullanır. Katalog 13 koddan oluşur:
+[Signing errors](../packages/core/src/profiles/signing-errors.ts) use one class,
+a stable code, and an empty immutable details object. The catalog contains
+13 codes:
 
 - existing-signature-headers
 - invalid-signing-key
@@ -87,40 +90,44 @@ kararlı kod ve boş, değişmez ayrıntı alanı kullanır. Katalog 13 koddan o
 - resource-limit
 - signing-failed
 
-Katalog sürümü 1'dir ve dondurulmuştur; değişiklik ayrı onay ve sürüm notu
-gerektirir. Doğrulama kataloğuyla ortak tip/birlik değildir. Aynı yazımlı
-kodlar aynı hata sınırını ifade etmez.
+Catalog version 1 is frozen. Changes require separate approval and release notes.
+It is not a shared type/union with verification errors. Identically spelled codes
+do not imply identical error boundaries.
 
-Sağlayıcıların ham hata mesajları, nonce ve anahtar materyali hata mesajı,
-ayrıntıları veya neden zincirine alınmaz. Kripto hatası yalnızca kripto
-çağrısının sınırında eşlenir; beklenmeyen uygulama hataları genel bir hata
-koduyla gizlenmez. Bilinen kamuya açık test anahtarları varsayılan reddedilir;
-açık test izni diğer güvenlik kontrollerini kaldırmaz.
+Raw provider errors, nonce values, and key material are not included in messages,
+details, or cause chains. Crypto failures are mapped only at the crypto-call
+boundary; unexpected programming errors are not hidden behind a generic code.
+Known public test keys are denied by default. Explicit test permission does not
+disable other security checks.
 
-## Golden ölçütü ve tamamlanan entegrasyon
+## Golden criteria and completed integration
 
-Fixture'lar uygulamadan önce bb54838 yerel commit'ine alınmıştır.
-[Bağımsız fixture denetimi](../tests/signing-fixture-audit.test.mjs) agentsig
-kodunu kullanmadan dört imzayı ve tam başlık baytlarını doğrular.
-[Gerçek imzalayan testleri](../packages/core/test/profile-signer.test.ts)
-iki profilde normal ve kaçış gerektiren nonce ile çıktının fixture'a bayt
-eşitliğini sınar; golden kabul ölçütü kendi imzalayanımızla round-trip değildir.
+Fixtures were committed in **bb54838** before implementation.
+The [independent fixture audit](../tests/signing-fixture-audit.test.mjs) verifies
+four signatures and complete header bytes without agentsig code.
+[Production signer tests](../packages/core/test/profile-signer.test.ts) require
+byte equality for both profiles with ordinary and escaped nonces. A round trip
+through our own signer is not the independent golden oracle.
 
-İlk imzalayan alt adımında yerel Windows / Node 22 üzerinde 168 hedefli test,
-4.034 birim testi, 9 entegrasyon testi, 44 bağımsız fixture denetimi ve M1 audit'i
-geçmişti. Bunlar o teslimata ait tarihsel sayılardır.
+At the original signer milestone, local Windows / Node 22 validation passed
+168 targeted tests, 4,034 unit tests, nine integration tests, 44 independent
+fixture audits, and the M1 audit. These counts belong to that historical delivery.
 
-**Tam çevrimdışı doğrulayıcıyla round-trip kabul kapısı geçti.**
-[Round-trip testleri](../packages/core/test/profile-verifier-roundtrip.test.ts)
-iki profilin dört bağımsız golden çıktısında tam doğrulanmış başarı ve ikinci
-kullanımda replay reddini sınar. Başarı; yerel kimlik bağlama, zaman ve gerçek
-bellek deposuyla nonce tüketimini içerir. Saf kripto kontrolü bunun yerine
-sayılmaz; bağımsız golden bayt eşitliği ayrıca korunur.
+**The full offline verifier round-trip acceptance gate subsequently passed.**
+[Round-trip tests](../packages/core/test/profile-verifier-roundtrip.test.ts)
+exercise all four independent golden outputs across both profiles, requiring
+full verified results and replay rejection on the second use. Success includes
+local identity binding, time checks, and nonce consumption in the real memory
+store. Pure cryptographic validity is not counted as a substitute; independent
+golden byte equality remains a separate requirement.
 
-[Profil tüketici testleri](../tests/profile-consumer.test.mjs) ayrı ESM/CJS
-süreçlerinde gerçek paket alt yoluyla imzalama/doğrulama ve replay reddini,
-iki biçimin tip bildirimlerini ve iç yetkilerin dışa aktarılmamasını sınar.
-Son tam yerel regresyon: 4.284 birim testi, 13 entegrasyon testi, 60 bağımsız
-ek fixture denetimi ve M1 audit'i başarılı; iki paketin derleme ve tip
-denetimleri geçti. Bu yeni değişiklikler için uzak CI matrisi henüz doğrulanmadı.
-Asistan push, yayın veya WG bildirimi yapmadı.
+[Profile consumer tests](../tests/profile-consumer.test.mjs) use the real package
+subpath in separate ESM/CommonJS processes. They exercise signing, verification,
+replay rejection, both declaration formats, and exclusion of internal capabilities.
+
+The completed M2 local regression passed 4,284 unit tests, 13 integration tests,
+60 additional independent fixture audits, the M1 audit, and both packages'
+build/type checks. The maintainer confirmed green core-m2 remote CI and fixture
+workflows; this does not establish remote CI success for later documentation
+or release-preparation commits. The assistant did not push, publish, or submit
+the WG report.

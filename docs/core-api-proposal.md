@@ -1,54 +1,82 @@
-# agentsig — core API önerisi
-Durum: ilk motor kilometre taşı uygulandı (core-m1); aşağıdaki ilk öneri tarihsel tasarım kaydıdır. M1 API karşılaştırması §11'dedir. Sonraki onaylarla M2 çevrimdışı doğrulayıcı, replay/zaman entegrasyonu ve profil ESM/CJS girişi uygulanmış; yerel round-trip kabul kapısı geçmiştir. Güncel M2 referansı: [çevrimdışı doğrulama rehberi](offline-verification.md) ve [M2 planı](milestone-2-plan.md). İnceleme tarihi: 2026-09-18.
+# agentsig — core API proposal
 
-## Uygulama onayı — 2026-09-18
-Bu bölüm, aşağıdaki ilk önerilerle çelişen noktalarda önceliklidir.
-- İlk core kilometre taşı, kendi Structured Fields ayrıştırıcımız dahil kullanıcı tarafından onaylandı.
-- GitHub deposu: https://github.com/agentsig-dev/agentsig. npm organizasyonu ve paket adları değişmedi.
-- Ayrıştırıcı ayrı workspace paketi: @agentsig/structured-fields. @agentsig/core bu pakete bağımlıdır; SF paketi core'a bağımlı değildir.
-- Ham AST, standart anlamsal model, kaynak limitleri, RFC 9651 parser/serializer ve fuzz/property testleri SF paketinde bulunur.
-- Uygulama sırası: geliştirme altyapısı → kaynak fixture'ları ve ayrı fixture commit'i → SF paketi → core motoru.
-- Herhangi bir kütüphane uygulama kodundan önce RFC 9421 B.1.4 anahtarı, B.2.6 imza tabanı/imza baytları ve HTTP WG Structured Fields test takımı repoya alınır.
-- Fixture kaynakları sürüm, upstream commit (varsa), içerik özeti ve lisans atıflarıyla sabitlenir. RFC için olmayan bir Git commit'i uydurulmaz; RFC numarası/bölümü ve kaynak içerik özeti kullanılır.
-- Testler fixture dosyalarını bayt olarak okur. Kanonik fixture metinlerine otomatik trim, satır sonu normalizasyonu veya son LF ekleme uygulanmaz.
-- Git attributes metin fixture/golden dosyalarında LF zorlar; ikili fixture'lar metin dönüşümünden muaf tutulur.
-- Satır sonu kontrolü geçici, yalıtılmış Git deposunda otomatik dönüşüm ayarlarıyla gerçek add/checkout akışını sınar; kullanıcının global Git ayarları değiştirilmez.
-- Altyapı, fixture, SF ve motor sonunda kısa rapor verilir: tamamlanan işler, gerçekten çalıştırılmış testlerin sonuçları ve onay bekleyen kararlar.
-- CI hedefi Node 20/22/24 × Windows/Linux; yerel çalıştırma sonuçları CI'da henüz çalışmamış sonuçlardan ayrılır.
-- İlk teslimatta profil katmanı, ağ erişimi, nonce deposu, framework adaptörleri ve CLI uygulanmaz. Paket yayını ve uzak depoya push yapılmaz.
+Updated September 19, 2026. The original proposal below is a historical design
+record. M1 was implemented and tagged core-m1; §11 compares the original API
+proposal with that implementation. Subsequent approvals led to the completed M2
+offline verifier, time/replay integration, and ESM/CommonJS profile entry.
+The full local round-trip gate passed. Current M2 references:
+[offline verification](offline-verification.md) and [M2 plan](milestone-2-plan.md).
 
-## 1. Kararlaştırılmış sınırlar
-- Paketler: @agentsig/core, @agentsig/fetch, @agentsig/hono, @agentsig/fastify, @agentsig/express; CLI: agentsig.
-- İlk kilometre taşı: profilden bağımsız RFC 9421 kanonikleştirme ve Ed25519 imzalama/doğrulama, golden ve negatif testlerle.
-- Sonraki katman: sürümü sabit iki profil; IETF varsayılan, Cloudflare açıkça seçilir.
-- İmzalayan otomatik downgrade veya sessiz yeniden deneme yapmaz.
-- Doğrulayan iki formatı tanır, seçilen profili raporlar; uygulama politikası profili reddedebilir.
-- Nonce tekrar kontrolü her iki profilde varsayılan zorunlu, varsayılan depo bellek içidir. İsteğe bağlı politika bilinçli seçilebilir; korumasız başarı açıkça raporlanır.
-- Profil başına yapılandırılabilir varsayılanlar: imzalama 60 sn, azami ömür ve yaş 300 sn, saat toleransı 30 sn.
-- TypeScript; ESM ve CJS; Node 20+ hedefi; pnpm workspaces, changesets, vitest, MIT.
-- Kriptografi Node yerleşik crypto modülünden; dış kripto bağımlılığı yok.
-- Yayınlama yapılmaz; elle yayınlama kullanıcıya aittir.
+## Implementation approval — September 18, 2026
 
-## 2. Paket sınırları
-| Paket | Sorumluluk | Sınır |
+This section takes precedence over conflicting initial proposals below.
+
+- The maintainer approved the first core milestone, including our Structured Fields parser.
+- Repository: https://github.com/agentsig-dev/agentsig. npm organization and package names are unchanged.
+- The parser is a separate workspace package, @agentsig/structured-fields.
+  Core depends on it, not the reverse.
+- The SF package owns the raw AST, semantic model, resource limits, RFC 9651
+  parser/serializer, and property/fuzz tests.
+- Sequence: infrastructure → independent source fixtures and fixture commit →
+  Structured Fields → core engine.
+- Before library implementation, commit the RFC 9421 B.1.4 key, B.2.6 signature
+  base/bytes, and official HTTP WG Structured Fields test suite.
+- Pin source version, upstream commit where applicable, content hash, and license.
+  Identify RFC publications by RFC number/section/hash, not an invented Git commit.
+- Read fixtures as bytes. Never trim canonical values, normalize their line endings,
+  or append a final LF automatically.
+- Git attributes enforce LF for text fixtures; binary fixtures are exempt.
+- Exercise real add/checkout operations in isolated Git repositories under different
+  line-ending settings without changing the user's global configuration.
+- Report completed work, observed tests, and pending decisions at each major stage.
+- CI targets Node 20/22/24 × Windows/Linux. Distinguish local results from unrun cells.
+- The first engine delivery excludes profiles, networking, nonce storage, adapters,
+  and CLI. No assistant push or package publication.
+
+## 1. Agreed boundaries
+
+Package names: @agentsig/core, @agentsig/fetch, @agentsig/hono,
+@agentsig/fastify, @agentsig/express; unscoped CLI: agentsig.
+
+The first milestone is profile-independent RFC 9421 canonicalization and Ed25519
+signing/verification with golden and negative tests. Later profiles are pinned:
+IETF by default, Cloudflare explicitly selected, without downgrade or silent retry.
+Verification recognizes both formats and reports the selected profile; application
+policy may disallow a profile.
+
+Both profiles default to required nonce replay checking with a memory store.
+Optional policy is explicit and reports unprotected success.
+Per-profile defaults: signing lifetime 60 seconds, maximum lifetime/age 300 seconds,
+clock skew 30 seconds.
+
+TypeScript, ESM/CJS, Node 20+, pnpm workspaces, Changesets, Vitest, and MIT.
+Cryptography uses Node's built-in module with no external crypto dependency.
+Publication remains a separate manual maintainer action.
+
+## 2. Package boundaries
+
+| Package | Responsibility | Boundary |
 | --- | --- | --- |
-| @agentsig/core | RFC 9421 motoru; sonraki aşamada profiller, JWK/thumbprint, dizin, cache, replay ve doğrulama politikası | Framework bağımlılığı ve otomatik yetkilendirme yok |
-| @agentsig/fetch | İstekleri gönderimden önce imzalayan fetch sarmalayıcısı; anahtar seçimi ve açık profil | Redirect/retry sessizce imzayı başka hedefe taşımaz; her yeni gönderim ayrı değerlendirilir |
-| @agentsig/hono | Hono istek eşlemesi, doğrulama sonucu ve politika hook'u | Kripto ve keşif kodunu tekrarlamaz |
-| @agentsig/fastify | Fastify hook, request decoration ve politika hook'u | Proxy güvenini kendiliğinden genişletmez |
-| @agentsig/express | Express middleware, request context ve politika hook'u | Orijinal istek hedefini router yeniden yazımlarından önce yakalar |
-| agentsig | Anahtar üretimi, dizin çıktısı, imzalı test isteği, güvenli debug | Gizli anahtarı loglamaz; otomatik npm yayını yok |
+| @agentsig/core | RFC 9421 engine; later profiles, JWK/thumbprint, directory/cache, replay, verification policy | No framework dependency or automatic authorization |
+| @agentsig/fetch | Sign outgoing requests; explicit profile and key selection | Redirect/retry must not silently transfer a signature to another target |
+| @agentsig/hono | Hono request mapping, verification context, policy hook | Do not duplicate crypto/discovery |
+| @agentsig/fastify | Hooks, request decoration, policy hook | Do not implicitly widen proxy trust |
+| @agentsig/express | Middleware, request context, policy hook | Capture original target before router rewrites |
+| agentsig | Key generation, directory output, signed test request, safe debugging | No private-key logging or automatic npm publication |
 
-Bağımlılık yönü: adaptörler ve fetch → core; CLI → core ve fetch. Core hiçbir adaptöre bağımlı değildir.
-Dizin oluşturma ve yanıt imzalama core'da ortak kalır; fetch paketi kolaylık dışa aktarımı sunabilir.
-Core'un saf motoru ile Node ağ erişimi kullanan dizin modülü ayrı alt giriş noktalarında tutulmalıdır.
-Operatör adı, kriptografiden türetilmez; doğrulanmış kimliği operatöre eşleyen uygulama hook'u tarafından sağlanır.
+Dependency direction: adapters/fetch → core; CLI → core/fetch. Core depends on no
+adapter. Directory creation and response signing can remain shared in core, with
+convenience exports from fetch. Keep the pure engine and future network directory
+module in separate entry points. Operator names are supplied by application
+mapping, not inferred from cryptography.
 
-## 3. İlk kilometre taşı: tip düzeyindeki API
-Aşağıdaki bildirimler tarihsel öneridir; doğrudan güncel API referansı değildir. Uygulanan tipler ve gerekçeli farklar §11'de karşılaştırılır.
-Başlıklar sıralı çiftlerdir: tekrarları korur; yalnızca Headers veya Record kullanımı zorunlu değildir.
-URI girdisi HTTP mesajının dışarıdan görülen hedefidir; imzalanmadan önce rastgele URL normalizasyonu yapılmaz.
-Motor Forwarded/X-Forwarded-* başlıklarına kendiliğinden güvenmez.
+## 3. First milestone: historical type-level proposal
+
+These declarations are the original proposal, not the current API. See §11 for
+implemented types and justified differences. Ordered header tuples preserve
+occurrences; callers are not forced into a Headers object or a plain record.
+The target URI represents the externally observed HTTP request. Do not normalize
+it arbitrarily before signing or trust Forwarded/X-Forwarded-* automatically.
 
 ```ts
 import type { KeyObject } from "node:crypto";
@@ -142,35 +170,43 @@ export declare function verifyHttpSignatureCryptography(
 ): Promise<CryptoVerification>;
 ```
 
-### Motor sözleşmesi
-- Parametreler nesne alanları olarak yeniden sıralanmaz; bileşen ve parametre sırası korunur.
-- Ham ayrıştırma katmanı parametre tekrarlarını ve konumlarını korur. RFC'nin anlamsal tekrar çözümlemesi ayrı uygulanır; ham tekrarların tamamı körlemesine imza tabanına yazılmaz.
-- İmza başlıklarındaki tekrar/çakışma kuralları RFC 9421 ve Structured Fields kurallarına göre test edilir; daha sıkı yerel ret kuralları varsa ayrıca belgelenir.
-- Ham istek hedefi gerektiren bileşen, bu bağlam yoksa tahmin edilmez ve reddedilir. Mutlak hedef URI ile ham hedef arasındaki tutarlılık adaptör sözleşmesidir.
-- Structured Fields ayrıştırılır ve RFC kurallarıyla serileştirilir; regex/split tabanlı bir parser yeterli değildir.
-- Sayı aralıkları, ASCII, anahtar türü ve Ed25519 eğrisi çalışma zamanında doğrulanır.
-- Ed25519 dışında anahtar reddedilir; mesaj üzerinde ayrıca SHA-256 ön-hash uygulanmaz.
-- İmza tabanı RFC 9421 biçiminde ve UTF-8 baytlarına dönüştürülür; fazladan son satır sonu eklenmez.
-- Response içindeki istek referanslı bileşenler için ilgili request bağlamı zorunludur.
-- Başlık patch'i tek label içindir; mevcut imza başlıklarını sessizce ezmez. Birleştirme ayrıca açıkça yapılır.
-- Saf motor zaman, nonce, dizin veya yetkilendirme kontrolü yapmaz. signature-valid bir Web Bot Auth verified sonucu değildir.
-- Parser/kanonikleştirme hataları kararlı kodlara sahip tipli hatalardır; beklenen doğrulama retleri sonuç olarak döner.
-- Desteklenmeyen bileşen/parametre sessizce atlanmaz. Trailer desteği ilk aşamada yoktur; kullanımı açıkça reddedilir.
-- Structured Fields altyapısı RFC 9651 Date ve Display String dahil kayıpsız türleri destekler. RFC 9421'in RFC 8941'e dayanan imza alanları için kabul edilen türler ayrıca sınırlandırılır; yeni türleri desteklemek her alanda kabul etmek anlamına gelmez.
-- Ondalıklar binlik ölçekli tamsayı olarak tutulur: tamsayı/ondalık ayrımı kaybolmaz ve ikili kayan nokta yuvarlaması kanonik baytları değiştirmez. Ölçek ve RFC aralıkları doğrulanır.
+### Engine contract
 
-## 4. Profil katmanı: tarihsel önerilen sözleşmeler
+- Preserve component and parameter ordering rather than reordering object fields.
+- Raw parsing preserves duplicate occurrences and positions; apply RFC semantic
+  resolution separately, rather than blindly serializing every raw duplicate.
+- Test header duplicates/collisions against RFC 9421 and SF rules; document stricter
+  local rejection policies.
+- Require explicit raw-target context when covered; adapters own consistency with
+  the absolute URI. Never infer missing context.
+- Use actual SF parsing/serialization, not a regex/split substitute.
+- Validate numeric ranges, ASCII, key purpose/type, and Ed25519 curve at runtime.
+- Reject other signing algorithms; sign exact bytes without an additional prehash.
+- Construct the RFC signature base with no final newline.
+- Response coverage of request components requires explicit related-request context.
+- One-label patches do not overwrite existing signatures; merging is explicit.
+- The pure engine performs no time, nonce, directory, or authorization checks.
+  Cryptographic validity is not full Web Bot Auth verification.
+- Expected parser/base/crypto failures use typed reasons; unsupported components
+  or parameters are not silently ignored. No trailers in M1.
+- General RFC 9651 Date/Display String support does not make those types valid in
+  RFC 9421's RFC 8941-based signature fields.
+- Decimals use integer thousandths, preserving integer/decimal distinctions and
+  avoiding binary-floating-point canonicalization changes.
 
-Aşağıdaki tip taslağı güncel dış API değildir. Uygulanan
-[sonuç ve yapılandırma tipleri](../packages/core/src/profiles/verification-types.ts)
-kapalı kodları ve aday başına sonuçları kullanır. M2 aynı istekte tek ajan
-başlığı grameri seçer; farklı gramerleri birleştirme veya başarısızlıkta diğer
-profili deneme desteği yoktur.
-Profil adları için öneri: ietf-wg-protocol-00 ve cloudflare-docs-2026-07-01.
-İkinci ad Cloudflare'in kendi sürüm numarası değil, agentsig'in sabitlediği doküman profilinin adıdır.
-Protokol değişikliği yeni profil gerektirir. Hata ve güvenlik düzeltmeleri ise sürüm notlarıyla yapılır; güvensiz uygulama davranışı dondurulmaz.
-Doğrulayıcı biçim sınıflandırması ardından ilgili profil kurallarını uygular; başarısızlığı başka profili deneyerek başarıya çevirmeye çalışmaz.
-Bir istekte farklı profillere ait bağımsız imzalar bulunabilir; sonuç label başına üretilir, kabul kuralını uygulama seçer.
+## 4. Profile layer: historical proposed contracts
+
+The following sketch is not the current external API.
+The [implemented result/configuration types](../packages/core/src/profiles/verification-types.ts)
+use closed codes and per-candidate results. M2 selects one agent-header grammar
+per request; it does not combine grammars or retry a failed candidate under another.
+
+Proposed profile names became ietf-wg-protocol-00 and cloudflare-docs-2026-07-01.
+The latter is agentsig's pinned-document identifier, not Cloudflare's own version.
+Protocol changes require a new profile; bug/security fixes require release notes,
+not preservation of unsafe behavior. The initial proposal considered independent
+signatures from different profiles within one request; this is not implemented
+by M2's single agent-header grammar.
 
 ```ts
 export type ProfileId = "ietf-wg-protocol-00" | "cloudflare-docs-2026-07-01";
@@ -214,157 +250,211 @@ export type VerificationResult =
     };
 ```
 
-Bu ikinci blok sözleşme yönünü gösterir; reason alanı uygulamadan önce kapalı hata kodları birliğine daraltılacaktır.
-Dizin çözümleyicisi en az URL + keyid bağını korur; tüm set atomik yenilenir, eski setle birleşip kaldırılan anahtarları yaşatmaz.
-Replay consume tek atomik işlem olmalıdır; kripto, kimlik bağlama ve zaman kontrollerinden sonra çalışır.
-Replay scope doğrulayıcının yapılandırdığı güven alanıdır; istemcinin serbestçe değiştirebildiği URL/label tek başına scope olamaz.
-Depo girdisi yapılandırılmış azami yaş + tolerans esas alınarak saklanır; sabit TTL kullanılmaz.
-Önerilen güvenli üst sınır: saklama sonu = max(doğrulama anı, created) + maxAgeSeconds + clockSkewSeconds.
-Bu seçim, gelecekte oluşturulmuş ancak tolerans içinde kabul edilmiş bir imzanın TTL dolduktan sonra yeniden kabul edilmesini önler.
-Örneğin 300 sn azami yaş ve 30 sn toleransta oluşturulma zamanı 30 sn ilerideyse, ilk kabul anından 330 sn sonra kayıt silmek erken olabilir; üst sınır 360 sn olur.
-Bu TTL ayrıntısı profil aşamasında zaman kabul eşitsizlikleri ve sınır testleriyle kesinleştirilir; kullanıcıya sabit 330 sn garantisi verilmez.
-Dolu/erişilemez depo başarılı replay kontrolü sayılmaz. Optional politika yalnızca eksik nonce'u gevşetir; mevcut nonce'un tekrarını veya depo arızasını gizlemez.
-Bellek içi depo süreçler arası koruma sağlamaz; çoklu instance için paylaşımlı atomik depo gerekir.
-Kaynak hatası unverified olabilir; bu, erişim izni değildir. Politikayı uygulama uygular.
+This sketch indicated direction only; later approvals replaced free-text reasons
+with the frozen catalog and added the per-key quota outcome.
 
-## 5. Güvenlik kararları ve ertelenen seçenekler
-Nonce zorunluluğu ve dengeli zaman politikası kullanıcı tarafından onaylandı.
-Structured Fields bağımlılığı kabul kriterleri onaylandı; inceleme sonucu §9'da.
-Dizin erişimi ve bayat cache davranışları öneridir; ağ katmanının uygulamasından önce ayrıca onaylanacaktır.
-| Karar | Öneri | Alternatif ve maliyeti |
+Future directory resolution must preserve URL/key binding and replace complete
+sets atomically, rather than merging removed keys back into validity.
+Replay consumption is atomic and follows crypto, identity, and time checks.
+Scope comes from local configuration, not attacker-controlled URL/label claims.
+
+The proposed conservative retention deadline is the greater of validation time
+and creation time, plus maximum age and skew. With age 300 and skew 30, a creation
+time accepted 30 seconds ahead may require 360 seconds of retention, not a fixed
+330 seconds. Later M2 approvals pinned exact inequalities and dispatch-time
+arithmetic. Full/unavailable storage never counts as successful replay protection.
+Optional mode relaxes absence only; it does not hide present-nonce replay or
+store failure. Memory is process-local; multiple instances need a shared atomic
+backend. Unverified resource rejection is not permission to proceed.
+
+## 5. Security decisions and deferred alternatives
+
+Nonce requirement and balanced time defaults were approved. Structured Fields
+dependency criteria and evaluation are recorded in §9. Network/cache choices
+remain proposals for separate approval, not implemented defaults.
+
+| Decision | Original recommendation | Alternative / cost |
 | --- | --- | --- |
-| Nonce eksikliği | Varsayılan zorunlu: nonce yoksa verified üretme | Varsa kontrol: eski istemcilerle daha uyumlu, ancak noncesiz istekte replay önlenmez; sonuç bunu belirtir |
-| Dengeli zaman politikası | İmzalama 60 sn; azami ömür 300 sn; azami yaş 300 sn; tolerans 30 sn | Sıkı: aynı süreler, tolerans 5 sn; daha az replay payı, iyi saat senkronizasyonu gerekir |
-| Geniş uyumluluk | Varsayılan yapma | İmzalama 60 sn; azami ömür/yaş 86400 sn; tolerans 60 sn; uzun imzaları kabul eder, nonce deposunu büyütür |
-| Dizin erişimi | HTTPS, redirect yok, global yönlendirilebilir IP'ler; DNS sonucu bağlantıda sabitlenir | Önceden izinli origin listesi daha dar saldırı yüzeyi sağlar, açık keşfi sınırlar |
-| Önbellek bayatlığı | Başarısız fetch kaydı silmez ama bayat kaydı otomatik güvenilir yapmaz | Sınırlı stale-if-error kullanılabilir; kaldırılmış anahtarın kabul süresini uzatır |
-| Structured Fields | Küçük, denetlenebilir bağımlılık değerlendirmeye açık | Sıfır runtime bağımlılığı: kendi parser'ımız, daha yüksek test/fuzz ve bakım yükü |
+| Missing nonce | Required by default | Optional absence improves compatibility but cannot prevent nonce-less replay; report it |
+| Balanced time | Sign 60 s; lifetime/age 300 s; skew 30 s | Skew 5 s is tighter but requires better synchronization |
+| Broad compatibility | Do not enable by default | Sign 60 s; lifetime/age 86,400 s; skew 60 s accepts older examples but increases replay exposure/storage |
+| Directory access | HTTPS, no redirects, globally routable IPs, pin DNS result to connection | Origin allow-list narrows exposure but restricts open discovery |
+| Stale cache | Failed fetch does not delete history or silently make stale keys trusted | Bounded stale-if-error improves availability but extends removed-key acceptance |
+| Structured Fields | Evaluate small auditable dependency | Own parser removes a runtime dependency but increases testing/maintenance obligations |
 
-Zaman değerleri iki profil için de onaylanmış başlangıç varsayılanlarıdır; profil başına ayrı değiştirilebilir ve protokol zorunluluğu değildir.
-Nonce varlığı tek başına gövdeyi veya yolu bağlamaz. Yazma istekleri için yöntem, hedef ve doğrulanan Content-Digest kapsamı ayrıca tasarlanmalıdır.
-SSRF korumasında yalnızca DNS ön kontrolü yeterli değildir: yeniden çözümleme, IPv6, IPv4-mapped IPv6, proxy ve bağlantı havuzu davranışları test edilmelidir.
-Timeout, byte limiti, anahtar sayısı, cache kapasitesi ve eşzamanlı fetch limitleri dizin kilometre taşında ayrıca onaylanacaktır.
+Time defaults are local per-profile policies, not protocol MUST requirements.
+Nonce presence does not bind method, path, or body. Write-request body integrity
+needs separate coverage and actual Content-Digest validation.
+A DNS precheck alone is not SSRF protection: reconnects, IPv6, mapped IPv4,
+proxy behavior, and connection pools require tests.
+Timeout, byte/key/cache/concurrency limits need approval in the network milestone.
 
-## 6. Protocol compatibility — satır bazlı kaynaklar
-WG kaynak sürümü: draft-ietf-webbotauth-httpsig-protocol-00, 2026-09-01.
-Cloudflare kaynağı: Web Bot Auth, sayfada görülen son güncelleme 2026-07-01; erişim 2026-09-18.
-Cloudflare sayfası değişebilir; uygulama öncesi kaynak commit'i veya içerik özetiyle snapshot alınmalıdır.
-| Konu | WG-00 | Cloudflare belgelenmiş profil | Kaynak |
+## 6. Protocol compatibility sources
+
+WG source: draft-ietf-webbotauth-httpsig-protocol-00, September 1, 2026.
+Cloudflare documentation date: July 1, 2026; retrieved September 18, 2026.
+The initial requirement to pin Cloudflare before implementation was fulfilled at
+commit acfb1f2270b9473ae65a15674995e0b2f3b6ab0c.
+
+| Topic | WG-00 | Cloudflare documented profile | Sources |
 | --- | --- | --- | --- |
-| Signature-Agent biçimi | İmza etiketine bağlı Dictionary üyesi | Tırnaklı Structured String; Dictionary biçimi başarısızlık nedeni | [WG §5.2.1](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#section-5.2.1); [CF §4.3, 2026-07-01](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#43-construct-the-required-headers) |
-| İmzalanan ajan bilgisi | İlgili Dictionary üyesi key parametresiyle kapsanır | Başlık bileşen listesinde bulunmalıdır | [WG §5.2.1](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#section-5.2.1); [CF §4.3, 2026-07-01](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#43-construct-the-required-headers) |
-| Hedef bileşeni | authority veya target-uri bileşenlerinden en az biri zorunlu | En az authority öneriliyor | [WG §5.2](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#section-5.2); [CF §4.1, 2026-07-01](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#41-choose-a-set-of-components-to-sign) |
-| Nonce | Ek nonce zorunluluğu tanımlanmıyor | Öneriliyor, ancak nonce doğrulaması/tekrar deposu olmadığı belirtiliyor | [WG §5.2.3](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#section-5.2.3); [CF §4.3, 2026-07-01](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#43-construct-the-required-headers) |
-| İmza ömrü | En fazla 24 saat öneriliyor | Kısa ömür; bir dakika çoğunlukla yeterli ifadesi var | [WG §5.2](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#section-5.2); [CF §4.3, 2026-07-01](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#43-construct-the-required-headers) |
-| Dizin yanıt imzası | Temel URL kimliği için Ek B atlanabilir; Ek B kanıtında istek authority'si ve content-digest kapsanır | Kullanılacak her anahtar için yanıt imzası isteniyor; gösterilen zorunlu bileşen tablosu authority'yi listeliyor | [WG Ek B](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#appendix-B); [CF §2, 2026-07-01](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#2-host-a-key-directory) |
-| Anahtar kimliği | Base64url SHA-256 JWK thumbprint | JWK thumbprint kullanılıyor | [WG §5.2](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#section-5.2); [CF §4.2, 2026-07-01](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#42-calculate-the-jwk-thumbprint) |
-| Verified Bot statüsü | Yerel yetkilendirme/operatör itibarı protokolün kanıtladığı şey değildir | Kayıt ve başarılı doğrulama süreci ayrıca gerekiyor | [WG §4.1 ve §4.6](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#section-4); [CF §3, 2026-07-01](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#3-register-your-bot-and-key-directory) |
+| Signature-Agent form | Dictionary keyed to signature label | Quoted String; Dictionary form rejected | [WG §5.2.1](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#section-5.2.1), [CF §4.3](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#43-construct-the-required-headers) |
+| Agent coverage | Matching member using key selection | Entire header covered | [WG §5.2.1](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#section-5.2.1), [CF §4.3](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#43-construct-the-required-headers) |
+| Target | Authority or target URI minimum | Authority recommended | [WG §5.2](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#section-5.2), [CF §4.1](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#41-choose-a-set-of-components-to-sign) |
+| Nonce | No additional requirement | Recommended; no replay tracking stated | [WG §5.2.3](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#section-5.2.3), [CF §4.3](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#43-construct-the-required-headers) |
+| Lifetime | At most 24 hours recommended | Short; one minute generally sufficient | [WG §5.2](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#section-5.2), [CF §4.3](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#43-construct-the-required-headers) |
+| Directory response | Appendix B optional for basic URL identity; proof covers authority and content-digest | Response signature for every key used; displayed required-component table lists authority | [WG Appendix B](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#appendix-B), [CF §2](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#2-host-a-key-directory) |
+| Key identity | Base64url SHA-256 JWK thumbprint | JWK thumbprint | [WG §5.2](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#section-5.2), [CF §4.2](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#42-calculate-the-jwk-thumbprint) |
+| Verified Bot status | No authorization/reputation implied | Separate registration/approval | [WG §4](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#section-4), [CF §3](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#3-register-your-bot-and-key-directory) |
 
-Bu tablo canlı Cloudflare hizmetinde yapılmış test sonucu değildir. Belge uyumluluğu ve canlı kabul ayrı raporlanacaktır.
-Taslakta §5.5'in 200 zorunluluğu ile Ek C'nin koşullu HTTP cache önerileri; redirect hükümleri arasında da açıklığa kavuşturulacak ayrıntılar vardır. Sessiz yorum yapılmayacaktır.
+This is source comparison, not a live Cloudflare result. WG §5.5's status-200
+requirement, Appendix C's conditional-cache guidance, and redirect provisions
+need explicit interpretation in the future network milestone.
 
-## 7. İlk kilometre taşı kabul ölçütleri
-- RFC 9421 Ed25519 örneği Appendix B.2.6 incelendi: beklenen imza tabanı ve gerçek imza baytları mevcut. §2–§3'ün her uygulanan kuralı kodlama sırasında ilgili alt bölümüyle eşlenir.
-- Dört ayrı golden takımı oluşturulur: başlık → ayrıştırılmış yapı; mesaj → imza tabanı; sabit özel anahtar → beklenen imza başlıkları; yayımlanmış imza/açık anahtar → doğrulama sonucu.
-- RFC 9421 B.1.4 anahtarı ve B.2.6 örneği kaynak atıflarıyla sabitlenir; testlerde RFC 8792 satır katlamaları kaldırılır. Motor saati kontrol etmediği için eski tarihli örnekler doğrudan doğrulanabilir.
-- Header normalizasyonu, tekrar eden alanlar, OWS, boş değerler ve ASCII sınırları için bağımsız golden testler yazılır.
-- authority, method, target-uri, scheme, request-target, path, query, query-param ve response status bileşenleri RFC kurallarıyla sınanır.
-- sf, key, bs ve response-to-request req parametreleri; parametre sırası; signature-params satırı sınanır.
-- Desteklenmeyen trailer ve parametre bileşimleri için açık ret testleri bulunur; tam RFC kapsamı iddiası yapılmaz.
-- RFC Ed25519 vektörünün beklenen imza tabanı ve imza baytları sabit fixture olur; yalnızca kendi sign/verify round-trip testiyle yetinilmez.
-- Yanlış anahtar, bozuk SF/base64, yanlış label eşlemesi, eksik bileşen, değiştirilmiş imza ve mesaj için negatif testler yazılır.
-- Çoklu imza ayrıştırılır; her label bağımsız doğrulanır, ilk başarılı imza otomatik erişim iznine dönüşmez.
-- URI percent-encoding, boş query, yinelenen query parametreleri, port ve authority köşe durumları test edilir.
-- Kaynak fixture lisansları/atıfları korunur; güvenlik kararlarının gerekçeleri testlerde ve kod yorumlarında belirtilir.
-- ESM ve CJS tüketici testleri, tip kontrolü ve Node sürüm matrisi çalışır; hiçbir paket yayınlanmaz.
+## 7. First milestone acceptance criteria
 
-## 8. Profil ve entegrasyon aşaması kabul ölçütleri
-- WG ve Cloudflare fixture takımları ayrıdır; hangi kaynak sürümüne ait oldukları kayıtlıdır.
-- Taslakta gerçek vektör bulunursa beklenen baytlar kullanılır; temsili imzalar kriptografik golden sayılmaz.
-- Cloudflare örneklerinden birebir serileştirme fixture'ları ile gerçek anahtar kullanarak oluşturulan kriptografik fixture'lar ayrılır.
-- Canlı test kullanıcı tarafından açıkça çalıştırılır; ağ hedefi ve gizli anahtar yapılandırması dışarıdan verilir.
-- Replay için eşzamanlı iki istekte tek kabul, saat toleranslı TTL, kapasite ve depo arızası testleri bulunur.
-- SSRF, DNS rebinding, cache yenileme, anahtar kaldırma ve çoklu süreç sınırları test edilir.
-- Aşağıdaki paket karşılaştırması doküman ve seçili kaynak incelemesidir; paketlerde test çalıştırılmamış, güvenlik denetimi yapılmamıştır.
-- WG eklerinin tümünde kriptografik vektör envanteri henüz çıkarılmadı; profil aşamasına geçiş koşuludur. Temsili örnekler gerçek vektör gibi raporlanmaz.
+- Inspect RFC 9421 B.2.6 real base/signature bytes and map implemented §2–§3 rules
+  to their source sections.
+- Separate golden suites: headers → parsed structure; message → base;
+  fixed private key → published headers; published signature/public key → verification.
+- Pin B.1.4/B.2.6 attribution and remove only recorded RFC 8792 presentation folds.
+  Old timestamps remain usable in pure-engine tests because that engine has no clock policy.
+- Test header normalization, repeats, OWS, empty values, and ASCII boundaries.
+- Cover authority/method/target/scheme/raw-target/path/query/query-param/status,
+  SF/key/binary wrapping, request references, parameter order, and signature-params.
+- Reject unsupported trailers and parameter combinations explicitly; no full-RFC claim.
+- Do not rely solely on our own sign/verify round trip.
+- Test wrong keys, malformed SF/base64, label pairing, missing components,
+  modified signatures/messages, percent encoding, empty queries, repeated query
+  names, ports, and authority edge cases.
+- Keep per-label verification independent; first success never grants authorization.
+- Preserve licenses and explain security decisions in code/test comments.
+- Test ESM/CommonJS, declarations, Node versions, and Windows/Linux; publish nothing.
 
-## 9. Kaynaklı paket karşılaştırması ve bağımlılık kararı
-Erişim tarihi: 2026-09-18. Liste hedefli bir taramadır; tüm npm ekosisteminin eksiksiz envanteri değildir.
-Sürümü sabit npm bağlantıları kullanılır; GitHub ana dalı incelemeleri değişmez yayın kanıtı sayılmaz.
-| Paket / incelenen sürüm | Doğrulanmış belgelenen yetenek | Sınır / agentsig için kalan iş | Kaynak |
+## 8. Later profile/integration acceptance criteria
+
+WG and Cloudflare fixtures remain separate with source versions recorded.
+Use actual published vectors where available, not illustrative signatures.
+Separate exact documentation serialization from independently generated crypto
+fixtures. Live tests require explicit user execution with target/key configuration.
+
+Replay tests cover concurrency, skew-aware retention, capacity, and backend failure.
+Network work separately needs SSRF, DNS rebinding, cache refresh, key removal,
+and multi-process boundary tests.
+
+At initial research, WG appendix inventory was incomplete. The later M2 inventory
+independently verified all three E.2 Ed25519 vectors; E.1 RSA is outside scope.
+The requested Appendix F.3 JSON collection remains a separate M3 pinning task.
+Package comparisons below are documentation/selected-source reviews, not audits
+or execution of alternative packages' test suites.
+
+## 9. Source-based package comparison and dependency decision
+
+Research date: September 18, 2026. This is a targeted review, not an exhaustive npm
+inventory. Versioned npm links are used where available; GitHub main-branch
+inspection is not immutable release evidence.
+
+| Package / examined version | Documented capabilities | Limits / remaining agentsig work | Source |
 | --- | --- | --- | --- |
-| http-message-sig 0.3.0 | RFC 9421 motoru, sıralı alan oluşumları, istek/yanıt bağlamı, Dictionary üyesi seçimi, çoklu imza, WebCrypto sağlayıcıları | Genel Structured Fields serileştirmesi, bayt biçimi, trailer seçimi ve tekil query-param açıkça reddediliyor; RFC 9651 yeni türleri imza alanlarında reddediliyor. Anahtar keşfi çağırana ait | [npm 0.3.0](https://www.npmjs.com/package/http-message-sig/v/0.3.0), Capabilities ve Limitations |
-| web-bot-auth, depo rozeti 0.2.0 | Web Bot Auth imzalama/doğrulama politikası; Ed25519/RSA; Signature-Agent, registry ve ajan kartı ayrıştırma; çoklu label seçimi | Belgelenmiş hedef bireysel protocol-00, WG-00 ile eşit sayılmaz. Örnekte resolver ve atomik replay cache uygulamaya bırakılıyor. Hazır Hono/Fastify/Express adaptör seti incelenen belgede gösterilmiyor | [Cloudflare paket belgesi](https://github.com/cloudflare/web-bot-auth/tree/main/packages/web-bot-auth), Features, Verifying ve Security Considerations |
-| http-message-signatures 1.0.6 | Node yerleşik kripto sağlayıcıları; RSA, ECDSA, Ed25519; genel imzalama/doğrulama; iki tarihsel HTTP imza biçimi | Belge taslak revizyon 13 hedefini bildiriyor; nihai RFC uyumu test edilmedi. Ham istek hedefi çıkarımı ve karmaşık mesaj bağlamlarında sınırlar belgelenmiş. Web Bot Auth profilleri bu incelemede doğrulanmadı | [npm 1.0.6](https://www.npmjs.com/package/http-message-signatures/v/1.0.6), Caveats, Limitations ve Examples |
-| structured-headers, görünen son sürüm 2.1.0 | RFC 9651/8941; Date/Display String; TypeScript, ESM/CJS, sıfır bağımlılık beyanı; yakın tarihli bakım; resmî HTTP WG testlerinden yararlanma | Tamsayı değerli ondalıkların tür ayrımı ve bazı yuvarlamalar için açık serileştirme sınırlamaları var. Parametre tekrarları çıktıda kayboluyor. Kayıpsız AST kriterimizi karşılamıyor | [Depo açıklaması](https://github.com/evert/structured-headers), Compatibility; [ayrıştırıcı kaynak incelemesi](https://github.com/evert/structured-headers/blob/main/src/parser.ts), 195–218 |
+| http-message-sig 0.3.0 | RFC 9421 engine, ordered occurrences, request/response context, Dictionary selection, multiple signatures, WebCrypto providers | Generic SF serialization, binary wrapping, trailers, and query-param explicitly rejected; RFC 9651 new types rejected in signature fields; discovery belongs to caller | [npm 0.3.0](https://www.npmjs.com/package/http-message-sig/v/0.3.0), Capabilities/Limitations |
+| web-bot-auth, repository badge 0.2.0 | WBA signing/verification policy; Ed25519/RSA; Signature-Agent, registry, agent-card parsing; multiple labels | Documented individual protocol-00 target is not WG-00; resolver and atomic replay cache left to application in examples; complete Hono/Fastify/Express adapter set not established | [Cloudflare package docs](https://github.com/cloudflare/web-bot-auth/tree/main/packages/web-bot-auth), Features/Verifying/Security Considerations |
+| http-message-signatures 1.0.6 | Node crypto; RSA/ECDSA/Ed25519; signing/verification and two historical formats | Documentation targets draft revision 13; final RFC conformance not tested; raw-target and complex-context limitations documented; WBA profiles not established by this review | [npm 1.0.6](https://www.npmjs.com/package/http-message-signatures/v/1.0.6), Caveats/Limitations/Examples |
+| structured-headers, observed latest 2.1.0 | RFC 9651/8941, Date/Display String, TypeScript, ESM/CJS, no-dependency claim, recent maintenance, official HTTP WG tests | Documented integer-valued decimal/rounding serialization limits; parameter occurrences lost; does not satisfy our lossless-AST criterion | [Repository](https://github.com/evert/structured-headers), Compatibility; [parser source](https://github.com/evert/structured-headers/blob/main/src/parser.ts), lines 195–218 at review |
 
-### Structured Fields kararı
-Öneri: incelenen structured-headers sürümünü runtime bağımlılığı olarak almamak; kullanıcının belirlediği fallback uyarınca iç ayrıştırıcı/serileştirici geliştirmek.
-Ret gerekçesi bakım eksikliği değil, kayıpsız kanonikleştirme ve ham tekrar gözlemlenebilirliği kriterleridir.
-Depo bakım faaliyeti, TypeScript, iki modül biçimi ve sıfır bağımlılık beyanı olumlu. Date/Display String yolları kaynakta görüldü.
-Paketin gerçek kurulum boyutu ve yayın tarball'ı ölçülmedi; boyut kriteri geçti diye raporlanmıyor. Diğer zorunlu kriterlerde elendiği için üretim bağımlılığı önerilmiyor.
-Ham tekrarların üzerine yazılması tek başına RFC ihlali değildir; ham AST ve standart anlamsal model ayrı tutulmalıdır.
-Kendi uygulamamız için RFC 9651 uyumluluk testleri, kayıpsız sayı türleri, kaynak limitleri ve deterministik fuzz/property testleri zorunludur.
-Resmî [HTTP WG Structured Fields test takımı](https://github.com/httpwg/structured-field-tests) uygulama aşamasında commit ve lisansıyla sabitlenir.
-RFC 9421'in imza meta verisi kabul kuralları ile RFC 9651 genel parser yetenekleri karıştırılmaz.
-Başka bir parser'ın tüm kriterleri geçtiğine dair inceleme yapılmadı; piyasada uygun hiçbir parser olmadığı iddia edilmez.
+### Structured Fields decision
 
-### Cloudflare referans uygulamasından çıkan sonuç
-[Cloudflare deposu](https://github.com/cloudflare/web-bot-auth) TypeScript ve Rust paketleri, Workers örnekleri, dizin araçları ve araştırma test ortamı listeliyor.
-Depo Apache-2.0; agentsig MIT olacak. Kod kopyalama önerilmiyor; gerekirse üçüncü taraf lisans/atıfları ayrıca korunur.
-Açık araştırma sunucusu yayımlanmış RFC test anahtarını kullanır. Yalnızca test fixture'ında kullanılmalı; üretim anahtar üretimiyle karıştırılmamalıdır.
-Araştırma ortamı testi, Cloudflare doküman formatı testi ve kayıt/onay gerektiren üretim Verified Bots testi ayrı sonuçlardır.
-İncelenen ana dal örnekleri Dictionary biçimini kullanıyor; Cloudflare üretim dokümanı eski tek dizgi biçimini istiyor. Depo davranışı üretim kabulü kanıtı değildir.
-Paket belgeleri incelendi; kriptografik kaynakların ve testlerin tamamı denetlenmedi. Alternatifler hakkında performans veya güvenlik üstünlüğü iddiası yapılmıyor.
+The recommendation was not to adopt the examined structured-headers version.
+Under the maintainer-approved fallback, implement our own separate parser/serializer.
+This was not a maintenance objection: active development, TypeScript, dual module
+formats, zero-dependency declaration, and visible Date/Display String support
+were positive findings. Lossless canonicalization and raw duplicate observability
+were the deciding criteria.
 
-### Konumlandırma
-agentsig ilk Node HTTP imza motoru veya ilk TypeScript Web Bot Auth paketi değildir.
-Hedef fark: Node yerleşik kripto ile açık, sürümü sabit profiller; varsayılan atomik replay kontrolü; güvenli keşif; framework adaptörleri; CLI ve kaynaklı uyumluluk matrisi.
-İlk araştırma sırasında bunlar proje hedefleriydi. Sonraki M2 uygulamasında sabit profiller ve varsayılan atomik replay kontrolü eklendi; güvenli ağ keşfi, adaptörler ve CLI hâlâ hedef kapsamıdır. Resmî IETF/Cloudflare referans uygulaması veya onaylı kütüphane iddiası yapılmaz.
+Actual installation/tarball size was not measured and is not reported as passing.
+Other mandatory criteria already ruled it out. Standard last-value duplicate
+resolution is not itself an RFC violation; raw AST and semantic models must remain
+separate. Our implementation requires official compatibility tests, lossless
+numeric distinctions, limits, and deterministic fuzz/property tests.
 
-## 10. İlk uygulama teslimatı
-1. Monorepo temelini, MIT lisansı, pnpm/changesets ve ESM/CJS tip/test araçlarını kur; yalnızca core'u işlevsel paket olarak geliştir.
-2. Bu belgedeki mesaj/tür/hata sözleşmelerini netleştir; ham hedef, kayıpsız SF türleri ve RFC kural-kapsam matrisini ekle.
-3. RFC kaynaklarından bağımsız beklenen çıktıları ve anahtar fixture'larını sabitle; dört golden takımını önce hazırla.
-4. Sınırlı kaynak tüketimli Structured Fields parser/serializer geliştir; RFC 9651 testlerini ve fuzz/property testlerini ekle.
-5. RFC 9421 başlık ayrıştırma ve kanonikleştirme motorunu geliştir; destek dışı özellikleri açıkça reddet.
-6. Ed25519 imzalama ve kriptografik doğrulamayı ekle; B.2.6 imza baytlarını birebir üret/doğrula, mutasyonları reddet.
-7. ESM/CJS tüketici testlerini, tip kontrolünü, Node 20/22/24 ve Windows/Linux test matrisini çalıştır; gerçek çalıştırma durumlarını raporla.
-8. Kök README'de neden agentsig, neden stealth değil, rate limit farkı ve kaynaklı Protocol compatibility bölümlerini hazırla.
-9. İlk core teslimatında dur; profil, ağ, nonce deposu, adaptör ve CLI uygulamalarına ayrıca onay olmadan geçme. Yayınlama yapma.
+The [official HTTP WG suite](https://github.com/httpwg/structured-field-tests) was
+subsequently pinned by commit and license. RFC 9421 metadata acceptance is not
+the same as general RFC 9651 parser capability. No claim is made that no suitable
+parser exists; no alternative parser was shown to pass every criterion.
 
-Node 20 uyumluluk hedefi korunur; destek ömrü ve güncel LTS önerisi README'de ayrı açıklanır. Araçların minimum Node sürümleri kurulumdan önce kontrol edilir.
-Dizin güvenlik limitleri, cache politikası ve WG vektör envanteri sonraki profil/dizin kilometre taşına geçiş kapılarıdır; ilk motor teslimatına ağ davranışı eklenmez.
+### Cloudflare reference implementation findings
 
-## 11. core-m1: öneri ↔ uygulanan API karşılaştırması
+The [Cloudflare repository](https://github.com/cloudflare/web-bot-auth) lists
+TypeScript/Rust packages, Workers examples, directory tools, and a research test
+environment. It is Apache-2.0; agentsig code is MIT. Copying code was not proposed;
+any future reuse must preserve applicable licenses and attribution.
 
-İnceleme temeli: motor commit'i **b3b0829**, SF commit'i **584144c** ve bağımsız audit commit'i **5fd54d3**.
-Kullanıcı, **core-m1** etiketinin push edildiğini ve CI matrisinin yeşil olduğunu bildirmiştir.
-Bu kayıt sonraki yerel değişikliklerin CI sonucunu veya bir güvenlik denetimini temsil etmez.
+The research server uses a published RFC test key. This is test material, not a
+production key-generation default. Research testing, documentation-form
+compatibility, and production Verified Bots registration/approval are distinct.
 
-**Sonuç:** Dört işlemli motorun sorumluluk ayrımında sapma yok. İlk tip taslağına göre aşağıdaki API farkları vardır; “birebir sapma yok” iddiası yapılmaz.
-Bu karşılaştırma uygulama davranışını değiştirmez ve bütün RFC kurallarının güvenlik denetimi değildir.
+Examined main-branch examples use Dictionary form while production documentation
+describes the legacy single String. Repository behavior does not prove production
+acceptance. Documentation and selected code were reviewed, not all crypto paths
+or tests. No performance or security superiority is claimed.
 
-| Alan | İlk öneri | Uygulanan sözleşme ve gerekçe |
+### Positioning
+
+agentsig is not the first Node HTTP-signature engine or TypeScript Web Bot Auth
+package. Intended differentiation: built-in crypto, explicit pinned profiles,
+default atomic replay checks, safe discovery, adapters, CLI, and source-backed
+compatibility. Pinned offline profiles/replay were subsequently implemented in M2;
+network discovery, adapters, and CLI remain future goals. No official
+IETF/Cloudflare reference-implementation or endorsement claim is made.
+
+## 10. Historical first implementation delivery plan
+
+1. Set up monorepo, MIT, pnpm/Changesets, ESM/CommonJS, types, and tests.
+2. Finalize message/type/error boundaries and RFC rule coverage.
+3. Commit independent source expectations, keys, and four golden suites first.
+4. Implement bounded SF parsing/serialization with RFC 9651 and property tests.
+5. Implement RFC 9421 parsing/canonicalization with explicit unsupported results.
+6. Add Ed25519 and exact B.2.6 signing/verification plus mutation rejection.
+7. Run real consumers, types, and available Node/OS tests; distinguish actual
+   execution from intended CI coverage.
+8. Document why agentsig, why not stealth, rate-limit differences, and compatibility.
+9. Stop at M1 pending separate approval for profiles, networking, replay, adapters,
+   and CLI. Do not publish.
+
+Node 20 runtime compatibility is separate from lifecycle/security support and
+tooling minimums. Directory budgets/cache policy and vector inventory are later
+gates; they do not add network behavior to the pure engine.
+
+## 11. core-m1: proposed versus implemented API
+
+Review basis: engine **b3b0829**, SF **584144c**, independent audit **5fd54d3**.
+The maintainer confirmed the core-m1 tag was pushed and CI was green. This history
+does not represent later CI results or a security audit.
+
+The four-operation separation is retained. The following differences from the
+initial type sketch are deliberate; this is not a claim of zero API changes.
+
+| Area | Original proposal | Implemented contract / reason |
 | --- | --- | --- |
-| Dört işlem | Ayrıştırma, imza tabanı, imzalama, kriptografik doğrulama | **Sapma yok.** [Dışa aktarımlar](../packages/core/src/index.ts:1) aynı dört işlemi sunar; son iki işlem Promise döndürür. |
-| Ağ/saat/nonce/yetki | Saf motorun dışında | **Sapma yok.** [Kriptografik doğrulama](../packages/core/src/crypto.ts:80) yalnızca verilen açık anahtarla imzayı kontrol eder; gövde digest'ini de doğrulamaz. |
-| Başlık değerleri | Yalnızca metin | [`HeaderField`](../packages/core/src/types.ts:8) ASCII metin veya ham bayt kabul eder. Binary-wrapped alanlarda özgün oktetleri UTF-8/Latin-1 tahminiyle değiştirmemek için genişletildi. |
-| HTTP sürümü | Ayrı alan yok | [`RequestParts`](../packages/core/src/types.ts:11) ve [`HttpMessage`](../packages/core/src/types.ts:22) açık HTTP sürümü bağlamı taşıyor. Eski satır katlamasını yalnızca HTTP/1.1 bağlamında çözmek için eklendi. |
-| Ham hedef ve yanıt bağlamı | İsteğe bağlı ham hedef ve ilgili request | **Sapma yok.** Ham hedef bileşeni kullanılıyorsa ayrıca sağlanır; ilişkili request yoksa tahmin edilmez. |
-| Kaynak limitleri | Dört imza ayrıştırma limiti | [`Limits`](../packages/core/src/types.ts:52) mesaj başlıkları, URI, imza tabanı ve SF bütçesiyle genişletildi. Kullanıcının sonraki 16 KiB açık core bütçesi kararı uygulandı. |
-| Ayrıştırma çağrısı | İkinci argüman zorunlu tam limit nesnesi | [`parseSignatureHeaders()`](../packages/core/src/signature-input.ts:118) isteğe bağlı kısmi bütçe değişiklikleri alır. [`LimitOverrides`](../packages/core/src/types.ts:63) dondurulmuş açık core varsayılanlarını güvenle özelleştirir; SF varsayılanına sessiz bağımlılık yoktur. |
-| Kanonikleştirme seçenekleri | Yalnızca SF alan türleri | [`CanonicalizationOptions`](../packages/core/src/types.ts:68) çağrı başına limitleri de taşır; imza tabanı ve kodlama genişlemesini sınırlamak için eklendi. |
-| SF tiplerinin sahibi | Core taslağında yerel SF türleri | Ayrı paket kararıyla [`BareItem` ve diğer SF türleri](../packages/structured-fields/src/index.ts:16) @agentsig/structured-fields tarafından sağlanır. Core [`Parameters`](../packages/core/src/types.ts:103) türünü tekrar dışa aktarır; eski SfBare/SfParameter adları core dış API'sinde yoktur. |
-| Ret nedenleri | Beş neden | [`RejectionReason`](../packages/core/src/types.ts:86) algoritma uyuşmazlığı ve kaynak limiti nedenleriyle genişletildi. Bunlar yanlış imzadan ayrı tanı konmasını sağlar. |
-| Hata sözleşmesi | Tipli parser/base hatası, beklenen crypto ret sonucu | [`Hata sınıfları`](../packages/core/src/errors.ts:1) bunu uygular; geçersiz çağıran yapılandırması sıradan imza reddine çevrilmez. Kripto sonucunda limit ayrıntıları değil yalnızca kaynak-ret kodu döner; ayrıntılar doğrudan işlem hatasında bulunur. |
-| Çoklu imza | Etiket başına imza dizisi | [`Ayrıştırıcı`](../packages/core/src/signature-input.ts:113) tüm çiftleri işler: boş imzasız alanlar boş dizi verir, karşılığı eksik herhangi bir etiket bütün çağrıyı reddeder. Öneride belirtilmeyen bu daha katı all-pairs davranışı belgelenmiştir; tek etiket seçimi API'si yoktur. |
-| Etiket/parametre tekrarları | Ham oluşumlar korunur, RFC semantiği ayrı uygulanır | SF ham AST korunur; RFC 9421 imza etiketleri tekrarlanamaz. Core'un anlamsal sonucu ham AST'yi döndürmez. Sonradan oluşturulmuş anlamsal parametre tekrarları serileştiricide reddedilir. |
-| SF alan tür bilgisi | Çağıran tür tablosu | İmza alanları ve Content-Digest için yerleşik Dictionary bilgisi eklendi; diğer alanlar çağırandan gelir. Otomatik ağ/IANA sorgusu yoktur. |
-| Kripto çalışma şekli | Promise tabanlı API | Dönüş tipi aynı; [uygulama](../packages/core/src/crypto.ts:35) sınırlı girdi üzerinde senkrondur. Promise, worker-thread veya bloklamayan kriptografi vaadi değildir. |
-| Trailer ve algoritmalar | Trailer yok; yalnızca Ed25519 | **Sapma yok.** Açık ret davranışları ve dört bağımsız golden takımı vardır. |
-| Tam Web Bot Auth sonucu | Sonraki katmanın taslağı | Bu tarihsel M1 teslimatında dışa aktarılmıyordu; M1 kapsam sınırı korunur. Sonraki M2 teslimatı ayrı [profil girişinde](../packages/core/src/profiles.ts) kapalı sonuç kodları, zaman ve replay entegrasyonu sunar. |
+| Four operations | Parse, base, sign, crypto verify | Same responsibilities; sign/verify return Promises. [Exports](../packages/core/src/index.ts) |
+| Network/time/nonce/authorization | Outside pure engine | Preserved; [crypto verification](../packages/core/src/crypto.ts:80) checks supplied key/signature only, not body digest |
+| Header values | Strings only | [HeaderField](../packages/core/src/types.ts:8) supports ASCII strings or raw bytes to avoid encoding guesses |
+| HTTP version | No field | [RequestParts](../packages/core/src/types.ts:11) and message types carry explicit context for HTTP/1.1 obs-fold |
+| Raw target / related request | Optional explicit context | Preserved; required when corresponding component is covered, never inferred |
+| Resource limits | Four parser budgets | [Limits](../packages/core/src/types.ts:52) also bound message headers, URI, base, and SF with approved 16 KiB defaults |
+| Parse arguments | Required complete limits | Optional [partial overrides](../packages/core/src/types.ts:63) over frozen explicit defaults |
+| Canonicalization options | Field types only | [Options](../packages/core/src/types.ts:68) also carry budgets to bound expansion |
+| SF type ownership | Local core types | Separate SF package owns BareItem and related types; core reexports Parameters, not the historical SfBare/SfParameter aliases |
+| Rejection reasons | Five codes | [Reasons](../packages/core/src/types.ts:86) add algorithm mismatch and resource limit for distinct diagnostics |
+| Errors | Typed parsing/base failures and crypto rejection results | [Error classes](../packages/core/src/errors.ts) preserve configuration failures separately; direct limit errors carry accounting, crypto results only the reason |
+| Multiple signatures | Per-label parsed array | All pairs parsed; missing counterpart rejects entire call, no headers returns empty array; no single-label selector |
+| Duplicates | Raw syntax preserved, semantics separate | SF retains raw AST; RFC signature labels must be unique; semantic results omit raw AST; serializer rejects duplicate caller-created semantic keys |
+| Field type knowledge | Caller table | Built-in signature and Content-Digest Dictionaries added; no network/IANA lookup |
+| Execution | Promise API | Bounded synchronous implementation; no off-thread/nonblocking guarantee |
+| Trailers / algorithms | No trailers; Ed25519 only | Preserved, with explicit rejection and four golden suites |
+| Full WBA result | Future sketch | Outside M1 as approved. Later M2 provides closed results and time/replay via a separate [profile entry](../packages/core/src/profiles.ts) |
 
-Güncel kullanım referansı: [core belgesi](../packages/core/README.md).
-GitHub metadata adresi https://github.com/agentsig-dev/agentsig; npm kapsamı @agentsig olarak kalır.
-Üç proje manifesti güncellenir; HTTP WG fixture içindeki üçüncü taraf manifest değiştirilmeyerek kaynak özeti ve provenance korunur.
+Current references: [core README](../packages/core/README.md) and
+[offline verification](offline-verification.md).
+GitHub metadata uses agentsig-dev/agentsig; npm scope remains @agentsig.
+Project manifests were corrected without modifying the HTTP WG fixture's
+third-party manifest, preserving its hash and provenance.

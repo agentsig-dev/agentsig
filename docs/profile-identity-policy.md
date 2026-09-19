@@ -1,162 +1,161 @@
-# M2 origin, tekrar ve yerel kimlik politikası
+# M2 origin, duplicate, and local identity policies
 
-Durum: 2026-09-18; yardımcılar uygulanmış ve hedefli testleri geçmiştir.
-Tam profil ayrıştırıcısı, imzalayan ve çevrimdışı doğrulayıcı henüz tamamlanmadı.
-Bu yardımcılar paket girişinden dışa aktarılmıyor.
+Updated September 19, 2026. The helpers and their targeted tests are implemented.
+Full profile signing, offline verification, and profile package exports were
+subsequently completed in M2. Internal helpers are not public authentication
+entry points. Historical test counts below refer to their respective milestones.
 
-## Origin kabulü ve kanonik kimlik
+## Origin acceptance and canonical identity
 
-[Origin doğrulaması](../packages/core/src/profiles/agent-origin.ts) iki profilde
-aynı yerel politikayı uygular:
+[Origin validation](../packages/core/src/profiles/agent-origin.ts) applies the
+same local policy to both profiles:
 
-- Yalnızca HTTPS ve dolu ASCII host kabul edilir.
-- Şema ve host büyük/küçük harf farkı normalize edilir.
-- Açık 443 portu kaldırılır; diğer portlar kabul edilmez.
-- Sondaki tek eğik çizgi kabul edilir, kimlik anahtarına dahil edilmez.
-- Yol, sorgu, fragment ve kullanıcı bilgisi reddedilir.
-- IPv4/IPv6 literalleri ve URL ayrıştırıcısının IP’ye çevirdiği alternatif
-  sayısal yazımlar reddedilir.
-- ASCII dışı host reddedilir; IDNA dönüşümü ve DNS sorgusu yapılmaz.
-- URL ayrıştırıcısının girdi onarması kimlik kabulü için kullanılmaz.
+- Accept HTTPS only, with a nonempty ASCII host.
+- Normalize scheme and host case.
+- Remove an explicit exact port 443; reject other ports.
+- Accept one trailing slash, excluding it from the identity key.
+- Reject paths, queries, fragments, and user information.
+- Reject IPv4/IPv6 literals and alternative numeric spellings interpreted as IPs
+  by the URL parser.
+- Reject non-ASCII hosts; perform neither IDNA conversion nor DNS queries.
+- Do not use the URL parser's input repair to establish an accepted identity.
 
-Örneğin HTTPS://AGENT.EXAMPLE:443/ ile https://agent.example aynı
-https://agent.example kimlik anahtarına dönüşür.
+For example, HTTPS://AGENT.EXAMPLE:443/ and https://agent.example both map to the
+identity key https://agent.example.
 
-**Kanonik origin yalnızca kimlik karşılaştırması içindir. İmzalanan başlık
-değeri yeniden yazılmaz.** Boyut sınırı normalizasyondan önce özgün girdiye
-uygulanır. URL’nin bu kontrolleri geçmesi alan adı sahipliğini kanıtlamaz.
+**The canonical origin is for identity comparison only. Received signed header
+values are never rewritten.** The size limit applies to the original input
+before normalization. Passing these checks does not prove domain ownership.
 
-[WG §5.5](../tests/fixtures/m2/sources/wg-protocol-00.txt:825) directory keşfinde
-origin biçimini gerektirir. Port ve IP kısıtları daha dar yerel M2 politikasıdır.
-[Cloudflare belgesi](../tests/fixtures/m2/sources/cloudflare-2026-07-01.mdx:178)
-HTTPS URI ve tırnaklı biçim ister; origin-only kısıtı Cloudflare zorunluluğu
-değil, agentsig’in açıkça onaylanmış daha katı yerel politikasıdır.
+[WG §5.5](../tests/fixtures/m2/sources/wg-protocol-00.txt:825) requires origin form
+for directory discovery. Port and IP restrictions are narrower local M2 policy.
+The [Cloudflare document](../tests/fixtures/m2/sources/cloudflare-2026-07-01.mdx:178)
+requires an HTTPS URI and quoted form; origin-only acceptance is an explicitly
+approved, stricter agentsig policy, not a Cloudflare requirement.
 
-## Ham tekrar reddi
+## Raw duplicate rejection
 
-[Tekrar denetimi](../packages/core/src/profiles/duplicates.ts), anlamsal
-ayrıştırma tekrarları kaybetmeden ham Structured Fields oluşumlarını inceler:
+[Duplicate screening](../packages/core/src/profiles/duplicates.ts) examines raw
+Structured Field occurrences before semantic parsing loses duplicates:
 
-- İmza metadata’sı veya bileşen parametresi tekrarı: malformed-signature.
-- İmza değeri parametresi tekrarı: malformed-signature.
-- Signature-Agent Dictionary üyesi veya parametresi tekrarı: malformed-agent.
-- Aynı değerin iki kez yazılması da reddedilir.
-- Aynı parametre adının farklı üye/bileşenlerde kullanılması tekrar sayılmaz.
-- Teşhis, yinelenen adı belirtir; parametre değeri veya tam başlık yazılmaz.
-  Görüntülenen ad 256 kod birimiyle sınırlandırılır, kısaltma açıkça belirtilir.
+- Repeated signature metadata or component parameters: malformed-signature.
+- Repeated signature-value parameters: malformed-signature.
+- Repeated Signature-Agent Dictionary members or parameters: malformed-agent.
+- Identical repeated values are also rejected.
+- Reusing a parameter name on different members/components is not a duplicate.
+- Diagnostics identify the repeated name, not its value or the entire header.
+  Displayed names are bounded to 256 code units with an explicit truncation marker.
 
-İmza tarafındaki denetim aday tag seçiminin önünde kullanılmalıdır; tekrar
-eden tag ile adayın başka protokol gibi gizlenmesi engellenir. Bütçe aşımları
-bozuk sözdizimi değil, mevcut resource-limit sonucunu korur.
+Signature screening precedes candidate tag selection so a repeated tag cannot
+hide a candidate as another protocol. Budget failures retain resource-limit
+rather than being misclassified as malformed syntax.
 
-[RFC 9421 §2.3](../tests/fixtures/profiles/sources/rfc9421-2.3.txt) ve
-[§2.5](../tests/fixtures/profiles/sources/rfc9421-2.5.txt), ham parametre adı
-tekrarlarını ayrıca reddeden açık bir hüküm içermez. §2.5 adım 2.1’deki ret,
-parametreleriyle birlikte aynı bileşen tanımlayıcısının tekrarına ilişkindir.
-İmza etiketlerinin benzersizliği ise RFC 9421 §4’ün ayrı şartıdır.
+[RFC 9421 §2.3](../tests/fixtures/profiles/sources/rfc9421-2.3.txt) and
+[§2.5](../tests/fixtures/profiles/sources/rfc9421-2.5.txt) do not explicitly impose
+a separate raw parameter-name duplicate rejection rule. The rejection in §2.5
+step 2.1 concerns a repeated complete component identifier including parameters.
+Signature-label uniqueness is a separate requirement in RFC 9421 §4.
 
-[RFC 9651 parametre ayrıştırması](../tests/fixtures/profiles/sources/rfc9651-parameters.txt)
-ve [Dictionary ayrıştırması](../tests/fixtures/profiles/sources/rfc9651-dictionary.txt)
-son değeri korur. M2’nin ham tekrar reddi bundan bilinçli olarak daha katıdır:
-amaç farklı ayrıştırıcıların farklı değer seçmesi riskini azaltmaktır.
-M1 motorunun ve genel SF paketinin davranışı değiştirilmemiştir.
+[RFC 9651 parameter parsing](../tests/fixtures/profiles/sources/rfc9651-parameters.txt)
+and [Dictionary parsing](../tests/fixtures/profiles/sources/rfc9651-dictionary.txt)
+retain the last value. M2 deliberately rejects more inputs to reduce the risk
+of different parsers selecting different values. The M1 engine and general
+Structured Fields package retain their existing behavior.
 
-## Açık yerel kimlik bağlaması
+## Explicit local identity binding
 
-[Bağlama yardımcısı](../packages/core/src/profiles/agent-bindings.ts) yalnızca
-yapılandırılmış thumbprint–origin ilişkilerini kullanır. Girdileri kopyalar;
-aynı anahtar ve kanonik origin çiftinin eşdeğer yazımlarını tekilleştirir.
-Kaynak bütçesi tekilleştirmeden önce tüm girdi oluşumlarını sayar.
+The [binding helper](../packages/core/src/profiles/agent-bindings.ts) uses only
+configured thumbprint–origin relationships. It snapshots inputs and deduplicates
+equivalent spellings of the same key/canonical-origin pair. Resource budgets
+count all input occurrences before deduplication.
 
-Thumbprint modunda imzalı URL iddiasından alan adı kimliği türetilmez.
-Açık bağlama modunda seçilen anahtarın ilişkisi yoksa agent-binding-missing;
-ilişki var ama origin uyuşmuyorsa agent-binding-mismatch üretilir.
-Başka bir anahtarın aynı origin’e bağlanması seçilen anahtara güven sağlamaz.
+Thumbprint mode does not derive domain identity from the signed URL claim.
+In explicit binding mode, no association for the selected key produces
+agent-binding-missing; an existing association with a different origin produces
+agent-binding-mismatch. Another key's association with the same origin does not
+establish trust for the selected key.
 
-Eşleşen URL kimlik önerisi kanonik origin’i, onun well-known dizin adresini
-ve local-configuration güven kaynağını taşır. TLS/dizin kanıtı veya operatör
-adı çıkarımı yapılmaz. Bu yalnızca iç kimlik önerisidir: kripto, zaman,
-test anahtarı politikası ve replay kontrolleri bitmeden doğrulanmış sonuç
-olarak dışarıya verilmemelidir. Anahtar bağlamasını yenilemek replay geçmişini
-kendiliğinden silmez.
+A matching URL identity proposal contains the canonical origin, its well-known
+directory URL, and local-configuration trust source. It implies neither TLS or
+directory proof nor an operator name. This is an internal proposal only: it must
+not escape as verified until cryptography, time, test-key policy, and replay
+checks pass. Updating key bindings does not automatically erase replay history.
 
-## Test ve teslimat sınırı
+## Original helper validation milestone
 
-Kaynak alıntıları ve 26 URL, 9 tekrar, 9 kimlik bağlama beklentisi üretim
-uygulamasından önce 34b0d9a fixture commit’ine alınmıştır.
-[Bağımsız denetim](../tests/profile-fixture-audit.test.mjs) kaynak/manifest
-bütünlüğünü ve beklenti tutarlılığını sınar; üretim kodunu kullanmaz.
+Source excerpts and 26 origin, nine duplicate, and nine binding expectations
+were committed in **34b0d9a** before implementation.
+The [independent audit](../tests/profile-fixture-audit.test.mjs) checks source and
+manifest integrity plus expectation consistency without production code.
 
-Yerel Windows / Node 22 üzerinde 48 origin, 18 tekrar ve 27 kimlik bağlama
-testi geçti. Bu yardımcılar eklendikten sonra tam regresyon da başarılıdır:
-3.754 birim testi, 9 entegrasyon testi, 32 bağımsız fixture denetimi,
-M1 audit'i ve iki paketin derleme/tip kontrolleri geçti.
-ESM/CJS tüketici testleri mevcut M1 girişlerini kapsar; yeni yardımcıların
-paket dışa aktarımı ve tam doğrulayıcı entegrasyonu henüz tamamlanmadı.
-Bu değişikliklerin uzak CI matrisi henüz doğrulanmadı. Push ve yayın yapılmadı.
+Local Windows / Node 22 results at that milestone: 48 origin, 18 duplicate, and
+27 binding tests passed. Full regression passed 3,754 unit tests, nine integration
+tests, 32 independent fixture audits, the M1 audit, and both packages' build/type
+checks. At that point consumers covered M1 only; full verifier integration and
+profile consumers were added later. These historical results are not a security
+review or proof that a later commit passed remote CI.
 
-## Aday seçimi, başlık biçimi ve bileşen desteği
+## Candidate selection, header grammar, and component support
 
-[Aday seçimi](../packages/core/src/profiles/candidates.ts) önce ham tekrarları
-denetler, ardından bütün imza çiftlerini ayrıştırır ve protokol tag’iyle seçim
-yapar. İmza etiketinin adı seçim ölçütü değildir. Bozuk bir çift, başka protokol
-tag’i taşısa bile imzasız trafik olarak kabul edilmez.
+[Candidate selection](../packages/core/src/profiles/candidates.ts) first screens
+raw duplicates, then parses every signature pair, and finally selects by the
+protocol tag. A signature label is not a selector. A malformed pair does not
+become unsigned traffic merely because it carries another protocol's tag.
 
-[Ajan başlığı ayrıştırması](../packages/core/src/profiles/agent-header.ts)
-Dictionary ile eski String biçimini tel gösteriminden bir kez seçer.
-Ayrıştırma veya doğrulama hatası diğer profili deneyerek başarıya çevrilmez.
-WG’de her aday yalnızca kendi etiketiyle eşleşen üyenin iddiasını kullanır.
-Desteklenmeyen keşif türü URL yolundan tahmin edilmez ve ağ erişimi başlatmaz.
+[Agent-header parsing](../packages/core/src/profiles/agent-header.ts) selects
+Dictionary or legacy String grammar once from the wire form. Parsing or
+verification failure never triggers a retry with the other profile. In WG form,
+each candidate uses only its own label's member claim. Unsupported discovery
+types are neither inferred from URL paths nor resolved through network access.
 
-[Asgari kapsam kontrolü](../packages/core/src/profiles/coverage.ts) iki profilde
-de yöntem ve tam hedef URI ister. WG’de etikete karşılık gelen ajan üyesi,
-Cloudflare profilinde ajan başlığının tamamı kapsanmalıdır. Ek bileşenlerin
-geçerliliği ve profil desteği bu kontrolden ayrıdır.
+[Required coverage](../packages/core/src/profiles/coverage.ts) demands method and
+complete target URI in both profiles. WG additionally requires the agent member
+matching the label; Cloudflare requires the entire agent header. Validity and
+support of additional components remain separate checks.
 
-[Bileşen desteği kontrolü](../packages/core/src/profiles/component-support.ts)
-iki profilde de Signature veya Signature-Input alanını kapsayan adayı
-unsupported-profile ile reddeder; alanın tamamını veya bir üyesini kapsamak
-bu sınırı değiştirmez. Bu, WG’nin böyle bir özelliği yasakladığı anlamına
-gelmez: zincirli kapsam M2’nin belgelenmiş yerel kapsamı dışındadır.
-M4 proxy arkası dağıtımda ihtiyaç doğarsa ayrı bir kilometre taşıyla ele alınır.
+[Component support](../packages/core/src/profiles/component-support.ts) rejects
+coverage of Signature or Signature-Input in either profile as unsupported-profile.
+Covering the entire field or an individual member makes no difference. This is
+not a claim that WG forbids countersignatures: such coverage is outside M2's
+documented local scope. Revisit it in a separate milestone if M4 proxy deployment
+requires it.
 
-Cloudflare’in sabitlenmiş belgesindeki destek dışı bileşenler ve parametreler
-de unsupported-profile üretir. Teşhis, desteklenmeyen profil adı ile desteklenen
-profil içindeki destek dışı bileşeni ayırır; bileşeni, varsa parametreyi ve
-Cloudflare Limitations bölümü veya yerel M2 sınırı olan kaynağı belirtir.
-Teşhis ayrıntıları donmuş sonuç kataloğuna yeni kod eklemez.
+Unsupported components and parameters in the pinned Cloudflare document also
+produce unsupported-profile. Diagnostics distinguish an unsupported profile name
+from an unsupported component within a recognized profile. They identify the
+component, optional parameter, and either the Cloudflare Limitations source or
+the local M2 restriction. Diagnostics do not add frozen catalog codes.
 
-### Reddedilen aday sayımdan düşmez
+### Rejected candidates remain counted
 
-Tag ile seçim, bileşen reddinden öncedir. İki adaydan biri diğer imzayı
-kapsıyorsa ikisi de sayımda kalır:
+Tag selection precedes component rejection. If one of two candidates covers the
+other signature, both remain in the candidate count:
 
-- Varsayılan exactly-one politikası ambiguous-signatures üretir; nonce tüketilmez.
-- Açık all/any politikasında dış adayın unsupported-profile sonucu korunur ve
-  diğer aday bağımsız değerlendirilir.
-- All başarılı olamaz; any ancak diğer aday bütün kimlik, kripto, zaman ve
-  replay kontrollerini geçerse başarılı olabilir.
+- Default exactly-one policy produces ambiguous-signatures and consumes no nonce.
+- Explicit all/any policy retains the outer candidate's unsupported-profile result
+  and evaluates the other independently.
+- All cannot succeed; any succeeds only if the other candidate passes every
+  identity, crypto, time, and replay gate.
 
-Reddedilen adayı yok saymak, ek imzalarla kabul politikasını yönlendirme riski
-oluşturur. Bu nedenle değerlendirme sonuçları aday listesini yeniden filtrelemez.
-[Sayım fixture’ları](../tests/fixtures/profiles/rejected-candidate-counting.json)
-bu toplu davranışı sabitler. Mevcut testler seçim listesinin ve aday bazlı
-retlerin korunmasını sınar; tam toplama ve nonce tüketimi entegrasyonu
-henüz uygulanmamıştır.
+Ignoring a rejected candidate would let additional signatures influence the
+acceptance policy by disappearing from the count. Evaluation therefore never
+refilters the selected candidate list.
+[Counting fixtures](../tests/fixtures/profiles/rejected-candidate-counting.json)
+pin this behavior. Full aggregate/replay integration is now separately exercised
+by the [verifier tests](../packages/core/test/profile-verifier-multiple.test.ts).
 
-### Bu alt adımın doğrulama durumu
+### Coverage and support validation milestone
 
-Kapsam fixture’ları 37159c4; bileşen kısıtları ve reddedilen aday sayımı
-fixture’ları 5f017f1 yerel commit’lerinde uygulamadan önce sabitlenmiştir.
+Coverage fixtures were committed in **37159c4**; component restrictions and
+rejected-candidate counting fixtures in **5f017f1**, before implementation.
 
-Yerel Windows / Node 22 tam regresyonunda 3.866 birim testi, 9 entegrasyon
-testi ve 35 bağımsız fixture denetimi geçti; derleme ve tip kontrolleri
-başarılıdır. [Kriptografik zincir testleri](../packages/core/test/profile-crypto-chain.test.ts)
-iki bağımsız imzalı örneği doğrular; yöntem, hedef sorgusu veya özgün ajan
-değeri değişince imza reddedilir. Aynı kanonik origin’e dönüşmek, farklı
-imzalı baytları eşdeğer kılmaz.
+At that milestone, local Windows / Node 22 full regression passed 3,866 unit
+tests, nine integration tests, and 35 independent fixture audits; builds and
+type checks passed. [Crypto-chain tests](../packages/core/test/profile-crypto-chain.test.ts)
+verify two independent signed examples and reject changes to method, target
+query, or original agent value. Mapping to the same canonical origin does not
+make different signed bytes equivalent.
 
-Tam profil imzalayanı, zaman/replay katmanı, çevrimdışı doğrulayıcı ve profil
-paket dışa aktarımları henüz tamamlanmadı. Mevcut ESM/CJS tüketici testleri
-M1 girişlerini kapsar. Yeni değişikliklerin uzak CI sonucu doğrulanmadı.
-Push, yayın veya WG bildirimi yapılmadı.
+Those helper/crypto checks do not replace the later full offline acceptance
+gate. Current integration and delivery results are recorded in
+[deferred work](deferred.md) and the [offline verifier guide](offline-verification.md).

@@ -30,7 +30,7 @@ importers:
   packages/core:
     dependencies:
       '@agentsig/structured-fields':
-        specifier: 0.1.0
+        specifier: 0.1.1
         version: link:../structured-fields
 
   packages/structured-fields: {}

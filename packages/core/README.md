@@ -1,26 +1,30 @@
 # @agentsig/core
 
-> **Status: pre-release, offline verifier only, no network discovery, not security-reviewed**
+[![npm](https://img.shields.io/npm/v/@agentsig/core.svg)](https://www.npmjs.com/package/@agentsig/core)
 
-Node 20+ için framework bağımsız RFC 9421 HTTP Message Signatures motoru.
-Ed25519 kriptografisi Node'un yerleşik kripto modülünü kullanır.
-Tek çalışma zamanı bağımlılığı @agentsig/structured-fields paketidir.
-ESM ve CommonJS çıktıları ile her iki biçim için tip bildirimleri sağlanır.
+> **Status: pre-release; offline verifier only, no network discovery; not security-reviewed**
 
-**Durum:** Saf RFC motoru ve ayrı çevrimdışı Web Bot Auth profil katmanı mevcuttur.
-İki profilin tam round-trip ve ESM/CJS tüketici testleri yerelde geçmiştir;
-güvenlik denetiminden geçmiş veya üretime hazır olduğu iddia edilmez.
+Framework-independent RFC 9421 HTTP Message Signatures and offline Web Bot Auth
+verification for Node 20+. Ed25519 uses Node's built-in cryptography. The only
+runtime dependency is @agentsig/structured-fields.
 
-## Kurulum ve 10 satırlık kullanım
+ESM, CommonJS, and declarations for both formats are provided. This package has
+not undergone an independent security review and does not claim production
+readiness or official IETF/Cloudflare endorsement. “Pre-release” describes
+maturity; it is not a SemVer prerelease suffix.
 
-**0.1.0 yayın hazırlığıdır; henüz npm'e yayımlanmadı.** Yayınlandıktan sonra:
-npm install @agentsig/core@0.1.0
+## Install
 
-Aşağıdaki 10 satırlık ESM örneği Node 20+ üzerinde ağ isteği göndermeden
-imzalar ve aynı isteği iki kez doğrular. Beklenen çıktı: verified replay-detected.
-Geçici anahtar yalnızca örnek içindir; üretimde güvenilir kalıcı anahtar yönetimi
-kullanın. Doğrulayıcıyı istek başına oluşturmayın; replay geçmişi uzun ömürlü
-bağlama aittir. Varsayılan kimlik anahtar thumbprint'idir, alan adı sahipliği değildir.
+```sh
+npm install @agentsig/core
+```
+
+Use a supported Node release that still receives security updates.
+
+## Quick start
+
+This ten-line ESM example makes no network requests. Expected output:
+`verified replay-detected`.
 
 ```js
 import { generateKeyPairSync } from "node:crypto";
@@ -35,139 +39,171 @@ const signed = { ...request, headers: [...request.headers, ...headers] };
 console.log((await verifier.verify(signed)).status, (await verifier.verify(signed)).reason);
 ```
 
-Örneğin işlemleri: [createWebBotAuthSigner()](src/profiles/signer.ts:39),
-[createOfflineVerifier()](src/profiles/verifier.ts:89) ve
-[OfflineVerifier.verify()](src/profiles/verification-types.ts:106).
-CommonJS tüketicileri aynı profil alt yolunu kullanabilir; iki biçim için de
-tip bildirimleri sağlanır. “Pre-release” olgunluk uyarısıdır; istenen 0.1.0 sürümü
-SemVer açısından prerelease son eki taşımaz.
+The ephemeral key is for demonstration. Real applications need persistent,
+trusted key management. Keep the verifier/security context long-lived:
+creating it per request discards replay history. Preserve that context and scope
+when rotating keys. Default success establishes a key thumbprint, not domain
+ownership, operator reputation, or authorization.
 
-## İki ayrı giriş
+The same profile subpath is available to CommonJS consumers. See the
+[offline verification guide](https://github.com/agentsig-dev/agentsig/blob/main/docs/offline-verification.md)
+for configuration and result semantics.
 
-- @agentsig/core: [saf RFC 9421 motoru](src/index.ts); saat, güven ve replay politikası içermez.
-- @agentsig/core/profiles: [profil API'si](src/profiles.ts); imzalayan, çevrimdışı
-  doğrulayıcı, yerel açık JWKS yükleyicisi ve paylaşılan saat/replay bağlamı.
+## Two separate entry points
 
-[Çevrimdışı kullanım ve güven sınırları](../../docs/offline-verification.md)
-profil yapılandırmasını, çoklu aday politikasını ve kimlik türlerini açıklar.
-Anahtar rotasyonunda ortak bağlam korunmalıdır; istek başına yeni bellek bağlamı
-oluşturmak replay korumasını etkisizleştirir. Ağdan keşif ve gövde digest
-karşılaştırması uygulanmamıştır. Profil başarısı erişim yetkisi değildir.
-
-## Saf motorun dört işlemi
-
-Dış motor API'si [paket girişinde](src/index.ts) tanımlıdır.
-
-| İşlem | Girdi | Çıktı |
-| --- | --- | --- |
-| [parseSignatureHeaders()](src/signature-input.ts:118) | Sıralı başlık oluşumları ve isteğe bağlı bütçe değişiklikleri | Etiketle eşleştirilmiş imza girdileri ve imza baytları |
-| [createSignatureBase()](src/signature-base.ts:132) | Mesaj bağlamı, imza girdisi, alan türleri ve bütçe | Kanonik metin ve baytlar |
-| [signHttpMessage()](src/crypto.ts:42) | Mesaj, imza girdisi, Ed25519 özel anahtarı | Bir etikete ait iki imza başlığının değerleri |
-| [verifyHttpSignatureCryptography()](src/crypto.ts:80) | Mesaj, ayrıştırılmış imza, Ed25519 açık anahtarı | Kriptografik geçerlilik veya neden kodlu ret |
-
-Kriptografik işlemler Promise döndürür; mevcut Node işlemi sınırlı girdi üzerinde
-senkron çalışır. Bu API işin bir worker'a taşındığı anlamına gelmez.
-İmzalayıcı ön-hash uygulamaz; RFC 9421 §3.3.6'daki saf Ed25519 kullanılır.
-
-### Mesaj ve anahtar sözleşmesi
-
-[Türler](src/types.ts) sıralı başlık çiftleri kullanır; tekrarlar ve geliş sırası
-korunmalıdır. Başlık adları büyük/küçük harfe duyarsız eşleştirilir, imza bileşeni
-adları ise küçük harfli olmalıdır.
-
-Metin başlık değerleri ASCII olarak yorumlanır. ASCII dışı özgün HTTP oktetleri
-için bayt dizisi ve binary-wrapped bileşen kullanılmalıdır; UTF-8/Latin-1 tahmini
-yapılmaz. HTTP/1.1 eski satır katlamaları yalnızca sürüm bağlamı açıkça sağlanırsa
-çözülür. Kalan CR/LF karakterleri reddedilir.
-
-Mutlak hedef URI, uygulamanın gördüğü dış HTTP(S) isteğini doğru temsil etmelidir.
-Ham istek hedefi gereken bileşende ayrıca sağlanır; URI'den tahmin edilmez.
-Reverse proxy başlıklarına otomatik güvenilmez. Mutlak URI, ham hedef ve başlık
-bağlamını tutarlı sağlamak çağıranın sorumluluğudur.
-
-İmzalayıcı özel, doğrulayıcı açık Ed25519 anahtar nesnesi bekler. Anahtar metni
-otomatik içe aktarılmaz. Açıkça belirtilmiş imza algoritması Ed25519 ile
-çelişirse işlem reddedilir.
-
-İmzalayıcı mevcut başlıkları değiştirmez. Dönen değerlerin başka imzaları ezmeden
-birleştirilmesi çağıranın açık işlemidir; etiket çakışmalarına dikkat edilmelidir.
-
-## Saf motorun kapsamı
-
-| RFC özelliği | Motor girişi |
+| Entry point | Responsibility |
 | --- | --- |
-| Sıralı başlık oluşumları, OWS, açık HTTP/1.1 obs-fold bağlamı | Desteklenir |
-| Structured Field katı serileştirme ve Dictionary üyesi seçimi | Alanın türü biliniyorsa desteklenir |
-| Her başlık oluşumunu ayrı binary-wrapped kodlama | Desteklenir |
-| Method, target URI, authority, scheme, path, query | Desteklenir |
-| Ham request-target | Çağıran ham bağlamı sağlarsa desteklenir |
-| Tekil query parametresi | RFC form çözümleme/kodlama kurallarıyla desteklenir; tekrar eden isim reddedilir |
-| Response status ve ilgili request bileşenleri | Açık bağlamla desteklenir |
-| Çoklu imza | Etiket başına ayrıştırılır/doğrulanır; otomatik kabul politikası yoktur |
-| Trailer | Açıkça reddedilir |
-| Ed25519 dışı kriptografi | Açıkça reddedilir |
-| Bilinmeyen türetilmiş bileşen veya bileşen parametresi | Açıkça reddedilir |
-| Bilinmeyen imza meta verisi | Desteklenen SF türündeyse imzaya dahil edilir; anlamı yorumlanmaz |
-| Web Bot Auth profilleri, yerel JWKS, nonce ve saat | Ayrı profil girişinde uygulanır; saf motorun parçası değildir |
-| Ağdan keşif, dizin cache'i | Henüz uygulanmadı |
+| @agentsig/core | Pure RFC 9421 parsing, canonicalization, signing, and cryptographic verification |
+| @agentsig/core/profiles | Profile signing, offline verification, trusted local public JWKS loading, shared clock/replay context |
 
-İmza meta verisi ve bileşen tanımları RFC 8941 türlerini kullanır; RFC 9651 Date
-ve Display String ekleri bu konumlarda kabul edilmez. Bilinen HTTP Structured
-Field değerleri kendi alan türüne göre RFC 9651 altyapısıyla işlenebilir.
-Sabit Dictionary alan bilgisi imza başlıkları ve Content-Digest için sağlanır;
-diğer alanların türü çağıran tarafından bildirilir.
+The pure engine has no clock, network, trust-resolution, or replay side effects.
+The profile layer combines those local authentication policies, but does not
+fetch directories or validate request bodies.
 
-Tam RFC 9421 algoritma/özellik desteği iddia edilmez. Yukarıdaki kapsam tablosu,
-testler ve kararlı hata sonuçları destek sınırını tanımlar.
+The default signer profile is **ietf-wg-protocol-00**.
+**cloudflare-docs-2026-07-01** requires explicit signer selection.
+The verifier recognizes both forms by default and supports an explicit profile
+allow-list. It selects one grammar and never retries another after failure.
 
-## Saf motorun güven sınırı
+Both local profiles require method, complete target URI, and profile-specific
+agent coverage. This is stricter than the source protocols' minimum coverage.
+Known published test keys are denied unless explicitly permitted for testing;
+that permission does not bypass any other check.
 
-**Yalnızca kriptografik geçerlilik aşağıdakileri kanıtlamaz:**
-- Açık anahtarın belirli bir ajan, alan adı veya operatöre ait olduğunu.
-- İsteğin yeni olduğunu veya daha önce işlenmediğini.
-- İmzanın oluşturulma/sona erme zamanlarının kabul edilebilir olduğunu.
-- İmzalanmamış yol, query, başlık veya gövdenin bütünlüğünü.
-- Content-Digest başlığıyla gerçek gövdenin eşleştiğini.
-- İsteğin yetkili, iyi niyetli veya hız sınırından muaf olduğunu.
+## Pure engine operations
 
-Saf motoru doğrudan kullanan çağıran hangi bileşenlerin zorunlu olduğunu
-belirlemeli, güvenilir anahtarı seçmeli ve tam doğrulama politikalarını ayrıca
-uygulamalıdır. Ayrı profil doğrulayıcısı M2 kapsam, yerel kimlik, zaman ve replay
-kontrollerini birleştirir; operatör itibarı veya yetkilendirme sağlamaz.
-Content-Digest başlığını imzalamak, gerçek gövdenin doğrulandığı anlamına gelmez.
-RFC test anahtarları kamuya açıktır; üretimde kesinlikle kullanılmamalıdır.
-Profil katmanı bilinen test anahtarlarını varsayılan reddeder.
+| Operation | Input | Output |
+| --- | --- | --- |
+| parseSignatureHeaders | Ordered header occurrences and optional limits | Label-matched signature inputs and bytes |
+| createSignatureBase | Message context, signature input, field types, limits | Canonical text and bytes |
+| signHttpMessage | Message, signature input, private Ed25519 key | Two signature-header values for one label |
+| verifyHttpSignatureCryptography | Message, parsed signature, public Ed25519 key | Cryptographic validity or typed rejection |
 
-Ayrıştırıcı tüm etiket çiftlerini döndürür; herhangi bir çiftte karşılık
-eksikse bu tüm-çiftler API'si hata verir. İki imza başlığı da yoksa boş dizi
-döner. Tek bir imzanın başarısı diğer imzaların kabul edildiği anlamına gelmez.
+Signing and verification return Promises, but currently execute synchronously
+on bounded input. This does not imply worker-thread or nonblocking cryptography.
+Ed25519 signs the exact base without prehashing, as specified in RFC 9421 §3.3.6.
 
-## Kaynak limitleri ve hatalar
+### Message and key contract
 
-[Dondurulmuş core bütçeleri](src/limits.ts) dışa aktarılır. Başlık, URI, SF ve
-imza tabanı boyutları için 16 KiB başlangıç değeri kullanılır; bu değer Node'un
-varsayılan başlık boyutu referansıyla seçilmiş yerel politikadır.
-Birleşik imza alanı değerleri ayrıca toplam olarak sınanır.
-İmza tabanı genişleyebileceği için geçerli küçük başlıklar bile çıktı bütçesini
-aşabilir. İmzalanan veri hiçbir zaman sınırı karşılamak için kesilmez.
+Preserve ordered header tuples and repeated occurrences. Header-name matching is
+case-insensitive; covered header component names must be lowercase.
 
-Core her SF çağrısında kendi bütçesini açıkça geçirir; SF paketinin varsayılanını
-değiştirmek core limitlerini sessizce değiştirmez. Çağrı başına limit değişikliği
-mümkündür. Daha büyük bütçeler daha fazla CPU/bellek maliyeti demektir.
+String field values represent ASCII. Use byte arrays and binary-wrapped coverage
+for original non-ASCII HTTP octets; the engine never guesses UTF-8 versus Latin-1.
+Only explicit HTTP/1.1 context permits obsolete line-fold removal. Remaining
+CR/LF characters are rejected during component normalization.
 
-[Hata türleri](src/errors.ts) içerik veya anahtar materyalini mesajlara yazmaz.
-Beklenen kriptografik retler sonuç olarak döner; yanlış çağıran yapılandırması
-hata olarak iletilir. Limit hataları sınır, üst değer ve gözlenen değeri taşır.
-Kriptografik sonuç kaynak reddini ayrı bir neden koduyla belirtir.
+Supply the externally observed absolute HTTP(S) target URI. If covering the raw
+request-target, supply it separately; it is not inferred from the URI. Proxy
+headers are never trusted automatically. Consistent external URI, raw target,
+and header context are the caller's responsibility.
 
-## Testler ve kaynaklar
+The pure signer takes a private Ed25519 key object; the pure verifier takes a
+public one. Key strings are not imported automatically. Declared signature
+algorithms must agree with the selected key.
 
-Dört bağımsız golden takımı ayrıştırma, imza tabanı, imzalama ve doğrulamayı
-[RFC 9421 B.1.4 ve B.2.6](https://www.rfc-editor.org/rfc/rfc9421.html#appendix-B.2.6)
-verileriyle sınar. İmzalama testi yayımlanmış baytları birebir üretir; doğrulama
-testi kendi imzalayıcımızı kullanmaz. Fixture'lar bayt olarak okunur.
+The pure signer returns one label's header values without mutating the message.
+Merging them with other signatures is an explicit caller operation. In contrast,
+the profile signer rejects any existing Signature, Signature-Input, or
+Signature-Agent header, even an empty one.
 
-[Kaynak ve lisans kaydı](../../docs/fixture-provenance.md), upstream commit'ini,
-kaynak özetlerini ve satır sonu kontrollerini açıklar. Negatif/property testleri,
-ESM/CJS tüketici kontrolleri ve Node 20/22/24 × Windows/Linux CI matrisi mevcuttur.
-CI tanımının varlığı bütün matrisin çalıştırıldığı anlamına gelmez.
+## Pure engine coverage
+
+| Feature | Support |
+| --- | --- |
+| Ordered occurrences, OWS, explicit HTTP/1.1 obs-fold | Supported |
+| Strict Structured Field serialization and Dictionary member selection | Requires a known field type |
+| Separate binary-wrapped encoding of each occurrence | Supported |
+| Method, target URI, authority, scheme, path, query | Supported |
+| Raw request-target | Requires explicit caller context |
+| Individual query parameter | RFC form decoding/encoding; repeated names rejected |
+| Response status and related request components | Requires explicit context |
+| Multiple signatures | Parsed/verified per label; no automatic acceptance policy |
+| Trailers | Explicitly rejected |
+| Non-Ed25519 cryptography | Explicitly rejected |
+| Unknown derived component or component parameter | Explicitly rejected |
+| Unknown signature metadata | Included if its SF type is supported; no inferred semantics |
+| Local profile, JWKS, nonce, and clock policy | Separate profile entry point |
+| Network discovery and directory cache | Not implemented |
+
+Signature metadata and component identifiers use RFC 8941 types; RFC 9651 Date
+and Display String extensions are not accepted in those positions. Other known
+Structured Fields may use the RFC 9651 implementation. Built-in Dictionary type
+information covers signature headers and Content-Digest; callers specify other
+field types. Full RFC 9421 feature/algorithm support is not claimed.
+
+## Trust and replay boundaries
+
+Pure cryptographic validity does **not** prove:
+
+- Ownership of a key by an agent, domain, or real-world operator.
+- Request freshness, acceptable timestamps, or absence of replay.
+- Integrity of uncovered components or the body.
+- Agreement between Content-Digest and actual body bytes.
+- Authorization, good intent, or exemption from rate limits.
+
+The offline profile verifier adds local identity, coverage, time, and replay
+checks. URL identity requires explicit local key-to-origin bindings and reports
+local configuration as its trust source, not DNS/TLS or directory proof.
+
+Default candidate policy requires exactly one tagged signature. Multiple tagged
+candidates are all evaluated, but ambiguity consumes no nonce. Explicit multiple
+mode supports all (default) or any, retaining every candidate's result.
+A successful candidate in a failed aggregate does not imply aggregate acceptance.
+
+Replay consumption is atomic and grouped only within one verification invocation.
+Independent requests never share acceptance. Memory is process-local and bounded;
+live entries are not evicted. Restart or explicit destructive clock reset loses
+history and may permit a still-valid old signature again. Optional-nonce mode
+only relaxes absence; a present nonce must still pass replay checks.
+
+Any malformed signature pair rejects the entire parsing call, including pairs
+with unrelated tags. No signature headers yields an empty parsed array. This is
+the local all-pairs contract, not a claim that the RFC mandates rejection of every
+unrelated signature in every application.
+
+## Resource limits and errors
+
+Core defaults use 16 KiB budgets for headers, URI, Structured Fields, and the
+signature base, with separate cardinality limits. These are local policy, not
+RFC maxima. Signature field values also have a combined budget. Canonicalization
+can expand data; small inputs can still exceed output limits. Signed data is
+never truncated to fit.
+
+Each SF call receives explicitly resolved core budgets. Raising limits increases
+CPU/memory exposure. Expected rejections have typed reasons; invalid application
+configuration throws separately. Unexpected programming errors are not hidden
+as ordinary authentication failures.
+
+Diagnostics exclude header contents, key material, and raw backend errors.
+Limit errors identify the budget and observed size. The verification, signing,
+and operator error catalogs are separately frozen; changes require approval and
+release notes.
+
+## Tests and provenance
+
+From a repository checkout, install workspace dependencies and build first:
+
+```sh
+pnpm install --frozen-lockfile --ignore-scripts
+pnpm run build
+pnpm --filter @agentsig/core test
+```
+
+The package-local test command runs core unit/golden tests. The repository's
+full check also runs type checks and fresh-process ESM/CJS consumers.
+
+Four independent golden suites use RFC 9421 B.1.4/B.2.6 data for parsing,
+canonicalization, signing, and verification. Profile fixtures precede their
+implementations. Full offline round trips supplement, rather than replace,
+independent golden bytes. Fixture files are read as bytes and checked against
+pinned hashes and isolated Git line-ending behavior.
+
+See [provenance](https://github.com/agentsig-dev/agentsig/blob/main/docs/fixture-provenance.md).
+CI targets Node 20/22/24 on Windows/Linux. A workflow definition or past green run
+does not prove that a later change passed every matrix cell.
+
+## License
+
+MIT for project code. Third-party test fixtures retain their own notices and are
+not included in the npm package.

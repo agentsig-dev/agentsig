@@ -1,10 +1,15 @@
-# WG E.2.1 bildirim taslağı — gönderilmedi
+# WG E.2.1 discrepancy report
 
-Kullanıcı tarafından gönderilecek kısa rapor. Hedef: taslak deposu veya
-kullanıcının belirttiği webbotauth@ietf.org adresi; alıcı adresi gönderimden önce
-güncel WG sayfasından teyit edilmelidir.
+The report text below was prepared for the maintainer to submit.
+The maintainer subsequently supplied this issue reference:
+https://github.com/webbotauth/draft-ietf-webbotauth-httpsig-protocol/issues/135
 
-Taslak deposu: https://github.com/thibmeu/http-message-signatures-directory
+Current issue repository: https://github.com/webbotauth/draft-ietf-webbotauth-httpsig-protocol
+Historical draft repository examined during research:
+https://github.com/thibmeu/http-message-signatures-directory
+
+The assistant did not submit the report. This reference does not establish
+the issue's current resolution status or authorize changing pinned fixtures.
 
 ## Subject
 
@@ -39,12 +44,16 @@ Could you confirm which naming is intended?
 Reference:
 https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#appendix-E.2.1
 
-## Yerel test kaydı
+## Local test record
 
-Özgün [vektör bölümü](../tests/fixtures/m2/published/wg-E.2.1/section.txt),
-[imza tabanı](../tests/fixtures/m2/published/wg-E.2.1/base.txt) ve
-[imza baytları](../tests/fixtures/m2/published/wg-E.2.1/signature.bin) değiştirilmez.
-[Politika fixture'ı](../tests/fixtures/m2/policy-cases.json) yalnızca etiket
-bağlama aşaması için agent-label-mismatch bekler; kapsam ve zaman ihlalleri de
-bulunduğundan tam doğrulayıcının ilk hatası hakkında çıkarım yapmaz.
-Bu rapor başka ekler veya taslak sürümleri için genel uyumluluk iddiası içermez.
+The original [vector section](../tests/fixtures/m2/published/wg-E.2.1/section.txt),
+[signature base](../tests/fixtures/m2/published/wg-E.2.1/base.txt), and
+[signature bytes](../tests/fixtures/m2/published/wg-E.2.1/signature.bin) remain unchanged.
+The [policy fixture](../tests/fixtures/m2/policy-cases.json) expects
+agent-label-mismatch only at the label-binding stage. Other coverage and time
+policy failures also exist, so the fixture does not assert the full verifier's
+first rejection reason.
+
+This report makes no general conformance claim for other appendices or draft
+versions. Any future corrected vector must be separately sourced and recorded;
+it must not silently replace the original published bytes.

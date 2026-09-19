@@ -1,299 +1,338 @@
-# M2 — çevrimdışı Web Bot Auth profil katmanı
+# M2 — offline Web Bot Auth profiles
 
-Durum: **M2 çevrimdışı doğrulayıcı ve profil dışa aktarımları uygulandı; yerel round-trip kabul kapısı geçti**. Tarih: 2026-09-18.
-Doğrulama kataloğu sürüm 1 olarak dondurulmuştur; kod değişikliği ayrı onay ve sürüm notu gerektirir.
-Bu belgenin aşağıdaki öneri/alternatif bölümleri tarihsel tasarım kaydıdır; eski
-“onay bekliyor” ifadeleri güncel uygulama engeli değildir. Güncel onaylı davranışlar:
-[JWKS yükleme](jwks-loading.md), [profil kimliği](profile-identity-policy.md),
-[imzalayan](profile-signing.md), [saat/replay bağlamı](security-context.md).
-[Çevrimdışı doğrulama rehberi](offline-verification.md) güncel dış API'yi açıklar.
-Son tam yerel kontrolde 4.284 birim testi ve 13 entegrasyon testi; ayrıca
-60 bağımsız ek fixture denetimi ve M1 audit'i geçti. İki profilde dört golden
-çıktının tam doğrulayıcıyla round-trip başarısı ayrıca sınandı.
-Bu belge tam protokol uyumluluğu veya yeni değişikliklerin uzak CI başarısı iddiası değildir.
-Depo: https://github.com/agentsig-dev/agentsig — npm kapsamı @agentsig.
+Updated September 19, 2026. **The offline verifier and profile exports are
+implemented; the full local round-trip acceptance gate passed.** The maintainer
+confirmed green core-m2 CI/fixture workflows and subsequently accepted the
+two-profile smoke test.
 
-## 1. Kapsam
+Verification catalog version 1 is frozen. Code additions, removals, and renames
+require separate approval and release notes. Historical proposals and
+alternatives below are retained as design history, not outstanding approval.
 
-M1 motorunun üzerinde, @agentsig/core içinde ayrı @agentsig/core/profiles alt
-giriş noktası uygulanmıştır. Yeni npm paketi eklenmemiştir. ESM/CJS çalışma
-zamanı ve tip bildirimleri gerçek paket tüketicileriyle yerelde sınanmıştır.
+Current contracts:
+[JWKS loading](jwks-loading.md),
+[profile identity](profile-identity-policy.md),
+[signing](profile-signing.md),
+[clock/replay context](security-context.md), and
+[offline verification](offline-verification.md).
 
-M2 iki sürümü sabit profil, profil bazlı imzalama/doğrulama, zaman politikası,
-elle verilen JWKS, atomik replay arayüzü, bellek içi depo ve kapalı sonuç kodlarını
-kapsar. Ağ, DNS, dizin fetch/cache, redirect, otomatik JWKS yenileme, framework
-adaptörleri, fetch sarmalayıcısı, CLI ve canlı Cloudflare testi kapsam dışıdır.
-Onay olmadan uygulama, push veya yayınlama yapılmaz.
+Completed M2 local validation passed 4,284 unit tests, 13 integration tests,
+60 additional independent fixture audits, and the M1 audit. Four independent
+golden signer outputs passed full offline verification across both profiles.
+These results do not imply complete protocol conformance, a security review,
+or remote CI success for later changes.
 
-## 2. Önceden onaylanan kararlar
+Repository: https://github.com/agentsig-dev/agentsig
+npm scope: @agentsig.
 
-- Varsayılan imzalayan profili **ietf-wg-protocol-00**.
-- Açıkça seçilen uyumluluk profili **cloudflare-docs-2026-07-01**.
-- İmzalayan otomatik downgrade veya sessiz yeniden deneme yapmaz.
-- Doğrulayan iki biçimi tanır; kullanılan profili her adayın sonucunda raporlar.
-- Hatalı biçim veya başarısız imza, diğer profili deneyerek başarıya çevrilmez.
-- İki profilde de nonce varsayılan zorunludur; isteğe bağlı politika açıkça seçilir.
-- İmzalama ömrü 60 sn; azami ömür/yaş 300 sn; saat toleransı 30 sn.
-  Bu değerler profil başına yapılandırılır; protokol zorunluluğu değildir.
-- Ed25519 ve Node yerleşik kripto kullanılır. M1 saf motoruna saat/ağ/depo yan etkisi eklenmez.
-- Fixture'lar ve bağımsız beklenen çıktılar önce ayrı commit, uygulama sonra.
+## 1. Scope
 
-## 3. Profil kuralları ve kaynak kapısı
+M2 builds on the pure M1 engine through the separate @agentsig/core/profiles
+entry point. No new npm package is required. ESM/CommonJS runtime exports and
+declarations were tested through real package consumers.
 
-| Profil | Wire davranışı | Sabit referans |
+M2 includes two pinned profiles, profile signing/verification, time policy,
+manually supplied public JWKS, an atomic replay interface, bounded memory
+storage, and closed result codes.
+
+Network access, DNS, directory fetching/caching, redirects, automatic JWKS
+refresh, framework adapters, a fetch wrapper, CLI, and live Cloudflare testing
+are outside this milestone. Push and publication remain maintainer operations.
+
+## 2. Approved decisions
+
+- Default signer profile: **ietf-wg-protocol-00**.
+- Explicit compatibility signer profile: **cloudflare-docs-2026-07-01**.
+- No automatic downgrade or silent retry.
+- The verifier recognizes both wire forms and reports each candidate's profile.
+- A malformed header or failed signature is not retried under another profile.
+- Both profiles require a nonce by default; optional policy must be explicit.
+- Default signing lifetime: 60 seconds; maximum lifetime and age: 300 seconds;
+  signature clock skew: 30 seconds.
+- Policies are configurable per profile and are not protocol requirements.
+- Only Ed25519 through Node's built-in cryptography; no clock/network/store side
+  effects are added to the pure M1 entry.
+- Independent fixtures and expected outputs precede implementations in separate
+  commits.
+
+## 3. Profile rules and source gate
+
+| Profile | Source behavior | Pinned reference |
 | --- | --- | --- |
-| ietf-wg-protocol-00 | Signature-Agent Dictionary; etiketle eşleşen imzalı üye; authority veya target-uri kapsamı; gerekli metadata | [WG-00 §5.2–5.5, 2026-09-01](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#section-5.2) |
-| cloudflare-docs-2026-07-01 | Tırnaklı Structured String; başlığın tamamı imzalı; belgelenmiş Cloudflare kuralları | [Cloudflare §4, sayfada görülen tarih 2026-07-01](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#4-after-verification-sign-your-requests) |
+| ietf-wg-protocol-00 | Signature-Agent Dictionary; signed member matching the signature label; authority or target-URI minimum coverage; required metadata | [WG-00 §§5.2–5.5, September 1, 2026](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#section-5.2) |
+| cloudflare-docs-2026-07-01 | Quoted Structured String; entire agent header covered; documented Cloudflare rules | [Cloudflare §4, documentation date July 1, 2026](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#4-after-verification-sign-your-requests) |
 
-Kaynak kapısı: WG-00 metni, varsa gerçek vektörleri ve Cloudflare dokümanının
-değişmez commit/snapshot'ı, lisans ve SHA-256 bilgileriyle sabitlenir.
-Cloudflare profil tarihine karşılık gelen kaynak bulunamazsa güncel sayfa o
-tarihteki kaynakmış gibi etiketlenmez; fark raporlanır ve onay istenir.
-Temsili örnek imza baytları gerçek vektör sayılmaz. Kendi fixture'larımız bu
-etiketle, M2 uygulamasından bağımsız Node kriptografisiyle denetlenir.
+The source gate requires the WG text, real vectors where available, and an
+immutable Cloudflare commit/snapshot with license and SHA-256 provenance.
+A source that cannot be tied to the named date must not silently be labeled as
+that historical source. Illustrative signatures are not cryptographic golden
+vectors. Independently authored agentsig fixtures are labeled as such and
+verified using Node cryptography without production code.
 
-Discovery türlerinin ayrıştırılması ağ çağrısı anlamına gelmez. M2 başlangıcı
-için yalnızca directory türünü işlemek önerilir; diğer türlere açık destek-dışı
-sonuç verilir. Alternatif: jwks_uri/cimd değerlerini de yalnızca önceden
-yapılandırılmış yerel kimlikler olarak desteklemek. Bu daha geniş kapsam ve
-normalizasyon testleri gerektirir; CIMD dokümanı indirilmez.
+Parsing discovery metadata does not imply network discovery. The approved M2
+choice supports only WG directory discovery, including its default when type
+is absent, and the Cloudflare legacy String form. Other discovery types are
+explicitly unsupported; URLs are not guessed or fetched.
 
-## 4. Çevrimdışı anahtar ve kimlik modeli
+Historical alternative: accept JWKS-URI/CIMD only through explicit local
+bindings. That would require broader identity semantics and URL-normalization
+fixtures, even without downloading any document. It was not selected for M2.
 
-JWKS yalnızca uygulamanın güvenilir yapılandırmasından alınır; istek içinden
-gelen JWKS veya anahtar materyali kabul edilmez. Yapılandırma yüklenirken kopyalanır,
-doğrulanır ve değişmez bir anahtar görünümü oluşturulur. Çalışırken sessiz mutasyon yoktur.
+## 4. Offline keys and identity
 
-Anahtar seçimi SHA-256 JWK thumbprint ile yapılır; keyid bir URL veya keyfi kid
-eşlemesi olarak kullanılmaz. İmza başlığındaki keyid yeniden hesaplanmış thumbprint
-ile eşleşmelidir. Yalnızca açık OKP/Ed25519, geçerli base64url ve 32 bayt x kabul
-edilir; özel d alanı reddedilir. use/key_ops kısıtları mevcutsa doğrulama amacıyla
-uyumlu olmalıdır. JWK alg değerinin JOSE bağlamı ile HTTP alg değeri birbirine
-karıştırılmaz; kabul matrisi kaynak ve negatif fixture'larla sabitlenir.
+JWKS comes only from trusted application configuration, never from incoming
+request key material. Configuration is snapshotted, validated, and exposed as
+an immutable loaded view; caller mutation does not silently change selected keys.
 
-Onaylanan iki kimlik modu:
-- **Varsayılan: yalnızca anahtar kimliği.** Elle JWKS verilince başarı anahtar
-  thumbprint'ine atfedilir. İmzalı Signature-Agent değeri bir iddia olarak ayrıca
-  raporlanabilir, ancak doğrulanmış alan adı/operatör değildir.
-- **Açık yerel bağlama:** Uygulama agent identifier → JWKS eşlemesi verir.
-  Başarıda güven kaynağı “local-configuration” olarak raporlanır; bu canlı TLS
-  çözümlemesi veya protokolün dizin kanıtı değildir. Aynı anahtarın başka URL'de
-  bulunması otomatik bağlama sağlamaz; operatör adı uygulamaya aittir.
+Selection uses the recomputed SHA-256 JWK thumbprint, not a URL or arbitrary key
+label. Usable verification keys are public OKP/Ed25519 with canonical base64url
+and 32-byte public material. Private fields are rejected. Recognized,
+structurally valid unsupported keys may be reported and skipped under the
+approved loading policy; malformed entries reject the entire set.
 
-Kullanıcı iki modu onayladı: düz JWKS için anahtar thumbprint'i;
-URL bağlaması yalnızca açık yerel yapılandırmayla etkinleştirilir ve sonuçta türü belirtilir.
-Statik anahtar değişimi yeni doğrulayıcı/anahtar görünümüyle yapılır; aynı replay
-deposu korunur. Anahtar rotasyonu tek başına daha önce kabul edilmiş nonce'ları silmez.
+Usage and operation metadata must satisfy the approved policy. JOSE JWK algorithm
+names and HTTP signature algorithm names are different vocabularies. See the
+[source-backed loading matrix](jwks-loading.md) rather than assuming aliases.
 
-## 5. Zaman politikası — kesin sınırlar için öneri
+Two identity modes are approved:
 
-Tüm değerler güvenli tamsayı Unix saniyesi; saat bağımlılığı enjekte edilebilir.
-Bir doğrulama aşamasında tek saat örneği kullanılır. created ve expires zorunlu;
-negatif zaman, expires ≤ created ve limit dışı ömür açık ret nedenidir.
+- **Default key identity:** a manually supplied JWKS establishes a verified key
+  thumbprint. The signed Signature-Agent URL remains a claim, not a verified
+  domain or operator.
+- **Explicit local binding:** the application configures key-thumbprint/origin
+  associations and selects URL-binding mode. Success reports local configuration
+  as its trust source, not live TLS or protocol directory proof.
 
-Önerilen kabul eşitsizlikleri:
-- created ≤ now + skew
-- expires − created ≤ maxLifetime
-- now < expires + skew
-- now < created + maxAge + skew
+Finding the same key at another URL does not automatically establish a binding.
+Operator names are application data, not inferred from cryptography.
 
-Son kabul sınırı hariçtir: tam sınırda istek reddedilir; böylece o sınırda
-nonce kaydını temizlemek replay penceresi açmaz.
-Alternatif: toleransı yalnızca gelecekteki created için uygulamak; sona ermiş
-imzayı asla uzatmaz, fakat dağıtık saat farklarında daha çok ret üretir.
-Öneri yukarıdaki simetrik tolerans; mevcut 60/300/300/30 varsayılanları değişmez.
+Static rotation creates a new verifier/key snapshot while retaining the shared
+security context and replay namespace. Rotating keys must not itself delete
+previously accepted nonces.
 
-Onaylanan korumacı replay saklama üst sınırı: max(tüketim anı, created) + maxAge + skew.
-Sabit 330 sn kullanılmaz. created 30 sn ileride kabul edilmişse varsayılanlarla
-ilk kabulden 360 sn sonrasına kadar saklama gerekebilir.
-Daha erken temizleme alternatifi: min(expires, created + maxAge) + skew;
-daha az bellek kullanır, ama bütün doğrulayıcıların aynı kabul politikasını
-uygulaması gerekir. Öneri ilk, korumacı üst sınırdır.
+## 5. Time policy and retention
 
-Asenkron depo beklemesinden sonra zaman tekrar sınanır; bu sırada süresi dolan
-imza kabul edilmez. Tüketilmiş nonce geri alınmaz: erişilebilirlik pahasına
-replay güvenliği korunur.
+Signed timestamps are safe integer Unix seconds within the SF Integer range.
+Creation, expiration, and key identity are required. A validation phase uses one
+healthy clock sample. Approved acceptance inequalities are:
 
-Saat geri giderse daha önce temizlenen nonce sessizce yeniden geçerli olmamalıdır.
-Duvar/monoton saat karşılaştırması ve ayrı 30 saniyelik sapma eşiği onaylanıp
-uygulanmıştır. Tarihsel alternatifler [karar tablosunda](m2-fixture-review.md),
-güncel toparlanma ve açık sıfırlama sözleşmesi [bağlam belgesinde](security-context.md)
-açıklanır. Açık sıfırlama replay geçmişini kesebilir; otomatik uygulanmaz.
-İmza toleransı ile saat sağlığı eşiği aynı yapılandırma alanı değildir.
-Kesin sapma eşiği ve süre aritmetiği fixture'ları uygulamadan önce sabitlenmiştir.
-Depo kaybı veya süreç yeniden başlatma sonrası bellek içi replay geçmişinin
-korunmadığı açıkça belgelenir; süreçler arası garanti verilmez.
+- Creation is at most current time plus skew.
+- Expiration is strictly after creation.
+- Lifetime is at most the configured maximum lifetime.
+- Current time is strictly before expiration plus skew.
+- Current time is strictly before creation plus maximum age plus skew.
 
-## 6. ReplayStore ve bellek içi depo
+End boundaries are exclusive so a record expiring at the boundary cannot
+reopen an accepted replay window. Comparisons and retention arithmetic must not
+silently overflow or clamp values.
 
-Depo sözleşmesi yönü: consume(scope, keyThumbprint, nonce, retainUntilEpochSeconds)
-→ Promise ile accepted / replayed / unavailable / per-key-quota-exceeded sonucu.
-Toplam kapasite doluluğu unavailable döndürür; ayrı capacity-exceeded kodu yoktur.
-Anahtar kotası ayrı per-key-quota-exceeded sonucudur; depo arızası olarak sınıflanmaz.
-Bunlar ayrı sorgu ve yazma değil, tek atomik işlem olmalıdır.
+Approved conservative retention is the greater of consumption time and creation
+time, plus maximum age and skew. It is not a fixed 330-second TTL. With default
+limits, a creation time accepted 30 seconds into the future may require retention
+until 360 seconds after initial consumption.
 
-Scope doğrulayıcının yapılandırdığı güven alanıdır; istekten alınmaz.
-Depo anahtarı scope + thumbprint + nonce üçlüsünün çakışmasız/uzunluk ayraçlı
-kodlanmasıyla türetilir. Profil ve imza etiketi anahtara katılmaz; bunları
-değiştirerek tekrar kontrolünden kaçış sağlanamaz. Aynı güven alanındaki
-doğrulayıcılar aynı depo örneğini kullanmalıdır.
-Onaylanan kota, depo genelinde doğrulanmış thumbprint başınadır; scope/profil/label
-kotayı bölmez. Atomik karar sırası: süresi dolan kayıtları temizle → replay →
-anahtar kotası → toplam kapasite. Aynı doğrulama çağrısında uygun adayların aynı
-scope/anahtar/nonce üçlüsü tek tüketim sonucunu paylaşır; bağımsız istekler paylaşmaz.
+Historical alternatives, not selected:
 
-Sıra: sınırlı ayrıştırma → profil/kapsam → yerel anahtar seçimi →
-kriptografi → son zaman kontrolü → atomik nonce tüketimi → zaman yeniden kontrolü.
-Geçersiz imza nonce'u tüketmez. “Optional” yalnızca eksik nonce'u gevşetir;
-mevcut nonce tekrarı, depo arızası veya kapasite aşımı başarıya çevrilmez.
+- Apply skew only to future creation and never extend expiration: tighter expiry,
+  but more rejection under distributed clock differences.
+- Retain only until the earlier of expiration and creation plus maximum age,
+  plus skew: lower memory use, but requires compatible policies across verifiers.
 
-Bellek içi depo: kontrol ve ekleme arasında await yok; kapasite kontrollü,
-sonlanmış kayıtlar temizlenir, yaşayan kayıtlar LRU ile atılmaz.
-Onaylanan toplam kapasite 10.000; yapılandırılabilir maxPerKey varsayılanı 1.000.
-Kripto ve kimlik kontrollerinden önce tüketim yapılmaz. Böylece anahtar başına
-kota doğrulanmış thumbprint üzerinden uygulanır; keyid iddiasına güvenilmez.
-Yakalanmış geçerli isteği yeniden gönderen biri de tüketimi tetikleyebilir:
-bu kontrol isteği bizzat özel anahtar sahibinin gönderdiğini ispatlamaz.
-Anahtar kotası, tek anahtarın toplam kapasiteyi tek başına doldurmasını sınırlar;
-birden fazla geçerli anahtar ve genel CPU tüketimi için tam DoS koruması değildir.
+The verifier rechecks time after awaiting replay consumption and at the final
+result gate. A signature that expires during the await is not accepted.
+Consumed nonces are not rolled back; availability is sacrificed rather than
+reopening replay windows.
 
-Nonce için en fazla 256 printable ASCII bayt ve üretilen nonce için 32 rastgele
-bayt onaylanmış varsayılanlardır. Gelen nonce'un entropisi kanıtlanamaz.
-Varsayılanlarla korumacı saklama üst sınırı ilk kabulden 360 sn sonrasına uzanabilir.
-Yerel JWKS için 64 anahtar / 256 KiB ve profil aday sayısı için 16 sınırı da
-protokol gereksinimi değil, onaylanmış ve yapılandırılabilir yerel kaynak bütçesidir.
+Clock health uses an initial wall reference plus monotonic elapsed time, with
+an independently configurable 30-second drift threshold. This policy was
+approved and implemented. Signature skew and clock-health thresholds are
+different settings. There is no automatic rebase.
 
-## 7. VerificationResult — kapalı sonuç modeli önerisi
+Wall drift can recover against the original reference; monotonic regression
+requires explicit reset. Explicit reset can destroy memory history and reopen
+a replay window. See the [context contract](security-context.md).
+Restart and separate processes do not preserve/share default memory history.
 
-Bu bölümdeki ilk büyük harfli kod taslağının yerine [tam küçük harfli kod kataloğu](m2-fixture-review.md)
-ve [makine-okunur politika fixture'ı](../tests/fixtures/m2/policy-cases.json) geçer.
-Uygulamada serbest metin reason bulunmayacak.
-Sonuç birlikleri başarı, geçersiz girdi ve doğrulanamama durumlarını ayıracak.
-Yalnızca başarılı sonuçta doğrulanmış anahtar kimliği bulunur. Başarısız sonuçta
-ajanın iddia ettiği kimlik “verified identity” alanına yerleştirilmez.
+## 6. Atomic replay interface and bounded memory
 
-Kod kataloğu başarı, geçersiz girdi, tamamlanamayan doğrulama, yapılandırma hatası
-ve depo işlemi sonuçlarını ayrı kapalı kümeler olarak tanımlar.
-Toplam doluluk replay-store-unavailable; anahtar kotası per-key-quota-exceeded;
-varsayılan çoklu aday reddi ambiguous-signatures olarak raporlanır.
-Eşleşen tag bulunmaması unsigned / no-web-bot-auth-candidate olarak sınıflanır;
-öncesindeki ayrıştırma hataları unsigned'a çevrilmez.
-Açık eşleme var ama URL uyuşmuyorsa invalid / agent-binding-mismatch;
-gereken eşleme yoksa unverified / agent-binding-missing.
-Bilinen algoritma ile seçilmiş anahtar çelişkisi invalid / algorithm-mismatch;
-böyle bir çelişki belirlenmeden desteklenmeyen algoritma unverified /
-unsupported-algorithm olur. **Düzeltme — onaylı metadata sınıflandırması:**
-yanlış SF metadata türü, M1 tüm-çiftler ayrıştırma sınırında bütün istek için
-malformed-signature olur; aday bazında invalid-parameter olarak raporlanmaz.
+The [store contract](../packages/core/src/profiles/replay-store.ts) receives
+scope, verified key thumbprint, nonce, healthy dispatch time, and conservative
+retention deadline. It returns one of accepted, replayed, unavailable, or
+per-key-quota-exceeded through a Promise.
 
-| Katman | Geçen örnek | Ret |
+Global capacity exhaustion returns unavailable; there is no separate capacity
+code. Per-key quota is distinct and is not treated as a backend malfunction.
+Checking and inserting must be one atomic operation, not separate queries.
+
+Scope is an explicit application trust namespace, never derived from a claim.
+The storage key is an injective encoding of scope/key-thumbprint/nonce. Profile
+and signature label do not partition protection. Related verifiers must share
+the intended security context and scope.
+
+The quota is per verified key thumbprint across the whole store, including all
+scopes. Decision order is expiry cleanup, replay, per-key quota, global capacity,
+then insertion. Eligible candidates in one invocation sharing the same tuple
+share one consume outcome; separate invocations never share acceptance.
+
+The flow is bounded parsing, profile/coverage checks, trusted key selection,
+identity/crypto/time eligibility, atomic consumption, and post-await/final
+time and epoch checks. Failed crypto or identity binding consumes nothing.
+Optional-nonce mode relaxes only absence; a present replay, store failure, or
+capacity failure cannot become a success.
+
+Memory check-and-insert contains no await. Capacity is bounded; expired entries
+are cleaned, but live entries are not LRU-evicted. Defaults are 10,000 total
+records and 1,000 per key. These quotas are not complete DoS protection:
+multiple trusted keys and cryptographic CPU costs remain application concerns.
+
+An observer of a valid request can race its first use. Nonce checks do not prove
+that the immediate sender is the private-key holder and do not themselves bind
+the body, method, or path; signature coverage is a separate requirement.
+
+Approved configurable secondary defaults:
+
+| Budget | Default |
+| --- | ---: |
+| Received nonce | 1–256 printable ASCII bytes |
+| Generated nonce | 32 random bytes, unpadded base64url |
+| Local JWKS | 256 KiB / 64 keys |
+| Selected profile candidates | 16 |
+| Local scope | 1–256 ASCII bytes |
+| Agent bindings | 64 |
+| Agent URL | 2,048 ASCII bytes |
+
+These are local budgets, not protocol MUST requirements. Valid nonce syntax
+does not establish entropy. Separate core limits remain in force.
+
+## 7. Closed result model
+
+The initial uppercase/free-text proposal was superseded by the
+[frozen lowercase catalog](m2-fixture-review.md) and
+[machine-readable policy fixture](../tests/fixtures/m2/policy-cases.json).
+The [implemented result types](../packages/core/src/profiles/verification-types.ts)
+retain exactly four external states: unsigned, verified, invalid, and unverified.
+
+Verified identity exists only on a successful candidate. An untrusted agent claim
+is never placed in a verified-identity field on rejection. Configuration errors
+and store outcomes are separate closed contracts. A failed aggregate can contain
+a successful candidate without granting aggregate acceptance.
+
+Important classifications:
+
+| Boundary | Result |
+| --- | --- |
+| No matching protocol tag after valid parsing | unsigned / no-web-bot-auth-candidate |
+| Default multiple-candidate ambiguity | invalid / ambiguous-signatures |
+| Global exhaustion or backend failure | unverified / replay-store-unavailable |
+| Per-key quota | unverified / per-key-quota-exceeded |
+| Required local binding absent | unverified / agent-binding-missing |
+| Existing key binding disagrees with signed URL | invalid / agent-binding-mismatch |
+| Known HTTP algorithm contradicts selected trusted key | invalid / algorithm-mismatch |
+| Unsupported algorithm without established contradiction | unverified / unsupported-algorithm |
+| Invalid aggregate configuration | thrown invalid-candidate-policy |
+
+### Approved metadata classification
+
+| Gate | Passing case | Failure |
 | --- | --- | --- |
-| Tel biçimi / SF türü | Algoritma String olarak verilmiş | Yanlış tür: bütün istek için malformed-signature |
-| Zorunlu metadata | Oluşturma, sona erme ve anahtar kimliği mevcut | Eksik alan: missing-required-parameter |
-| Profil anahtar kimliği biçimi | Padding'siz kanonik base64url, çözülmüş 32 bayt | Geçersiz gösterim: invalid-parameter; teşhis ihlal edilen kuralı belirtir |
-| Yerel anahtar araması | Yeniden hesaplanan thumbprint ile anahtar bulunmuş | Geçerli fakat bulunamayan kimlik: unknown-key |
-| Seçilmiş anahtar bağlaması | Seçilmiş açık anahtarın yeniden hesaplanan thumbprint'i eşleşmiş | Gerçek çelişki: key-id-mismatch; olağan yükleyici yolunda beklenmeyen savunma kontrolü |
+| Wire/SF type | Expected metadata types | Wrong type: whole-request malformed-signature |
+| Required metadata | Creation, expiration, and key identity present | missing-required-parameter |
+| Profile key-identity representation | Canonical unpadded base64url decoding to 32 bytes | invalid-parameter with a fixed violated-rule diagnostic |
+| Local lookup | Recomputed thumbprint found | unknown-key |
+| Selected-key binding | Recomputed selected public-key thumbprint agrees | key-id-mismatch; defensive and not expected on the normal loader path |
 
-Beş katmanın her iki profil için pozitif/negatif örnekleri
-[metadata fixture'larında](../tests/fixtures/metadata/cases.json) sabittir.
-Eksik veya farklı protokol tag'i aday oluşturmaz. Nonce için onaylı
-nonce-required / nonce-invalid ayrımı korunur.
+Both profiles have positive and negative examples for each gate in the
+[metadata fixtures](../tests/fixtures/metadata/cases.json).
+A missing or different tag does not select a candidate. Missing required nonce
+and present invalid nonce remain nonce-required and nonce-invalid.
 
-Thumbprint zorunluluğu genel RFC 9421 anahtar kimliği sözdiziminden değil,
-[WG §5.2](../tests/fixtures/metadata/sources/wg-5.2.txt) ve
-[Cloudflare §4.2](../tests/fixtures/metadata/sources/cloudflare-4.2.mdx)
-profil kurallarından gelir. [RFC 9421 §3.2](../tests/fixtures/metadata/sources/rfc9421-3.2.txt)
-adım 1–3 ayrıştırmayı gerektirir ve adımların başarısızlığında ilgili imza
-doğrulamasını başarısız sayar. Herhangi bir bozuk çift nedeniyle bütün isteği
-reddetmek, korunan yerel M1 tüm-çiftler sözleşmesidir; RFC'nin tüm ilgisiz
-imzaları koşulsuz reddetmeyi emrettiği iddia edilmez.
-aggregate-policy-required kaldırıldı; hatalı toplu kural yapılandırması
-invalid-candidate-policy olur. Açık çoklu-aday modunda kural verilmezse all seçilir.
-Dış VerificationResult yalnızca unsigned / verified / invalid / unverified kalır;
-tüketim öncesi CandidateEvaluation yalnızca iç tiptir.
+Thumbprint requirements come from
+[WG §5.2](../tests/fixtures/metadata/sources/wg-5.2.txt) and
+[Cloudflare §4.2](../tests/fixtures/metadata/sources/cloudflare-4.2.mdx), not generic
+RFC 9421 key-identifier syntax.
+[RFC 9421 §3.2](../tests/fixtures/metadata/sources/rfc9421-3.2.txt) steps 1–3 require
+parsing and failure of the relevant signature on invalid input. Rejecting the
+whole call for any malformed pair is the retained local M1 all-pairs contract,
+not a claim that RFC 9421 unconditionally rejects every unrelated signature.
 
-Yanlış yerel JWKS, limit veya saat yapılandırması oluşturma aşamasında tipli
-yapılandırma hatasıdır; saldırganın imzası bozukmuş gibi raporlanmaz.
-Beklenmeyen programlama hataları genel invalid sonucuyla gizlenmez.
-Doğrulanan sonuç ayrıca profil, etiket, imzalanan bileşenler, key thumbprint,
-doğrulama zamanı ve güven kaynağını taşır. Bu, erişim izni değildir.
+Unexpected programming errors propagate rather than becoming ordinary invalid
+results. Success reports profile, label, covered components, key identity,
+verification time, and trust source. It is not authorization.
 
-Onaylanan aday seçimi: tag değeri web-bot-auth olan imzalar; etiket adı seçim
-girdisi değildir. Tek aday değerlendirilir. Çoklu adayların tamamı değerlendirilir
-ve etiket başına sonuç dizisi döner. Varsayılan tam olarak bir aday ister;
-fazlasında üst düzey invalid / ambiguous-signatures döner.
-Üst düzey verified yalnızca açık çoklu-aday politikası izin verirse mümkündür.
-Açık modda all varsayılan, any bilinçli seçimdir; her iki durumda tüm adaylar
-değerlendirilir ve erken başarı yoktur. Varsayılan exactly-one çoklu-aday reddinde
-nonce tüketilmez; bütün adaylara ait kripto/kimlik/zaman değerlendirmesi iç tipte
-yapılır ve tam replay başarısı olarak dışa sızdırılmaz.
-“İlk geçen kazanır”, adayları sessizce düşürme ve etiket allowlist'i yoktur.
-M1 tüm-çiftler ayrıştırıcısı bozuk bir çiftte tüm çağrıyı reddeder; bu mevcut sınır
-ayrıca korunur. Onaylanan altı davranış politika fixture'ında kaydedilmiştir.
+### Candidate selection and aggregation
 
-## 8. Tarihsel güvenlik seçenekleri — sonraki onaylarla kesinleştirildi
+Select by tag equal to web-bot-auth, never by label name. Evaluate every selected
+candidate and preserve results in header order, including rejected ones.
+Default exactly-one policy rejects multiple candidates without nonce consumption;
+otherwise-eligible internal results are mapped to ambiguity, not public success.
 
-| Karar | Öneri | Alternatif / maliyet |
+Explicit multiple mode defaults to all; any is an explicit alternative.
+Both evaluate all candidates with no first-success shortcut. Rejection never
+removes a candidate from the count. CandidateEvaluation remains internal.
+
+## 8. Security approval history
+
+| Decision | Approved outcome | Boundary |
 | --- | --- | --- |
-| JWKS kimlik bağlaması | **Onaylandı:** düz JWKS → thumbprint; URL yalnızca açık eşlemeyle | TLS/dizin sahipliği kanıtı iddia edilmez |
-| İmzalama ve doğrulama kapsamı | **Onaylandı:** method + target-uri + profilin ajan bileşeni | Protokol minimumundan daha sıkı M2 politikasıdır |
-| Gövde | **Onaylandı:** content-digest M2 kapsamında yok | Dizin yanıt vektörünü arşivlemek gövde doğrulama özelliği eklemez |
-| Zaman ve TTL | **Onaylandı:** 60/300/300/30 ve korumacı saklama | Kesin sınır eşitsizlikleri ve saat anomalileri fixture onayında netleşir |
-| Kapasite | **Onaylandı:** 10.000 toplam; depo genelinde thumbprint başına maxPerKey 1.000; yaşayan kayıt atılmaz | Temizleme → replay → anahtar kotası → toplam kapasite |
-| Çoklu imza | **Onaylandı:** tag ile seçim, her adaya sonuç, varsayılan exactly-one; belirsizlik reddinde tüketim yok | Açık modda all varsayılan / any açık seçim; aynı çağrıda aynı nonce grubu tek tüketim |
-| Bilinen test anahtarları | Normal doğrulayıcıda reddet; testte açık izin | Tümüyle uygulamaya bırakmak yanlışlıkla üretim kullanımı riskini artırır |
-| Keşif türleri | M2 directory biçimi; diğerleri destek-dışı | Tamamen yerel jwks_uri/cimd eşleme desteğiyle test kapsamı artar |
+| JWKS identity | Default thumbprint; URL only with explicit local binding | No TLS/directory proof implied |
+| Required coverage | Method + complete target URI + profile agent component | Stricter than protocol minimum |
+| Body | No body-digest comparison in M2 | Archiving a directory-response vector adds no feature |
+| Time and retention | 60/300/300/30 defaults and conservative retention | Exact boundaries pinned before implementation |
+| Capacity | 10,000 global; 1,000 per key across scopes; no live eviction | Expire → replay → quota → capacity |
+| Multiple signatures | Tag selection, every candidate retained, exactly-one by default | Explicit all/any; shared consume only within one invocation |
+| Public test keys | Deny known fixture thumbprints by default | Explicit test override only |
+| Discovery | Directory form only in WG; legacy String for Cloudflare | No network fallback |
+| Clock recovery | Monotonic-reference health with explicit destructive reset | No automatic rebase |
 
-İmzalayan nonce kullansa bile saldırgan ilk kullanım yarışını kazanabilir.
-Nonce gövdeyi, yolu veya yöntemi kendiliğinden bağlamaz. Kapsam seçenekleri bu
-nedenle replay seçeneklerinden ayrı karardır.
-Tablodaki eski öneriler sonraki kullanıcı onaylarıyla kesinleştirilmiştir.
-Güncel davranış, belgenin başında bağlantılı uygulama belgeleri ve dondurulmuş
-fixture sözleşmeleridir; farklı bir güvenlik seçeneği sessizce uygulanmaz.
+Historical alternatives remain in the [fixture review](m2-fixture-review.md).
+Choosing another security behavior requires explicit approval, not a silent
+reinterpretation of these records.
 
-## 9. Fixture-first commit sırası ve kabul kapıları
+## 9. Fixture-first sequence and acceptance gates
 
-1. Güvenlik kararları ve kesin API sözleşmesi onaylanır.
-2. **Ayrı fixture commit'i:** sabit iki profil kaynağı; ayrı wire/AST/base/imza
-   beklentileri; gerçek vektör/temsili örnek ayrımı; lisans ve içerik özetleri.
-3. Zaman sınır tabloları, JWKS negatif verileri ve replay olay dizileri veri
-   olarak kaydedilir. Beklentiler M2 uygulamasından üretilmez.
-4. Fixture audit genişletmesi fixture commit'ini ve referans kriptografisini
-   doğrular; M1 fixture'ları değiştirilmez.
-5. Profil codec'leri, RFC 7638/8037 thumbprint, yerel JWKS doğrulaması eklenir.
-6. Enjekte edilen saatle profil başına zaman politikası eklenir.
-7. Atomik replay sözleşmesi ve kapasitesi sınırlı bellek içi depo eklenir.
-8. Kapalı sonuç modeli ve çevrimdışı doğrulayıcı birleştirilir.
-9. M1 testleri, yeni fixture/negatif/property testleri, ESM/CJS ve CI matrisi
-   çalıştırılır; her ana aşamada kısa rapor verilir. Push/yayın kullanıcıya aittir.
+The approved implementation sequence was:
 
-Zorunlu testler: iki profilin çapraz reddi ve downgrade yokluğu; etiket/ajan
-üyesi uyuşmazlığı; sınır saniyelerinde kabul/ret; saat geri/ileri sıçraması;
-gelecekteki created ile erken TTL boşluğu; 100 eşzamanlı aynı istekte tek kabul;
-geçersiz imzanın nonce tüketmemesi; optional noncesiz açık korumasız sonuç;
-kapasite doluluğu/depo hatası; farklı scope/anahtar ayrımı ve profil değiştirme
-ile replay kaçışının engellenmesi; JWKS içinde özel anahtar/yanlış eğri/bozuk
-base64url/çakışan kid; URL iddiasının kendiliğinden doğrulanmış kimliğe dönüşmemesi.
-İşlem sırasında ağ çağrısı olmadığını kanıtlayan testler ve bilinmeyen anahtarda
-fetch'e düşülmediği kontrolü bulunur.
+1. Approve security decisions and API boundaries.
+2. Commit pinned profile sources, independent wire/base/signature expectations,
+   real-vector versus illustrative-example distinctions, licenses, and hashes.
+3. Record time boundaries, JWKS negatives, and replay event sequences as data,
+   without deriving expected values from production code.
+4. Extend independent audits; leave M1 fixture bytes unchanged.
+5. Implement profile codecs, thumbprints, and bounded local JWKS validation.
+6. Implement configurable time policy with injected clocks.
+7. Implement atomic replay and bounded memory.
+8. Integrate the closed result model and offline verifier.
+9. Run M1 regressions, fixture/negative/property tests, and real ESM/CommonJS
+   consumers; report actual local versus remote CI results.
 
-## 10. Tarihsel kaynak/fixture teslimatı kaydı
+Required coverage includes no downgrade, profile-specific grammar, label/member
+mismatch, exact timestamp boundaries, clock anomalies, future-created retention,
+one acceptance among concurrent identical requests, no consumption for rejected
+crypto/identity, optional-nonce reporting, capacity/backend failures, scope/key
+separation, cross-profile replay protection, public-only JWKS, and prevention
+of automatic URL identity inference. Unknown keys must not fall back to fetching.
 
-M2 kaynak snapshot'ları ve bağımsız fixture'lar hazırlandı; API uygulaması,
-zaman kontrolü ve replay deposu eklenmedi. WG-00 Ek E.2'nin üç Ed25519 vektörü
-bağımsız doğrulandı. E.2.1'deki sig2/agent2 farkı değiştirilmedi; kriptografik
-geçerlilik ile profil/M2 politika kabulü ayrı kaydedildi. Cloudflare kaynak commit'i
-acfb1f2270b9473ae65a15674995e0b2f3b6ab0c olarak sabitlendi.
-Ağ katmanının SSRF, DNS rebinding, HTTP cache ve otomatik rotasyon kararları
-sonraki kilometre taşına ertelendi. E.2.1 özgün baytları korunarak etiket bağlama
-aşamasının agent-label-mismatch negatif fixture'ı olarak kullanılır; diğer
-kapsam/zaman ihlalleri nedeniyle tam doğrulayıcının ilk hatası varsayılmaz.
-[WG rapor taslağı](wg-e2-1-report-draft.md) kullanıcı tarafından gönderilmek üzere
-hazırdır. Kullanıcı göndereceğini belirtti; gönderimin tamamlandığı henüz teyit edilmedi.
-Bu tarihsel teslimatı izleyen onayda katalog ve güvenlik seçenekleri
-donduruldu; profil yardımcıları, imzalayan, saat/sıfırlama koordinatörü ve
-bellek deposu uygulandı. Güncel kapsam için belgenin başındaki durum notu geçerlidir.
-Metadata fixture denetimi ile gerçek doğrulayıcı entegrasyonu ayrı testlerdir;
-biri diğerinin yerine sayılmaz. Güncel uygulamada tam doğrulayıcı, çoklu aday,
-replay/sıfırlama yarışları ve profil ESM/CJS tüketicileri ayrıca sınanmıştır.
-Push ve yayın kullanıcıya aittir.
+## 10. Historical source delivery and subsequent completion
+
+The first M2 delivery contained source snapshots and independent fixtures, not a
+verifier, time policy, or replay implementation. All three WG E.2 Ed25519 vectors
+were independently verified. E.2.1's sig2/agent2 mismatch was preserved, with
+cryptographic validity distinguished from profile/M2 policy acceptance.
+
+Cloudflare was pinned at **acfb1f2270b9473ae65a15674995e0b2f3b6ab0c**.
+SSRF, DNS rebinding, HTTP caching, and automatic rotation decisions were deferred
+to a later network milestone. E.2.1 is a label-binding-stage negative fixture,
+not an assertion about the full verifier's first failure amid other violations.
+
+The maintainer supplied
+[upstream issue #135](https://github.com/webbotauth/draft-ietf-webbotauth-httpsig-protocol/issues/135);
+the [report text](wg-e2-1-report-draft.md) is retained. No resolution is assumed.
+
+Subsequent approvals froze the catalogs and policies. Helpers, signer,
+clock/reset coordination, real memory storage, full verification, and profile
+exports were implemented. Independent fixture audits and actual integration
+tests remain separate evidence; neither substitutes for the other.
+
+Network source excerpts and Appendix F.3 JSON vectors requested for M3 will be
+pinned and reviewed separately after the current documentation patch is delivered.
+No network policy is selected by this translation.

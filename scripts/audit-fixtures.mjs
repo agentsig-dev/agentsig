@@ -1,6 +1,6 @@
 // scripts/audit-fixtures.mjs
-// RFC 9421 B.2.6 fixture'larını motordan bağımsız doğrular.
-// Sadece node:crypto kullanır; @agentsig/* paketlerine dokunmaz.
+// Verify RFC 9421 B.2.6 fixtures independently of the engine.
+// Use only node:crypto for cryptography; do not import @agentsig/* packages.
 
 import { readFileSync, existsSync } from "node:fs";
 import { execSync } from "node:child_process";
@@ -17,13 +17,13 @@ const ok = (msg) => console.log(`  ✔ ${msg}`);
 const fail = (msg) => { failures++; console.log(`  ✘ ${msg}`); };
 const section = (t) => console.log(`\n${t}`);
 
-// RFC 8792 tek ters bölü katlamasını aç: "\" + satır sonu + baştaki boşluklar silinir
+// Unfold RFC 8792 single-backslash folds: remove backslash, newline, and leading whitespace.
 const unfold = (text) => text.replace(/\\\r?\n[ \t]*/g, "");
 const read = (p) => readFileSync(p, "utf8");
 const hasCR = (buf) => buf.includes(0x0d);
 
-// ---------- 1. Dosyalar var mı ----------
-section("1. Fixture dosyaları");
+// ---------- 1. File existence ----------
+section("1. Fixture files");
 const files = {
     reqHead: "request-head.txt",
     base: "signature-base.txt",
@@ -35,136 +35,136 @@ const files = {
 };
 for (const [k, f] of Object.entries(files)) {
     const p = resolve(FX, f);
-    existsSync(p) ? ok(f) : fail(`${f} eksik`);
+    existsSync(p) ? ok(f) : fail(`${f} missing`);
     files[k] = p;
 }
-existsSync(RFC) ? ok("tests/fixtures/sources/rfc9421.txt") : fail("RFC kaynak metni eksik");
-if (failures) { console.log(`\n${failures} hata, devam edilemiyor.`); process.exit(1); }
+existsSync(RFC) ? ok("tests/fixtures/sources/rfc9421.txt") : fail("RFC source text missing");
+if (failures) { console.log(`\n${failures} errors; cannot continue.`); process.exit(1); }
 
-// ---------- 2. Satır sonları ----------
-section("2. Satır sonları (LF zorunlu)");
+// ---------- 2. Line endings ----------
+section("2. Line endings (LF required)");
 for (const f of ["reqHead", "base", "headers", "privPem", "pubPem"]) {
     const buf = readFileSync(files[f]);
-    hasCR(buf) ? fail(`${files[f]} içinde CR var (CRLF sızıntısı)`) : ok(`${f}: sadece LF`);
+    hasCR(buf) ? fail(`${files[f]} contains CR (CRLF contamination)`) : ok(`${f}: LF only`);
 }
 
-// ---------- 3. RFC metninden sig-b26 değerlerini çek ----------
-section("3. RFC 9421 metni → sig-b26");
+// ---------- 3. Extract sig-b26 values from RFC text ----------
+section("3. RFC 9421 text → sig-b26");
 const rfcText = unfold(read(RFC));
 const rfcInputs = [...rfcText.matchAll(/Signature-Input:\s*sig-b26=([^\n]+)/g)].map((m) => m[1].trim());
 const rfcSigs = [...rfcText.matchAll(/Signature:\s*sig-b26=:([A-Za-z0-9+/=]+):/g)].map((m) => m[1]);
 
-if (rfcInputs.length === 0) fail("RFC metninde Signature-Input sig-b26 bulunamadı");
-else if (new Set(rfcInputs).size > 1) fail("RFC metninde birden fazla farklı sig-b26 Signature-Input var");
-else ok(`Signature-Input bulundu (${rfcInputs.length} oluşum, tutarlı)`);
+if (rfcInputs.length === 0) fail("Signature-Input sig-b26 not found in RFC text");
+else if (new Set(rfcInputs).size > 1) fail("RFC text contains distinct sig-b26 Signature-Input values");
+else ok(`Signature-Input found (${rfcInputs.length} occurrences, consistent)`);
 
-if (rfcSigs.length === 0) fail("RFC metninde Signature sig-b26 bulunamadı");
-else if (new Set(rfcSigs).size > 1) fail("RFC metninde birden fazla farklı sig-b26 Signature var");
-else ok(`Signature bulundu (${rfcSigs.length} oluşum, tutarlı)`);
+if (rfcSigs.length === 0) fail("Signature sig-b26 not found in RFC text");
+else if (new Set(rfcSigs).size > 1) fail("RFC text contains distinct sig-b26 Signature values");
+else ok(`Signature found (${rfcSigs.length} occurrences, consistent)`);
 
 const rfcInput = rfcInputs[0];
 const rfcSigB64 = rfcSigs[0];
 
-// ---------- 4. signature-headers.txt ile karşılaştır ----------
+// ---------- 4. Compare with signature-headers.txt ----------
 section("4. signature-headers.txt ↔ RFC");
 const hdrText = unfold(read(files.headers));
 const fxInput = hdrText.match(/Signature-Input:\s*sig-b26=([^\n]+)/)?.[1]?.trim();
 const fxSigB64 = hdrText.match(/Signature:\s*sig-b26=:([A-Za-z0-9+/=]+):/)?.[1];
 
-fxInput ? ok("Signature-Input ayrıştırıldı") : fail("signature-headers.txt içinde Signature-Input yok");
-fxSigB64 ? ok("Signature ayrıştırıldı") : fail("signature-headers.txt içinde Signature yok");
-if (fxInput && rfcInput) fxInput === rfcInput ? ok("Signature-Input RFC ile birebir") : fail(`Signature-Input farklı\n    fixture: ${fxInput}\n    rfc:     ${rfcInput}`);
-if (fxSigB64 && rfcSigB64) fxSigB64 === rfcSigB64 ? ok("Signature base64 RFC ile birebir") : fail("Signature base64 RFC'den farklı");
+fxInput ? ok("Signature-Input parsed") : fail("Signature-Input missing from signature-headers.txt");
+fxSigB64 ? ok("Signature parsed") : fail("Signature missing from signature-headers.txt");
+if (fxInput && rfcInput) fxInput === rfcInput ? ok("Signature-Input matches RFC exactly") : fail(`Signature-Input differs\n    fixture: ${fxInput}\n    rfc:     ${rfcInput}`);
+if (fxSigB64 && rfcSigB64) fxSigB64 === rfcSigB64 ? ok("Signature base64 matches RFC exactly") : fail("Signature base64 differs from RFC");
 
 // ---------- 5. signature.bin ----------
 section("5. signature.bin");
 const sigBin = readFileSync(files.sig);
-sigBin.length === 64 ? ok("64 bayt (Ed25519)") : fail(`${sigBin.length} bayt, 64 bekleniyordu`);
+sigBin.length === 64 ? ok("64 bytes (Ed25519)") : fail(`${sigBin.length} bytes; expected 64`);
 if (rfcSigB64) {
     const rfcBytes = Buffer.from(rfcSigB64, "base64");
-    rfcBytes.equals(sigBin) ? ok("signature.bin = RFC base64 baytları") : fail("signature.bin RFC baytlarıyla eşleşmiyor");
+    rfcBytes.equals(sigBin) ? ok("signature.bin = RFC base64 bytes") : fail("signature.bin does not match RFC bytes");
 }
 
 // ---------- 6. signature-base.txt ----------
 section("6. signature-base.txt");
 const baseBuf = readFileSync(files.base);
 const hadTrailingLF = baseBuf.length && baseBuf[baseBuf.length - 1] === 0x0a;
-const baseText = baseBuf.toString("utf8").replace(/\n$/, ""); // tek sondaki LF'i at
+const baseText = baseBuf.toString("utf8").replace(/\n$/, ""); // Remove a single trailing LF.
 const baseLines = baseText.split("\n");
-baseLines.length === 7 ? ok("7 satır (6 bileşen + @signature-params)") : fail(`${baseLines.length} satır, 7 bekleniyordu`);
-console.log(`  ℹ dosya sonunda LF ${hadTrailingLF ? "VAR" : "YOK"} (imzalanan baytlarda olmamalı; aşağıdaki kripto testi bunu doğrular)`);
+baseLines.length === 7 ? ok("7 lines (6 components + @signature-params)") : fail(`${baseLines.length} lines; expected 7`);
+console.log(`  ℹ trailing LF ${hadTrailingLF ? "PRESENT" : "ABSENT"} (must not be in signed bytes; the crypto check below verifies this)`);
 
 const last = baseLines[baseLines.length - 1];
 const spPrefix = '"@signature-params": ';
-if (!last.startsWith(spPrefix)) fail(`son satır "@signature-params" ile başlamıyor: ${last}`);
+if (!last.startsWith(spPrefix)) fail(`last line does not start with "@signature-params": ${last}`);
 else {
     const spValue = last.slice(spPrefix.length);
-    spValue === rfcInput ? ok("@signature-params değeri = RFC Signature-Input değeri") : fail(`@signature-params RFC ile farklı\n    base: ${spValue}\n    rfc:  ${rfcInput}`);
-    /created=1618884473/.test(spValue) ? ok("created=1618884473") : fail("created değeri beklenen değil");
-    /keyid="test-key-ed25519"/.test(spValue) ? ok('keyid="test-key-ed25519"') : fail("keyid beklenen değil");
+    spValue === rfcInput ? ok("@signature-params value = RFC Signature-Input value") : fail(`@signature-params differs from RFC\n    base: ${spValue}\n    rfc:  ${rfcInput}`);
+    /created=1618884473/.test(spValue) ? ok("created=1618884473") : fail("unexpected created value");
+    /keyid="test-key-ed25519"/.test(spValue) ? ok('keyid="test-key-ed25519"') : fail("unexpected keyid");
 }
 
 const expectedComponents = ['"date"', '"@method"', '"@path"', '"@authority"', '"content-type"', '"content-length"'];
 expectedComponents.forEach((c, i) => {
-    baseLines[i]?.startsWith(c + ": ") ? ok(`satır ${i + 1}: ${c}`) : fail(`satır ${i + 1} ${c} ile başlamıyor: ${baseLines[i]}`);
+    baseLines[i]?.startsWith(c + ": ") ? ok(`line ${i + 1}: ${c}`) : fail(`line ${i + 1} does not start with ${c}: ${baseLines[i]}`);
 });
 
-// ---------- 7. Anahtarlar ----------
-section("7. Anahtarlar (B.1.4)");
+// ---------- 7. Keys ----------
+section("7. Keys (B.1.4)");
 let pubKey, privKey;
 try {
     pubKey = createPublicKey(read(files.pubPem));
-    pubKey.asymmetricKeyType === "ed25519" ? ok("public.pem: ed25519") : fail(`public.pem tipi ${pubKey.asymmetricKeyType}`);
-} catch (e) { fail(`public.pem okunamadı: ${e.message}`); }
+    pubKey.asymmetricKeyType === "ed25519" ? ok("public.pem: ed25519") : fail(`public.pem type: ${pubKey.asymmetricKeyType}`);
+} catch (e) { fail(`could not read public.pem: ${e.message}`); }
 try {
     privKey = createPrivateKey(read(files.privPem));
-    privKey.asymmetricKeyType === "ed25519" ? ok("private.pem: ed25519") : fail(`private.pem tipi ${privKey.asymmetricKeyType}`);
-} catch (e) { fail(`private.pem okunamadı: ${e.message}`); }
+    privKey.asymmetricKeyType === "ed25519" ? ok("private.pem: ed25519") : fail(`private.pem type: ${privKey.asymmetricKeyType}`);
+} catch (e) { fail(`could not read private.pem: ${e.message}`); }
 
 if (pubKey && privKey) {
     const derivedPub = createPublicKey(privKey).export({ type: "spki", format: "der" });
     const filePub = pubKey.export({ type: "spki", format: "der" });
-    derivedPub.equals(filePub) ? ok("private.pem'den türeyen public = public.pem") : fail("private/public PEM çifti uyumsuz");
+    derivedPub.equals(filePub) ? ok("public key derived from private.pem = public.pem") : fail("private/public PEM pair mismatch");
 }
 try {
     const jwk = JSON.parse(read(files.privJwk));
     const jwkKey = createPrivateKey({ key: jwk, format: "jwk" });
     const jwkPub = createPublicKey(jwkKey).export({ type: "spki", format: "der" });
-    pubKey && jwkPub.equals(pubKey.export({ type: "spki", format: "der" })) ? ok("JWK private → public = public.pem") : fail("JWK anahtarı PEM ile uyumsuz");
-    jwk.kid === "test-key-ed25519" ? ok(`JWK kid=${jwk.kid}`) : console.log(`  ℹ JWK kid: ${jwk.kid ?? "(yok)"}`);
-} catch (e) { fail(`JWK okunamadı: ${e.message}`); }
+    pubKey && jwkPub.equals(pubKey.export({ type: "spki", format: "der" })) ? ok("JWK private → public = public.pem") : fail("JWK key does not match PEM");
+    jwk.kid === "test-key-ed25519" ? ok(`JWK kid=${jwk.kid}`) : console.log(`  ℹ JWK kid: ${jwk.kid ?? "(absent)"}`);
+} catch (e) { fail(`could not read JWK: ${e.message}`); }
 
-// ---------- 8. Kriptografik doğrulama (motordan bağımsız) ----------
-section("8. Kriptografi: node:crypto ile doğrulama");
+// ---------- 8. Cryptographic verification (engine-independent) ----------
+section("8. Cryptography: verification with node:crypto");
 if (pubKey && privKey) {
     const msg = Buffer.from(baseText, "utf8");
     const valid = verify(null, msg, pubKey, sigBin);
-    valid ? ok("signature.bin, signature-base.txt üzerinde public.pem ile GEÇERLİ") : fail("imza doğrulanamadı: base metni, imza veya anahtar uyumsuz");
+    valid ? ok("signature.bin is VALID over signature-base.txt with public.pem") : fail("signature verification failed: base, signature, or key mismatch");
 
-    // Ed25519 deterministik: aynı anahtar + aynı mesaj = aynı imza
+    // Ed25519 is deterministic: same key + same message = same signature.
     const resigned = sign(null, msg, privKey);
-    resigned.equals(sigBin) ? ok("private.pem ile yeniden imzalama = signature.bin (deterministik eşleşme)") : fail("yeniden imzalama farklı bayt üretti");
+    resigned.equals(sigBin) ? ok("resigning with private.pem = signature.bin (deterministic match)") : fail("resigning produced different bytes");
 
-    // Tersini de göster: sondaki LF eklenirse imza bozulmalı
+    // Also check that including a trailing LF invalidates the signature.
     if (hadTrailingLF) {
         const withLF = verify(null, baseBuf, pubKey, sigBin);
-        withLF ? fail("sondaki LF ile de doğrulandı — bu olmamalı, kontrol et") : ok("sondaki LF dahil edilirse imza bozuluyor (beklenen)");
+        withLF ? fail("verification also passed with trailing LF — unexpected; investigate") : ok("including trailing LF invalidates the signature (expected)");
     }
 }
 
-// ---------- 9. Fixture commit'inde uygulama kodu yok ----------
-section(`9. Commit ${FIXTURE_COMMIT}: uygulama kodu içermiyor mu`);
+// ---------- 9. Fixture commit contains no implementation ----------
+section(`9. Commit ${FIXTURE_COMMIT}: no implementation code`);
 try {
     const names = execSync(`git show --name-only --format= ${FIXTURE_COMMIT}`, { cwd: ROOT, encoding: "utf8" })
         .split("\n").filter(Boolean);
     const srcFiles = names.filter((n) => /^packages\/[^/]+\/src\//.test(n) || /\.(ts|tsx)$/.test(n) && !/\/test\//.test(n) && !/fixtures/.test(n));
-    srcFiles.length === 0 ? ok(`${names.length} dosya, hiçbiri src/ veya uygulama .ts değil`) : fail(`uygulama kodu bulundu:\n    ${srcFiles.join("\n    ")}`);
+    srcFiles.length === 0 ? ok(`${names.length} files; none are src/ or implementation .ts files`) : fail(`implementation code found:\n    ${srcFiles.join("\n    ")}`);
     const hasSources = names.some((n) => n.includes("tests/fixtures/sources/rfc9421.txt"));
-    hasSources ? ok("RFC kaynak metni bu commit'te pinlenmiş") : fail("RFC kaynak metni bu commit'te yok");
-} catch (e) { fail(`git komutu çalışmadı: ${e.message.split("\n")[0]}`); }
+    hasSources ? ok("RFC source text is pinned in this commit") : fail("RFC source text missing from this commit");
+} catch (e) { fail(`git command failed: ${e.message.split("\n")[0]}`); }
 
-// ---------- Sonuç ----------
+// ---------- Result ----------
 console.log(`\n${"─".repeat(50)}`);
-if (failures === 0) console.log("TAMAM: tüm kontroller geçti. Fixture zemini sağlam.");
-else console.log(`HATA: ${failures} kontrol başarısız. Push etmeden önce düzelt.`);
+if (failures === 0) console.log("PASS: all checks passed. Fixture baseline is intact.");
+else console.log(`FAIL: ${failures} checks failed. Fix before pushing.`);
 process.exit(failures ? 1 : 0);

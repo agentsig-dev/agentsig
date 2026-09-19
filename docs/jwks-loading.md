@@ -1,118 +1,123 @@
-# M2 yerel JWKS yükleme sözleşmesi
+# M2 local JWKS loading contract
 
-Tarih: 2026-09-18. Durum: yükleyici kaynak kodu ve testleri mevcut;
-tam Web Bot Auth profil doğrulayıcısı henüz tamamlanmadı.
-Bu yardımcılar mevcut yayımlanabilir paket girişinden dışa aktarılmıyor.
-Güvenlik incelemesinden geçmiş veya üretime hazır olduğu iddia edilmez.
+Updated September 19, 2026. The loader is implemented and exposed through the
+[profile entry point](../packages/core/src/profiles.ts). Full offline verification
+and profile consumers were subsequently completed in M2. Historical test counts
+below describe the original loader milestone, not the current total.
+No security review or production-readiness claim is made.
 
-## Güven sınırı
+## Trust boundary
 
-[Yerel yükleyici](../packages/core/src/profiles/jwks.ts) yalnızca uygulamanın
-güvenilir yapılandırmasını kabul eder. İstekten gelen açık anahtarlar güvenilir
-yapılandırma yerine kullanılamaz. Ağ erişimi, sertifika indirme, dizin keşfi,
-otomatik yenileme ve alan adı sahipliği kanıtı yoktur.
+The [local loader](../packages/core/src/profiles/jwks.ts) accepts trusted
+application configuration only. Public keys supplied by an incoming request
+cannot replace that configuration. There is no network access, certificate
+download, directory discovery, automatic refresh, or proof of domain ownership.
 
-Nesne, JSON metni veya UTF-8 bayt girdisi desteklenir. Varsayılan bütçe
-256 KiB ve 64 anahtardır; desteklenmeyen ve tekrar eden girdiler de sayılır.
-[Girdi kopyalama](../packages/core/src/profiles/jwks-input.ts), çağıranın sonraki
-mutasyonlarını yüklenen görünümden ayırır. Boyut bütçesi JSON temsilini sınırlar;
-JavaScript yığın belleğinin tam ölçümü değildir. Nesneler güvenilir yerel
-yapılandırmadır; çalıştırılabilir Proxy nesneleri için bir sandbox sağlanmaz.
+Objects, JSON text, and UTF-8 bytes are supported. Default budgets are 256 KiB
+and 64 keys; unsupported and duplicate entries count toward the limits.
+[Input snapshots](../packages/core/src/profiles/jwks-input.ts) isolate the loaded
+view from subsequent caller mutation. The size budget bounds the JSON
+representation, not exact JavaScript heap usage. Local configuration objects
+are trusted code; this is not a sandbox for executable Proxies.
 
-Anahtar seçimi yalnızca yeniden hesaplanan SHA-256 RFC 7638 thumbprint ile yapılır.
-Yükleme veya anahtar bulma; imza doğrulama, nonce tüketimi, saat kontrolü,
-test anahtarına izin verme ya da URL kimliği bağlama anlamına gelmez.
+Keys are selected only by recomputed SHA-256 RFC 7638 thumbprints. Loading or
+finding a key does not verify a signature, consume a nonce, check time, permit
+a test key, or establish a URL identity.
 
-## İki açık girdi biçimi
+## Two explicit input formats
 
-| Biçim | Ed25519 algoritma metadata’sı | Anahtar etiketi |
+| Format | Ed25519 algorithm metadata | Key label |
 | --- | --- | --- |
-| Varsayılan genel JWKS | Yok veya tam JOSE EdDSA adı | İsteğe bağlı serbest metin; seçimde kullanılmaz |
-| WG directory-00 | Yok veya tam HTTP ed25519 adı | Varsa hesaplanan thumbprint ile eşit olmalı |
+| Default generic JWKS | Absent or exactly JOSE EdDSA | Optional opaque string; never used for selection |
+| WG directory-00 | Absent or exactly HTTP ed25519 | If present, must equal the computed thumbprint |
 
-Biçimler arasında sessiz isim çevirisi veya otomatik yeniden deneme yoktur.
-WG etiket kuralının kaynağı §5.5; algoritma adları kuralının kaynağı §5.5.1’dir.
-[Özgün bölüm alıntısı](../tests/fixtures/jwks/wg-discovery-format-excerpt.txt)
-aynen korunur. Bu bölümler kullanım amacı veya anahtar işlemleri için ek normatif
-kısıt getirmez; örnekte imza kullanım amacı bulunur.
+There is no silent translation or automatic retry between formats. The WG key
+label requirement comes from §5.5; the algorithm-name requirement comes from
+§5.5.1. The [original excerpt](../tests/fixtures/jwks/wg-discovery-format-excerpt.txt)
+is preserved verbatim. These sections impose no additional normative key-use
+or key-operation restrictions; the example includes signature use.
 
-## Kullanım politikası A
+## Approved usage policy A
 
-[Yerel kullanım politikası](../packages/core/src/profiles/jwks-usage.ts)
-iki biçimde de aynıdır. Ed25519 için kullanım amacı yok veya imza olmalıdır.
-İşlem listesi yoksa kabul edilir; varsa doğrulamayı içermeli ve yalnızca
-imzalama/doğrulama işlemlerinden oluşmalıdır.
+The [local usage policy](../packages/core/src/profiles/jwks-usage.ts) is identical
+for both formats. Ed25519 use must be absent or signature use. An absent
+operation list is accepted; a present list must include verification and contain
+only signing/verification operations.
 
-Bozuk metadata türleri, tekrarlanan işlemler ve bilinen kullanım/işlem
-çelişkileri tüm yüklemeyi reddeder. Ed25519’e özgü kısıt bütün OKP ailesine
-uygulanmaz: X25519 ve Ed448, yalnızca şifreleme kullanım amacı taşıdıkları
-için reddedilmez. Geçerli desteklenmeyen anahtarlar raporlanarak atlanır.
+Malformed metadata types, duplicate operations, and known use/operation
+contradictions reject the entire load. Ed25519-specific restrictions do not
+apply to the entire OKP family: X25519 and Ed448 are not rejected merely for
+declaring encryption use. Structurally valid unsupported keys are reported and
+skipped.
 
-## Desteklenmeyen anahtarlarda algoritma politikası B
+## Approved algorithm policy B for unsupported keys
 
-[Algoritma sınıflandırması](../packages/core/src/profiles/jwks-algorithm.ts)
-yeni kriptografik algoritma desteği sağlamaz.
+[Algorithm classification](../packages/core/src/profiles/jwks-algorithm.ts) does
+not implement additional cryptographic algorithms.
 
-1. Algoritma metadata’sı yoksa anahtar raporlanır ve atlanır.
-2. Ad kendi biçiminin sabit listesinde ise raporlanır ve atlanır.
-   Genel anahtar-algoritma uyumu denetlenmez.
-3. Ad karşı biçimin listesinde ise tüm yükleme biçim hatasıyla reddedilir.
-4. Ad iki listede de yoksa anahtar bilinmeyen algoritma adı nedeniyle atlanır.
-   Bu ayrı yükleme raporu nedenidir; donmuş istek sonuç kataloğuna ek değildir.
-5. Kendi biçiminin Ed25519 algoritma adını taşıyan başka tür/eğride anahtar
-   reddedilir. Ed448 ile JOSE EdDSA eşleşmesi RFC 8037’de geçerlidir;
-   buradaki ret açıkça onaylanmış daha dar yerel politikadır.
-6. Simetrik anahtarlar, sır alanları eksik olsa bile açık JWKS’te reddedilir.
+1. No algorithm metadata: report and skip the key.
+2. Name in the selected format's pinned vocabulary: report and skip. No general
+   key/algorithm compatibility check is performed for these skipped keys.
+3. Name belonging to the opposite format: reject the entire load as a format error.
+4. Name in neither vocabulary: skip with the unknown-algorithm-name load-report
+   reason. This is not an addition to the frozen request result catalog.
+5. Another key type/curve using the selected format's Ed25519 algorithm name:
+   reject. Ed448 with JOSE EdDSA is valid under RFC 8037; rejecting it here is an
+   explicitly approved, narrower local policy.
+6. Symmetric keys are rejected from a public JWKS even if secret fields are absent.
 
-WG §5.5.1 kayıt üyeliği, kullanılabilir Ed25519 anahtarları için katı uygulanır.
-Doğrulamaya alınmayan anahtarlarda bilinmeyen isimler, sabit kayıt listesinin
-eskimesi nedeniyle tek başına tüm kümeyi düşürmez. Dolayısıyla başarılı yükleme,
-atlanan girdiler dahil belgenin tam WG dizin uyumluluğunu kanıtlamaz.
+WG §5.5.1 registry membership is enforced strictly for usable Ed25519 keys.
+Unknown names on keys excluded from verification do not by themselves reject
+the whole set, because pinned registries age. Successful loading therefore
+does not prove full WG directory conformance of skipped entries.
 
-Atlanan anahtar nesneleri doğrulama havuzuna verilmez. Böyle bir anahtarın
-thumbprint’i sorgulanırsa desteklenmeyen algoritma sonucu alınır;
-bilinmeyen thumbprint için bilinmeyen anahtar sonucu döner. Hiçbiri ağ çağrısı başlatmaz.
+Skipped key objects never enter the verification pool. Looking up their
+thumbprints returns unsupported-algorithm; an unknown thumbprint returns
+unknown-key. Neither result triggers network access.
 
-## Hatalar ve operatör teşhisi
+## Errors and operator diagnostics
 
-[Yapılandırma hataları](../packages/core/src/profiles/jwks-error.ts),
-donmuş geçersiz-JWKS kodunu koruyarak sıfır tabanlı anahtar indeksi, varsa etiket
-ve ihlal açıklaması taşır. Ayrıştırma veya toplam bütçe hatası anahtar indeksi
-belirlenmeden oluşabilir; bu durumda belge düzeyinde teşhis verilir.
+[Configuration errors](../packages/core/src/profiles/jwks-error.ts) retain the
+frozen invalid-jwks code and include a zero-based key index, optional label,
+and violated rule. Parsing or total-budget errors can occur before a key index
+is available; those receive document-level diagnostics.
 
-Mesajdaki etiket kontrol karakterleri kaçışlanır; 256 UTF-16 kod birimini aşan
-etiket açık kısaltma işaretiyle gösterilir. Ham etiket yapılandırılmış teşhis
-alanında korunur: bu alan doğrudan terminale veya satır tabanlı günlüğe yazılmamalıdır.
-Anahtar bileşenleri, özel materyal ve kripto altyapısı hata metni mesaja eklenmez.
+Displayed labels escape control characters and truncate after 256 UTF-16 code
+units with an explicit marker. The raw label remains in the structured diagnostic
+field: do not write that field directly to a terminal or line-oriented log.
+Messages exclude key components, private material, and raw crypto backend errors.
 
-## Kaynaklar, fixture’lar ve doğrulama durumu
+## Sources, fixtures, and validation history
 
-[Ad listeleri](../tests/fixtures/jwks/algorithm-lists.json):
-JOSE için RFC 7518 ve RFC 8037’de algoritma kullanım konumuna kayıtlı 31 ad;
-içerik şifreleme kullanım konumuna ait kayıtlar dahil değildir.
-HTTP için RFC 9421 §6.2’ye bağlı IANA kaydından 6 ad alınmıştır.
+The [pinned name lists](../tests/fixtures/jwks/algorithm-lists.json) contain
+31 JOSE names registered for the algorithm usage location in RFC 7518/8037;
+content-encryption usage registrations are excluded. The HTTP vocabulary
+contains six names from the IANA registry referenced by RFC 9421 §6.2.
 
-[IANA kaynağı](https://www.iana.org/assignments/http-message-signature/http-message-signature.xml)
-2026-09-18T20:36:24.390Z anında alınmıştır; kayıt güncellemesi 2026-07-20’dir.
-Özgün snapshot SHA-256:
+The [IANA source](https://www.iana.org/assignments/http-message-signature/http-message-signature.xml)
+was retrieved at 2026-09-18T20:36:24.390Z and reports an update date of 2026-07-20.
+Original snapshot SHA-256:
 bd4b0304e21e226fef189ed283a31392b5ffc99a37d00e9911dc011dcfb1523f.
-Kaynak baytları, iki satır sonu boşluğu dahil korunmuştur.
-RFC belgeleri özgün lisans bildirimlerini korur; proje MIT lisansı bu kaynakları
-yeniden lisanslamaz. IANA kaydı IANA’ya atfedilir; herhangi bir onay ilişkisi yoktur.
 
-Fixture’lar üretim yükleyicisinden önce ayrı yerel commit’lere alınmıştır:
-ab8812f temel JWKS kaynakları; 1fd6fd5 kullanım politikası;
-45153ff algoritma listeleri ve altı kural.
+Source bytes, including trailing whitespace on two lines, are preserved.
+RFC documents retain their original license notices; the project MIT license
+does not relicense them. The registry is attributed to IANA without implying
+endorsement.
 
-[Bağımsız denetim](../tests/jwks-fixture-audit.test.mjs) agentsig kodunu kullanmaz.
-32 temel, 54 kullanım ve 410 algoritma senaryosu sabitlenmiştir.
-[Yükleyici testleri](../packages/core/test/profile-jwks.test.ts) bu 496 senaryoyu
-nesne, metin ve bayt girdileriyle çalıştırır; ayrıca sınır kontrolleri içerir.
+Fixtures were committed separately before the production loader:
 
-Bu alt adımda yerel Windows / Node 22 üzerinde tam regresyon geçti:
-3.661 birim testi (625 profil testi dahil), 9 entegrasyon testi, 27 bağımsız
-JWKS/M2 denetimi ve M1 fixture audit'i başarılıdır. İki paketin derleme ve
-tip kontrolleri de geçti. ESM/CJS tüketici testleri mevcut M1 girişlerini kapsar;
-JWKS yardımcılarının paket dışa aktarımı ve tüketici testleri henüz eklenmedi.
-Yeni değişikliklerin uzak Node 20/22/24 × Windows/Linux sonuçları henüz
-doğrulanmadı. Push ve yayın yapılmadı.
+- **ab8812f:** initial JWKS sources.
+- **1fd6fd5:** usage policy.
+- **45153ff:** algorithm vocabularies and the six rules.
+
+The [independent audit](../tests/jwks-fixture-audit.test.mjs) imports no agentsig
+code. It pins 32 basic, 54 usage, and 410 algorithm scenarios.
+[Loader tests](../packages/core/test/profile-jwks.test.ts) exercise the fixture
+matrix through object/text/byte input paths and add boundary checks.
+
+At the original loader milestone, local Windows / Node 22 regression passed:
+3,661 unit tests (including 625 profile tests), nine integration tests, 27
+independent JWKS/M2 audits, the M1 fixture audit, and both packages' build/type
+checks. Consumer tests at that time covered only M1; later M2 work added the
+profile exports and full offline verifier. See the
+[current delivery record](deferred.md) for subsequent results.

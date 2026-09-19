@@ -1,190 +1,210 @@
-# M2 ortak güvenlik bağlamı: saat, dönem ve sıfırlama
+# M2 shared security context: clocks, epochs, and resets
 
-Durum: 2026-09-18. İç koordinatör, gerçek bellek içi replay deposu, ortak bağlam
-fabrikası ve çevrimdışı doğrulayıcı entegrasyonu uygulanmıştır. Gerçek depo,
-sıfırlama yarışları ve başarısızlık enjeksiyonu için test dublörleri sınanır.
-Profil ESM/CJS dışa aktarımları ve tam round-trip testleri yerelde geçmiştir.
-Bu sonuçlar üretime hazırlık veya güvenlik denetimi iddiası değildir.
-Güncel dış API: [çevrimdışı doğrulama rehberi](offline-verification.md).
+Updated September 19, 2026. The internal coordinator, bounded in-memory replay
+store, shared context factory, and offline verifier integration are implemented.
+Tests cover the real store, reset races, and failure injection with test doubles.
+Profile ESM/CommonJS consumers and full round trips passed locally. The maintainer
+subsequently confirmed green core-m2 CI and fixture workflows. These results do
+not establish production readiness or constitute a security review.
 
-## Zaman ve saat sağlığı
+See the [offline verification guide](offline-verification.md) for the public API.
 
-[Saf zaman politikası](../packages/core/src/profiles/time-policy.ts) çağıranın
-sağladığı tam sayı Unix saniyesini kullanır; kendi başına saat okumaz.
-Oluşturma zamanı gelecekte en fazla yapılandırılmış tolerans kadar olabilir.
-Sona erme oluşturma zamanından büyük olmalı ve azami ömrü aşmamalıdır.
-Sona erme artı tolerans ve oluşturma artı azami yaş artı tolerans sınırları
-hariçtir: tam sınırda ret verilir. Karşılaştırmalar taşmasız tam sayı
-aritmetiğiyle yapılır. Zaman kontrolünü geçmek kimlik doğrulama değildir.
+## Signature time and clock health
 
-[Saat izleyicisi](../packages/core/src/profiles/clock-tracker.ts) etkin zamanı
-başlangıç duvar saati ile monoton geçen sürenin toplamından hesaplar.
-İmza zamanı bunun saniyeye aşağı yuvarlanmış değeridir.
-Duvar saati ile etkin zaman arasındaki mutlak fark varsayılan 30 saniyeyi
-aşarsa saat sağlıksızdır; eşik imza toleransından bağımsız yapılandırılır.
+The [pure time policy](../packages/core/src/profiles/time-policy.ts) accepts
+caller-supplied integer Unix seconds and never reads a clock implicitly.
+Creation time may be in the future only within the configured tolerance.
+Expiration must follow creation and the lifetime must not exceed policy.
+Both expiration plus tolerance and creation plus maximum age plus tolerance
+are exclusive acceptance boundaries: equality is rejected. Comparisons use exact
+integer arithmetic to avoid overflow. Passing the time gate is not authentication.
 
-Duvar saati sapması aynı referansa göre tekrar sınır içine dönerse toparlanma
-mümkündür. Monoton gerileme izleyiciyi kalıcı olarak geçersiz kılar ve açık
-sıfırlama gerektirir. Otomatik referans yenileme veya replay temizleme yoktur.
-Sağlıksız saatte zaman değeri doğrulama için sunulmaz ve depo çağrısı başlatılmaz.
+The [clock tracker](../packages/core/src/profiles/clock-tracker.ts) calculates
+effective time from its initial wall-clock reference plus monotonic elapsed time.
+Signature time is that value floored to integer seconds. A wall-clock difference
+strictly greater than the default 30-second drift threshold makes the clock
+unhealthy. This threshold is configured separately from signature clock skew.
 
-## Paylaşılan dönem ve işlem sınırı
+Wall drift can recover against the original reference when it returns within
+the threshold. Monotonic regression permanently invalidates the tracker and
+requires an explicit reset. There is no automatic rebase or replay cleanup.
+An unhealthy clock supplies no usable verification time and starts no store call.
 
-[İç koordinatör](../packages/core/src/profiles/security-context-controller.ts)
-saat, [işlem dönemleri](../packages/core/src/profiles/operation-epochs.ts)
-ve depo erişimini tek bağlamda yönetir. Aynı güvenlik bağlamındaki
-doğrulayıcılar bağımsız saat sıfırlayamaz.
+## Shared epoch and operation boundary
 
-Dönem kimliği monoton artan, süreç-yerel bir tam sayıdır. İşlemler başladıkları
-döneme ait bağlam-sahipli tanıtıcı taşır. Depoya gönderimden önce ve depo
-beklemesinden sonra dönem ve saat sağlığı tekrar kontrol edilir.
-Sonuç üretme aşamasında da kontrol zorunludur. Tam doğrulayıcı bu son kontrolün
-zaman örneğiyle bütün uygun adayların zaman pencerelerini yeniden sınar.
-Son kontrolden başarı sonucuna kadar bekleme veya uygulama callback'i yoktur.
-Önceki grubun depo tüketimi kabul edilmiş olsa bile sonraki grup beklerken
-sıfırlama yapılması eski çağrının başarılı aday döndürmesini engeller.
+The [internal coordinator](../packages/core/src/profiles/security-context-controller.ts)
+owns the clock, [operation epochs](../packages/core/src/profiles/operation-epochs.ts),
+and store access within one context. Verifiers sharing the context cannot reset
+their clocks independently.
 
-Dönem kimliği uzak depoya gönderilmez. Başka bağlamın veya sonlanmış dönemin
-tanıtıcısı, sayısal dönem kimliği aynı olsa bile kabul edilmez.
+Epoch identifiers increase monotonically within the process. Each operation
+holds a context-owned lease for the epoch in which it began. Epoch ownership and
+clock health are checked before store dispatch and again after awaiting the store.
 
-## Operatör sıfırlaması
+The final result path checks them again. The verifier uses that final clock
+sample to recheck each eligible candidate's time window. No await or application
+callback separates the final gate from construction of successful results.
+Even if an earlier group's store consumption was accepted, a reset while a later
+group is pending prevents the old invocation from returning a verified candidate.
 
-[Operatör hata kataloğu](../packages/core/src/profiles/operator-errors.ts)
-dört ayrı, dondurulmuş kod içerir. İmzalayan ve doğrulama kataloglarıyla
-ortak hata tipi veya birlik kullanılmaz.
+Epoch identifiers are never sent to an external store. A lease from another
+context or a finished epoch is rejected even if its numeric epoch matches.
 
-| Hata | Davranış |
+## Explicit operator reset
+
+The [operator error catalog](../packages/core/src/profiles/operator-errors.ts)
+contains four separately frozen codes. It shares no error type or union with
+the signing or verification catalogs.
+
+| Error | Behavior |
 | --- | --- |
-| reset-unsupported-store | Depo beyanı yok veya güvenli yerel temizleme yeteneği yok; referanslar, dönem ve kayıtlar korunur. |
-| reset-in-progress | Başka sıfırlama sürüyor veya senkron yeniden giriş var; ikinci işlem durumu değiştirmez. |
-| reset-clock-unavailable | Hazırlık saat örnekleri geçersiz; referanslar ve kayıtlar korunur, sağlık hatası gizlenmez. |
-| reset-failed | Dönem kapatma, temizlik veya etkinleştirme tamamlanamadı; bağlam kapalı fakat yeniden denenebilir kalır. |
+| reset-unsupported-store | No retention declaration or safe owned-memory cleanup capability; preserve references, epoch, and records |
+| reset-in-progress | Another reset is running or synchronous reentry occurred; the second call changes no state |
+| reset-clock-unavailable | Initial replacement samples are invalid; preserve references and records without hiding the health failure |
+| reset-failed | Epoch invalidation, cleanup, or activation failed; leave the context closed but retryable |
 
-Sıra: yetenek/meşgul kontrolü → bağlamı kapatma → yeni saat örneklerini
-doğrulama → eski dönemi geri alınamaz biçimde geçersiz kılma ve gerekiyorsa
-bellek temizleme → son sağlık kontrolü ve yeni dönemi etkinleştirme.
+Reset order:
 
-Temizlik beklerken saat bozulursa yeni dönem açılmaz. Son kontrol hazırlanan
-referansı kullanır; yeniden bir referans seçerek bozulmayı gizlemez.
-Başarısızlık meşgul durumunu temizler; sonraki açık sıfırlama baştan denenebilir.
-Eski dönem hiçbir başarısızlık yolunda yeniden etkinleştirilmez.
+1. Check capability and whether a reset is already running.
+2. Close the context to new verification work.
+3. Validate fresh wall and monotonic samples.
+4. Irreversibly invalidate the old epoch, then clear owned memory if required.
+5. Check clock health again and activate the replacement reference and epoch.
 
-**Sağlıklı saatte de sıfırlama uygulanır. Bellek deposunun temizlenmesi
-yıkıcıdır: daha önce tüketilmiş, hâlâ geçerli bir imza tekrar kabul edilebilir.**
-Süreç yeniden başlatma da bellek içi replay geçmişini korumaz.
-Sıfırlama sürerken doğrulama beklemez; saat kullanılamıyor sonucu alır.
+If clock health fails while cleanup is pending, the new epoch is not activated.
+The final check uses the prepared replacement reference; it does not silently
+rebase to conceal the failure. Failure clears the busy state so another explicit
+reset can retry. The old epoch is never resurrected.
 
-## Depo saat beyanı
+**Reset also applies to a healthy clock. Clearing memory is destructive: a
+previously consumed, still-valid signature may be accepted again.** Process
+restart likewise loses in-memory replay history. Verification arriving during
+reset does not wait for it; it receives a clock-unavailable rejection.
 
-[Replay sözleşmesi](../packages/core/src/profiles/replay-store.ts) üç durumu ayırır:
+## Store retention-clock declarations
 
-- Süreç saatine bağlı: bağlama ait bellek kayıtları ve kota sayaçları temizlenir.
-  Haricî deponun yalnızca bu beyanı vermesi onu temizleme yetkisi sağlamaz.
-- Bağımsız saat: yerel sıfırlama kayıtları veya kotaları temizlemez; yerel dönem yenilenir.
-- Beyan yok: normal tüketim mümkündür, fakat sıfırlama durumu değiştirmeden reddedilir.
+The [replay contract](../packages/core/src/profiles/replay-store.ts) distinguishes
+three cases:
 
-Bağımsız depo adaptörleri kendi saat alanlarını, atomikliği ve TTL yuvarlamasını
-ayrıca sağlamalıdır. Redis veya dağıtık sıfırlama protokolü M2'de uygulanmaz.
+- **Process clock:** clear records and quota counters in context-owned memory.
+  Merely declaring this on an external store does not grant cleanup authority.
+- **Independent clock:** preserve store history and quotas; renew only the local epoch.
+- **Undeclared:** normal consumption is allowed, but reset is rejected without
+  changing references or store state.
 
-Önceden gönderilmiş uzak tüketim sıfırlama sonrasında tamamlanabilir; dağıtık
-iptal garantisi verilmez. Yerel bağlam eski dönemden yeni tüketim başlatmaz
-ve o doğrulama çağrısından doğrulanmış başarı üretmez. Tamamlanan yazma,
-eski saatle hesaplanmış süreyle gereksiz kayıt tutabilir. Bu, mevcut canlı
-kaydı silmeyen veya süresini kısaltmayan atomik depo sözleşmesi altında
-replay güvenliğini zayıflatmaz; erişilebilirliği azaltabilir.
-Aynı nonce başka çağrıda kabul edilmiş olabileceğinden, nonce'un hiçbir
-zaman kabul edilmediği genellemesi yapılmaz.
+Independent-store adapters must implement their own clock-domain translation,
+atomicity, and TTL rounding. They derive retention duration from the supplied
+deadline and dispatch time rather than compare absolute timestamps from
+unrelated clocks. Redis and a distributed reset protocol are not implemented
+in M2.
 
-## Olaylar ve gözlemci
+An external consume dispatched before reset may complete afterward; distributed
+cancellation is not guaranteed. The old local operation cannot dispatch more
+consumption or return verified. Its completed write may retain an unnecessary
+record based on the old clock. Under the atomic store contract, which forbids
+shortening or deleting an existing live record on replay, this can reduce
+availability without weakening replay protection. The nonce might have been
+accepted in another invocation, so do not claim that it was never accepted.
 
-[Olay şeması](../packages/core/src/profiles/context-events.ts) sıfırlama nedeni,
-eski/yeni dönem, temizlenen kayıt ve kota sayıları, geçersiz kılınan işlem
-sayısı, depo beyanı ve sonucu taşır. Sağlık olayları yalnızca geçişlerde üretilir.
-Kısmi temizlikte bilinen gerçek sayaçlar raporlanır; bilinmeyenler açıkça
-bilinmeyen kalır. Anahtar, nonce, başlık veya ham altyapı hatası taşınmaz.
+## Events and observer isolation
 
-[Tek senkron gözlemci](../packages/core/src/profiles/context-observer.ts)
-bağlam oluşturulurken verilir; değiştirme veya çıkarma yoktur.
-İlgili durum kesinleştikten sonra, çağırana dönmeden önce olay başına bir kez
-çağrılır. Başarısız sıfırlamalar da olay üretir.
-Her tür senkron fırlatma yutulur; ham değer saklanmaz veya loglanmaz.
-Salt okunur hata sayacı artar; ikincil hata hook'u yoktur.
+The [event schema](../packages/core/src/profiles/context-events.ts) includes
+reset reason, old/new epochs, cleared record and quota-counter counts, invalidated
+operation count, store declaration, and outcome. Clock-health events are emitted
+only on transitions. Partial cleanup reports known actual counts; unknown counts
+remain explicitly unknown. Events contain no keys, nonces, headers, or raw
+infrastructure errors.
 
-Gözlemcinin senkron çağrı yığınından doğrulama yeniden girişi saat kullanılamıyor,
-sıfırlama yeniden girişi meşgul sıfırlama reddi alır. Bu retler yeni olay üretmez.
-Koruma hata halinde de temizlenir; ertelenmiş işe taşınmaz.
-Tamamlanmış sıfırlamanın sonucu gözlemci hatası nedeniyle değişmez.
+The [single synchronous observer](../packages/core/src/profiles/context-observer.ts)
+is fixed at context creation; it cannot be replaced or removed. Each event is
+delivered once, after state is finalized and before returning to the caller.
+Failed reset attempts also produce events, except observer-originated reentry
+that must not recursively produce more events.
 
-**Hook içinde ağır iş yapmayın; senkron hook çağıranı ve sıfırlamayı geciktirir.**
-Örnek düzen: hook yalnızca temizlenmiş olay verisini uygulamanın sınırlı
-log kuyruğuna bırakır; ayrı tüketici yazmayı yapar ve kendi asenkron hatalarını
-yönetir. [Ertelenmiş çağrı testi](../packages/core/test/profile-context-observer.test.ts)
-korumanın senkron dönüşten sonra sona erdiğini gösterir. Kuyruk taşma
-politikası uygulamaya aittir. Hook'un döndürdüğü asenkron sonuç beklenmez;
-ertelenmiş hata bu senkron yakalama sınırına dahil değildir.
+Every synchronously thrown value is swallowed without retaining or logging it.
+A read-only, saturating observer-error counter increments; there is no secondary
+error hook. Observer errors do not change a completed reset's outcome.
 
-## Doğrulama durumu
+Verification reentry from the observer's synchronous call stack is rejected as
+clock-unavailable. Reset reentry is rejected as reset-in-progress. The guard is
+cleared even after an exception and does not leak into deferred work. Observers
+also cannot retire active leases or change invalidation accounting.
 
-Dönem/sıfırlama fixture'ları b1c7bee, gözlemci fixture'ları f9466af yerel
-commit'lerinde koordinatörden önce sabitlenmiştir.
-[Bağımsız denetim](../tests/reset-fixture-audit.test.mjs) uygulama kodunu kullanmaz.
-[Bağlam testleri](../packages/core/test/profile-security-context.test.ts)
-bilinen kısmi temizlik, yeniden deneme, saat değişimi ve yeniden giriş
-regresyonlarını test dublörleriyle sınar.
+**Do not perform expensive work inside the hook. Synchronous work delays the
+caller and reset.** Enqueue sanitized events into an application-owned bounded
+logging queue instead. A separate consumer performs I/O and handles its own
+asynchronous failures. Queue overflow policy belongs to the application.
+Returned asynchronous work is neither awaited nor inspected; failures after
+the synchronous callback returns are outside this catch boundary.
+[Deferred-callback tests](../packages/core/test/profile-context-observer.test.ts)
+exercise the stack-local guard.
 
-Tarihsel koordinatör teslimatında Windows / Node 22 üzerinde 102 hedefli test,
-4.136 birim testi ve 54 bağımsız fixture denetimi geçmişti. Gerçek bellek deposu
-ve fabrika eklendikten sonra bunlara ait 65 hedefli test de başarılı oldu.
+## Validation history
 
-Güncel tam yerel regresyon: 4.284 birim testi, 13 entegrasyon testi,
-60 bağımsız ek fixture denetimi ve M1 audit'i geçti. Derleme ve tip denetimleri
-başarılıdır. Profil tüketici testleri artık ayrı ESM/CJS süreçlerinde gerçek
-paket alt yolunu, round-trip, replay ve açık sıfırlama davranışını sınar.
-[Doğrulayıcı yarış testleri](../packages/core/test/profile-verifier-multiple.test.ts)
-bekleyen ikinci grup sırasında sıfırlamanın önceki kabulü de geçersiz kıldığını
-ve nihai zaman kontrolünün önceki grubun süresi dolmuş imzasını reddettiğini gösterir.
-Bu yeni değişiklikler için uzak CI sonucu henüz doğrulanmadı.
-Asistan push, yayın veya WG bildirimi yapmadı.
+Reset/epoch fixtures were committed in **b1c7bee** and observer fixtures in
+**f9466af**, before their coordinator implementation.
+The [independent audit](../tests/reset-fixture-audit.test.mjs) uses no production
+code. [Coordinator tests](../packages/core/test/profile-security-context.test.ts)
+exercise partial cleanup accounting, retries, clock changes, and reentry with
+controlled test doubles.
 
-## Gerçek bellek deposu ve ortak fabrika
+The original coordinator milestone passed 102 targeted tests, 4,136 unit tests,
+and 54 independent fixture audits on local Windows / Node 22. The subsequent
+real-memory/factory milestone passed its 65 targeted tests.
 
-[Bellek deposu](../packages/core/src/profiles/memory-replay-store.ts) varsayılan
-10.000 toplam kayıt ve anahtar thumbprint'i başına 1.000 kayıt sınırı uygular.
-Kota bütün scope'ları kapsar. Karar sırası süresi dolanları temizleme, replay,
-anahtar kotası, toplam kapasite ve eklemedir. Yaşayan kayıtlar yer açmak için
-atılmaz; replay mevcut kaydın süresini kısaltmaz veya uzatmaz.
+Completed M2 regression passed 4,284 unit tests, 13 integration tests,
+60 additional independent fixture audits, the M1 audit, and build/type checks.
+Profile consumers exercise the actual package subpath, round trips, replay,
+and explicit resets in separate ESM/CommonJS processes.
+[Verifier race tests](../packages/core/test/profile-verifier-multiple.test.ts)
+show that reset during a pending second group invalidates earlier acceptance
+and that final time checks reject an earlier group whose signature has expired.
 
-Atomiklik tek JavaScript yürütme alanı içindedir; kontrol ve ekleme arasında
-bekleme veya uygulama callback'i yoktur. Depo anahtarı scope, thumbprint ve
-nonce üçlüsünün çakışmasız JSON dizi kodlamasıdır. Profil/etiket anahtara girmez.
-Otomatik temizleme zamanlayıcısı yoktur. Süre dolumu yalnızca bağlamın sağlık
-kontrolünden geçen tüketim çağrısında işlenir; salt okunur sayaçları okumak
-kayıt silmez. Ayrı süreçler ve ayrı bağlamlar replay geçmişini paylaşmaz.
+The maintainer confirmed core-m2 remote CI/fixture success. That confirmation
+does not establish remote CI success for later changes. The assistant did not
+push, publish, or submit the WG report.
 
-Depo verilen saklama sonunu uygular. Doğrulayıcı, iç koordinatörün gönderim
-anındaki sağlıklı saat örneğiyle zaman uygunluğunu ve korumacı saklama sonunu
-birlikte hesaplar. Hesap oluşturma ile tüketim zamanının büyüğüne azami yaş
-ve toleransı ekler; aynı çağrıdaki ortak nonce grubunda uygun üyelerin en uzun
-gereksinimi kullanılır. Hazırlık hatası depo arızası gibi gizlenmez ve tüketim
-başlatmaz. Dış depo arayüzüne callback veya dönem kimliği gönderilmez.
-[Gönderim-anı regresyonları](../packages/core/test/profile-consume-preparation.test.ts)
-bu sınırı sınar. Depo başarısı tek başına doğrulanmış istek anlamına gelmez.
+## Real memory store and shared factory
 
-[Ortak fabrika](../packages/core/src/profiles/security-context.ts) varsayılan
-bellek deposunu ve koordinatörü birlikte oluşturur. Operatör yüzeyi yalnızca
-sıfırlama ve salt okunur durum/sayaç erişimini sunar; ham tüketim, depo ve
-temizleme portu dışarı verilmez. İç doğrulayıcı bağlantısı nesne kimliğiyle
-saklanır; kopyalanmış bir nesne geçerli bağlam sayılmaz.
+The [memory store](../packages/core/src/profiles/memory-replay-store.ts) defaults
+to 10,000 total records and 1,000 records per key thumbprint across all scopes.
+Decision order is expiry cleanup, replay, per-key quota, global capacity, insertion.
+Live records are never evicted to admit new ones. A replay neither shortens nor
+extends the existing record's retention.
 
-Haricî depo verilirse bellek kota ayarıyla birlikte kullanımı yapılandırma
-hatasıdır; uygulanmayan kota sessizce kabul edilmez. Haricî deponun temizleme
-metodu çağrılmaz. Bağımsız saat beyanıyla yerel dönem yenilenirken geçmiş
-korunur; beyansız veya bağlamın sahip olmadığı süreç saatli depoda sıfırlama
-reddedilir. Haricî depo sayaçları bilinmediği için sayı uydurulmaz.
+Atomicity is within one JavaScript execution agent: no await or application
+callback separates checking and insertion. The key is an injective JSON encoding
+of the scope/thumbprint/nonce tuple; profile and label are excluded.
+There is no expiry timer. Cleanup runs only during consumption approved by the
+context's clock-health checks. Reading counters does not delete records.
+Separate processes and separate memory contexts do not share replay history.
 
-[Gerçek depo entegrasyon testleri](../packages/core/test/profile-memory-context.test.ts)
-sağlıksız saatte tüketim/temizleme engelini, 100 eşzamanlı tüketimde tek kabulü,
-eski dönem tamamlamasının reddini ve sağlıklı sıfırlamanın replay geçmişini
-bilinçli olarak silmesini gösterir. Bunlar tam doğrulayıcı round-trip testinin
-yerini almaz; [ayrı kabul kapısı](../packages/core/test/profile-verifier-roundtrip.test.ts)
-iki profilde gerçek imzalayan, kimlik, zaman ve replay zinciriyle ayrıca geçmiştir.
+The store applies the supplied retention deadline. The verifier uses the
+coordinator's exact healthy dispatch-time sample for both eligibility and the
+conservative retention calculation: the greater of creation and consumption
+time, plus maximum age and skew. A shared nonce group uses the longest deadline
+required by its eligible members. Preparation errors are not hidden as backend
+failures and do not dispatch a consume. No preparation callback or epoch ID is
+sent through the external store interface.
+[Dispatch-time regression tests](../packages/core/test/profile-consume-preparation.test.ts)
+cover this boundary. Store acceptance alone is not a verified request.
+
+The [shared factory](../packages/core/src/profiles/security-context.ts) creates
+the default memory backend and coordinator together. Its operator surface offers
+reset and read-only status/counters, not raw consumption, store access, or cleanup
+ports. Internal verifier access is associated with object identity; a copied
+object is not a valid context.
+
+Supplying an external store together with memory quota configuration is a
+configuration error: unenforced quotas are not silently accepted. External
+cleanup methods are never invoked. Independent-clock reset preserves history;
+reset is rejected for undeclared stores or caller-owned process-clock stores.
+External store counts are unknown rather than fabricated.
+
+[Real-store integration tests](../packages/core/test/profile-memory-context.test.ts)
+cover no consumption/cleanup while unhealthy, one acceptance among 100 concurrent
+consumes, rejection of stale-epoch completions, and deliberate replay-history
+loss on healthy reset. They do not replace the
+[full round-trip acceptance gate](../packages/core/test/profile-verifier-roundtrip.test.ts),
+which separately passed with the real signer, identity, time, and replay chain
+for both profiles.

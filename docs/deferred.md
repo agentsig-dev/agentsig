@@ -1,125 +1,179 @@
-# Ertelenen işler ve güvenlik dışı uygulama seçimleri
+# Deferred work and implementation decisions
 
-Tarih: 2026-09-19. Bu kayıt, onaylanmış güvenlik sözleşmelerini değiştirmez.
+Updated September 19, 2026. This record does not change approved security contracts.
 
-## Karar alma sınırı
+## Language and decision boundaries
 
-Kullanıcı talimatı: doğrulayıcının yanlış doğrulanmış sonuç üretmesini
-etkilemeyen ayrıntılarda makul varsayılan seçilir, burada kaydedilir ve
-yeniden onay sorulmaz. Yanlış kabulü etkileyen belirsizliklerde onay alınır.
-Yalnızca beklenen ret kodunu ilgilendiren ayrıntılar için de makul varsayılan
-seçilir ve raporda belirtilir; tekrar onay sorulmaz. M3 güvenlik kararları ise
-ayrı plan adımında seçenekleri, artıları ve eksileriyle sunulacaktır.
-Donmuş doğrulama, imzalayan ve operatör kataloglarını değiştirmek ayrıca
-onay ve sürüm notu gerektirir.
-Her adım raporundan sonra push kullanıcı tarafından yapılır. Rapor verilmeden
-üçten fazla yerel commit biriktirilmez; üçüncü commit noktasında rapor verilir.
+All project-authored repository content must be English: READMEs, documentation,
+comments, changelogs, commit messages, and diagnostics. Conversation with the
+maintainer remains Turkish. Immutable upstream sources, cryptographic fixture
+bytes, and deliberate Unicode test inputs must not be translated or normalized.
 
-## Bu adımda seçilen ayrıntılar
+For details that cannot affect incorrect verified acceptance, choose a reasonable
+default, document it, and proceed without another approval question. This includes
+diagnostic precedence between rejection reasons. Ambiguities affecting incorrect
+acceptance require approval. M3 security decisions must be presented explicitly
+with alternatives, benefits, and costs; no silent defaults.
 
-- Metadata testleri, beş kontrol katmanını ayrı senaryolar olarak tutar.
-  Her iki profilde her katmanın pozitif ve negatif örnekleri bulunur.
-  Bir katmanı geçmek tam doğrulanmış istek sonucu değildir.
-  Kaynak: [metadata fixture'ları](../tests/fixtures/metadata/cases.json).
-- Thumbprint biçim hataları yalnızca ihlal edilen sabit kural metnini gösterir;
-  sağlanan anahtar kimliği veya nonce hata mesajına yazılmaz.
-  Kaynak: [metadata kontrolleri](../packages/core/src/profiles/metadata.ts).
-- RFC B.2.6 smoke betiği, çalışma dizininden bağımsız fixture yolları ve
-  derlenmiş ESM motor girişi kullanır. Paket kurulumu veya ağ erişimi yapmaz.
-  Derleme ön koşuldur. Kullanıcı 2026-09-18 tarihinde smoke sonucunu başarılı
-  olarak bildirdi: RFC B.2.6'nın 64 imza baytı birebir eşleşti.
-  Kaynak: [20 satırlık smoke betiği](../scripts/smoke-core.mjs).
-- WG bildirim metni yalnızca taslak olarak saklanır ve adım raporunda
-  İngilizce paylaşılır; otomatik issue veya e-posta gönderilmez.
-  Kaynak: [WG E.2.1 raporu](wg-e2-1-report-draft.md).
-- Toplu doğrulama başarısızlığının özet nedeni, başlık sırasındaki ilk başarısız
-  adaydan alınır; bütün aday sonuçları ayrıca korunur. Bu teşhis seçimi
-  exactly-one/all/any kabul kurallarını veya aday sayımını değiştirmez.
-  Varsayılan çoklu aday belirsizlik reddi bu özetleme kuralından önce gelir.
-- Başarı kimlikleri aday sonuçlarında tutulur; çoklu başarıdan tek bir
-  operatör veya URL kimliği seçilmez. Başarısız üst sonuç, başarılı bir
-  alt adayın kimliğini üst düzey doğrulanmış kimlik olarak taşımaz.
-- Başarı özet nedeni korumacı biçimde seçilir: başarılı adaylardan herhangi
-  biri nonce'suz ise özet nonce'suz başarıyı belirtir. Her adayın replay
-  koruması ayrıca raporlanır; özet kabul politikasını değiştirmez.
-- Profil API'si @agentsig/core/profiles alt yolunda sunulur; saf motorun
-  ana girişi korunur. İç aday değerlendirmesi, işlem tanıtıcıları ve bağlam
-  yetkileri dışa aktarılmaz. Yeni paket veya çalışma zamanı bağımlılığı eklenmez.
-- Gönderim öncesi zaman kontrolü ve onaylı saklama formülü aynı sağlıklı
-  saat örneğine bağlanır. Bunun için yalnızca iç koordinatörde senkron
-  hazırlık yolu kullanılır; dış replay depo sözleşmesi değişmez.
-  Kaynak: [gönderim-anı testleri](../packages/core/test/profile-consume-preparation.test.ts).
+The verification, signing, and operator catalogs are frozen separately.
+Adding, removing, or renaming codes requires approval and release notes.
 
-## Ertelenen özellikler
+The maintainer pushes after delivery reports. Do not accumulate more than three
+local commits without an interim report; report at the third commit at the latest.
+The assistant does not push, publish packages, or submit WG reports.
 
-- Ağdan anahtar dizini keşfi, SSRF/DNS koruması, ağ önbelleği ve otomatik
-  yenileme M2 dışında kalır; güvenlik kararları ilgili kilometre taşında alınır.
-- Zincirli imza kapsamı M2 dışında kalır. Proxy arkası dağıtımda ihtiyaç
-  doğarsa ayrı bir kilometre taşıyla ele alınır.
-- İmzalayanda mevcut imza başlıklarını birleştirme ve uzak/asenkron imza
-  sağlayıcıları ertelenmiştir.
-- Redis adaptörü ve dağıtık dönem/sıfırlama protokolü uygulanmamıştır.
-  Bağımsız depo beyanı, uzak işlemleri iptal etme garantisi değildir.
-- Gövde digest doğrulaması, framework adaptörleri, fetch katmanı ve CLI
-  M2 uygulamasına sessizce dahil edilmeyecektir.
+## Recorded implementation details
 
-## Tamamlanan yerel kabul kapıları
+- Metadata tests preserve five distinct gates, with positive/negative cases for
+  both profiles. Passing one gate is not full authentication.
+  See the [metadata fixtures](../tests/fixtures/metadata/cases.json).
+- Thumbprint-format diagnostics show only fixed violated-rule text, not supplied
+  key identifiers or nonces. See [metadata checks](../packages/core/src/profiles/metadata.ts).
+- The [RFC smoke script](../scripts/smoke-core.mjs) resolves fixtures relative to
+  itself and uses the built ESM engine. It needs a prior build but performs no
+  installation or networking. The maintainer confirmed exact equality of all
+  64 RFC B.2.6 signature bytes on September 18, 2026.
+- The [WG report text](wg-e2-1-report-draft.md) was prepared for the maintainer.
+  The maintainer later supplied
+  [protocol issue #135](https://github.com/webbotauth/draft-ietf-webbotauth-httpsig-protocol/issues/135).
+  No upstream resolution is assumed; original fixtures remain unchanged.
+- Failed aggregate summaries use the first failed candidate in header order,
+  preserving all individual results. Default exactly-one ambiguity takes
+  precedence. This diagnostic choice does not alter acceptance or counting.
+- Verified identities belong to individual successful candidates. Multiple
+  successes are not reduced to one operator/URL identity. A failed aggregate
+  never promotes an individual candidate's identity to aggregate acceptance.
+- If any successful candidate is nonce-less, the aggregate success summary uses
+  the nonce-less reason. Each candidate reports replay protection separately.
+- The profile API lives at @agentsig/core/profiles, separate from the pure engine.
+  Internal evaluations, leases, and context capabilities are not exported.
+- Dispatch-time eligibility and conservative retention use the same healthy
+  clock sample through an internal synchronous preparation path. The public
+  replay-store interface is unchanged.
+  See [dispatch-time tests](../packages/core/test/profile-consume-preparation.test.ts).
 
-- Çevrimdışı doğrulayıcı metadata, anahtar, kripto, zaman, replay ve
-  çoklu aday kararlarını birleştirir. Belirsizlikte tüketim yapılmaması,
-  ortak nonce grubu, tümü/herhangi biri politikaları ve sıfırlama yarışları
-  gerçek doğrulayıcı üzerinden sınanmıştır.
-- İki profilin dört golden imzalayan çıktısı tam doğrulayıcıdan doğrulanmış
-  sonuç almıştır; ikinci kullanım replay reddi üretir. Her profil için
-  100 eşzamanlı aynı istekte bir kabul ve 99 replay reddi gözlenmiştir.
-  Saf kripto başarısı bu kabul kapısının yerine sayılmamıştır.
-- Profil ESM/CJS dışa aktarımları, ayrı süreçlerde çalışma zamanı ve her iki
-  biçimin tip bildirimi tüketici testleri geçmiştir.
-- Son tam yerel kontrol: 4.284 birim testi, 13 entegrasyon testi, derleme ve
-  tip denetimleri başarılıdır. Bağımsız M1 audit'i ve 60 ek fixture denetimi
-  ayrıca geçmiştir. Bunlar Windows / Node 22 yerel sonuçlarıdır.
+## Deferred functionality
 
-## Kullanıcı tarafından teyit edilen M2 teslimi
+- Network directory discovery, SSRF/DNS protection, network caching, and automatic
+  refresh are outside M2. Their security policies need separate decisions.
+- Countersignature coverage is outside M2; revisit in a separate milestone if
+  proxy deployment requires it.
+- Signer merging of existing signature headers and remote/asynchronous signing
+  providers remain deferred.
+- No Redis adapter or distributed reset protocol is implemented. An independent
+  retention-clock declaration does not guarantee cancellation of remote work.
+- Body-digest comparison, framework adapters, fetch wrappers, and CLI are not
+  silently included in the offline implementation.
 
-- Kullanıcı e8ecb27 ve 88e1fc0 commit'lerini push ettiğini, core-m2 etiketi
-  oluşturduğunu ve CI/fixture workflow'larının yeşil olduğunu bildirdi.
-- Kullanıcı 08592a2 smoke betiğini iki profilde başarıyla çalıştırıp push etti.
-  İlk kabul, replay reddi ve süresi geçmiş imza reddi doğrulandı; M2 kabul edildi.
-  Kaynak: [smoke betiği](../scripts/smoke-verify.mjs).
-- Smoke yaş senaryosu varsayılanları değiştirmez: on dakika eski saat ve
-  60 saniye ömürle yeniden imzalama, yaş kontrolünden önce sona erme reddi verir.
-  Yaş sınırları ayrıca birim testlerindedir.
+## Completed M2 acceptance gates
 
-## 0.1.0 erken yayın hazırlığı
+The offline verifier integrates metadata, key selection, cryptography, identity,
+time, replay, and multiple-candidate policy. Integration tests exercise zero
+consumption on ambiguity, invocation-local nonce sharing, all/any aggregation,
+and reset races.
 
-- İki paket için minor changeset 17b98d3 commit'ine kaydedildi; Changesets
-  sürümleme işlemiyle tüketilerek paket sürümleri 0.1.0 ve changelog'lar üretildi.
-  Yeni bir sürüm artışı gerekmiyorsa aynı changeset tekrar oluşturulmamalıdır.
-- “Pre-release” README'lerde olgunluk uyarısıdır. İstenen 0.1.0 sürümü SemVer
-  prerelease son eki taşımaz; npm yayını veya dağıtım etiketi oluşturulmadı.
-- Doğrudan npm paketleme/yayınlama workspace protokolünü dönüştürmediğinden,
-  core'un Structured Fields bağımlılığı tam 0.1.0 olarak sabitlendi.
-  pnpm workspace bağlantısı açıkça etkinleştirildi; kilit dosyası yerel bağlantıyı
-  korur. Sonraki sürümlemelerde bağımlılık ve kilit dosyası birlikte denetlenmelidir.
-- Kök ve iki paket README'sinde durum bandı, yayın sonrası kurulum bilgisi ve
-  10 satırlık ESM örneği bulunur. Structured Fields bandının proje kapsamını
-  anlattığı, paketin kendi başına doğrulayıcı olmadığı ayrıca açıklanır.
-- Dışa aktarım ve tip yolları korunmuştur. Paket içerik listesi yalnızca derleme
-  çıktıları, README ve lisansa izin verir; npm manifesti otomatik dahil edilir.
-  Changelog'lar depoda kalır; testler ve kamuya açık özel test anahtarları dağıtılmaz.
-- Bu hazırlıkta kilitli çevrimdışı kurulum, derleme, tip denetimi,
-  4.284 birim testi ve 13 entegrasyon testi yerelde geçti.
-- npm paketleme önizlemesi: Structured Fields 7 dosya, 21,1 kB / 80,2 kB;
-  core 14 dosya, 76,7 kB / 346,4 kB (sıkıştırılmış / açılmış).
-  Kaynak, test ve fixture dosyaları listede yoktur. Önizleme yayın değildir.
-- Elle yayın ileride kullanıcıya aittir; önce Structured Fields 0.1.0,
-  sonra ona bağımlı core 0.1.0 yayımlanmalıdır. Yayın otomasyonu eklenmedi.
+Four independent golden signer outputs across both profiles passed full offline
+verification, followed by replay rejection on second use. For each profile,
+100 concurrent identical requests produced one acceptance and 99 replay rejections.
+Pure cryptographic validity was not substituted for this gate.
 
-## Bekleyen teslim ve haricî doğrulamalar
+ESM/CommonJS exports, fresh-process runtime consumers, and declarations for both
+module formats passed. Completed local Windows / Node 22 regression passed
+4,284 unit tests, 13 integration tests, builds, and type checks. The independent
+M1 audit and 60 additional fixture audits passed separately.
 
-- Yayın hazırlığı commit'lerinin kullanıcı tarafından push edilmesi ve yeni
-  uzak CI sonucu. M2'nin yeşil sonucu yeni değişikliklere genellenmez.
-- M3 planı bu adımda hazırlanmaz; kullanıcı push teyidinden sonra ayrı adımda
-  güvenlik seçenekleri sunulur, sessiz varsayılan veya uygulama eklenmez.
-- Asistan push, paket yayını veya WG bildirimi yapmaz. Kullanıcı WG bildirimini
-  göndereceğini belirtti; gönderimin tamamlandığı henüz teyit edilmedi.
+## Maintainer-confirmed delivery
+
+- The maintainer pushed **e8ecb27** and **88e1fc0**, created **core-m2**, and
+  confirmed green CI and fixture workflows.
+- The maintainer ran and pushed **08592a2**, confirming the two-profile
+  verified → replay-detected → signature-expired smoke sequence, and accepted M2.
+- The [verification smoke script](../scripts/smoke-verify.mjs) keeps default
+  verifier policy. Signing at a clock ten minutes in the past with a 60-second
+  lifetime triggers expiry before the age check. Age boundaries have separate
+  unit coverage.
+- The maintainer subsequently reported that published npm READMEs contained
+  Turkish and obsolete pre-publication wording, requesting the 0.1.1 correction.
+  Publication was not performed by the assistant.
+
+Past CI confirmations do not establish remote CI success for later commits.
+
+## Historical 0.1.0 preparation
+
+The initial two-package minor changeset was recorded in **17b98d3**, then consumed
+by Changesets to produce 0.1.0 versions and changelogs. Preparation was committed
+in **371c214**. Do not recreate the consumed changeset without a new change.
+
+For direct npm packaging/publication, core's SF dependency was changed from the
+pnpm workspace protocol to exact version 0.1.0. Explicit workspace linking and
+the lockfile preserve the local link. Future versioning must update both the
+dependency and lockfile consistently.
+
+The original preparation passed locked offline installation, builds, type checks,
+4,284 unit tests, and 13 integration tests. All three ten-line README examples
+were executed. The npm dry-run inventory was:
+
+| Package | Files | Compressed / unpacked |
+| --- | ---: | ---: |
+| @agentsig/structured-fields@0.1.0 | 7 | 21.1 kB / 80.2 kB |
+| @agentsig/core@0.1.0 | 14 | 76.7 kB / 346.4 kB |
+
+Only built outputs, README, LICENSE, and the automatically included manifest were
+listed. Source, test, and fixture files were excluded. Changelogs remained in the
+repository. These historical sizes do not describe the new documentation patch.
+
+## Current 0.1.1 documentation correction
+
+The requested patch translates project prose and diagnostic comments/messages,
+removes obsolete pre-publication README wording, adds npm badges and direct
+installation instructions, and distinguishes each package's maturity/scope band.
+Package-local test commands are development metadata, not a runtime feature.
+
+The change must not alter parser, signing, verification, replay, or protocol
+behavior. Upstream sources and fixtures remain immutable. Existing English
+changelogs retain their history; a new patch note records the documentation
+correction and development-script changes.
+
+The patch changeset was recorded in **78dedf7**, then consumed by Changesets.
+Both packages and core's exact Structured Fields dependency are now 0.1.1;
+the lockfile retains the local workspace link.
+
+Validation for this correction completed locally on Windows / Node 22:
+
+- Locked offline installation, builds, type checks, 4,284 unit tests, and
+  13 integration tests passed.
+- Package-local commands passed 1,342 core tests and 2,942 Structured Fields
+  tests. These repeat the same unit suites; they are not additional tests.
+- The translated independent M1 audit and 60 additional fixture audits passed.
+- All three ten-line README examples executed successfully.
+- The translated smoke script passed both profiles' verified, replay-detected,
+  and signature-expired sequence.
+- A language scan found only deliberate Unicode test inputs among remaining
+  Turkish-character matches. Library source, tests, and pinned fixture files
+  are unchanged from the 0.1.0 preparation commit.
+
+The npm dry-run inventories for this correction are:
+
+| Package | Files | Compressed / unpacked |
+| --- | ---: | ---: |
+| @agentsig/structured-fields@0.1.1 | 7 | 20.7 kB / 80.4 kB |
+| @agentsig/core@0.1.1 | 14 | 76.0 kB / 346.3 kB |
+
+Both contain built outputs, README, LICENSE, and the package manifest, with no
+source, tests, fixtures, or private test keys. Dry runs did not create archives
+or publish packages. Remote CI for this correction remains unconfirmed.
+Stop after the local commit sequence so the maintainer can push and publish
+0.1.1. No assistant publication or push.
+
+## Next stage: M3 planning and source pinning
+
+After the documentation-patch handoff, prepare alternatives with benefits/costs
+for directory fetching, SSRF and DNS rebinding defenses, redirects, cache/stale
+behavior, key rotation, timeouts, byte limits, and the Redis store contract.
+
+Pin WG §5.5, Appendix C, and the Cloudflare directory section with provenance.
+Separately pin the Appendix F.3 JSON vectors from cloudflare/web-bot-auth,
+including web_bot_auth_architecture_v2.json, with immutable commit and license
+information. Report contradictions instead of changing vectors to fit the
+implementation. This work is pending; no M3 security policy or implementation
+is introduced by the documentation patch.

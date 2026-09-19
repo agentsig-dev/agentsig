@@ -1,6 +1,6 @@
 {
     "name": "@agentsig/structured-fields",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "Lossless RFC 9651 Structured Fields parsing and serialization.",
     "type": "module",
     "license": "MIT",
@@ -39,6 +39,7 @@
     "sideEffects": false,
     "scripts": {
         "build": "tsup src/index.ts --format esm,cjs --dts --clean --target node20",
-        "typecheck": "tsc --noEmit -p tsconfig.json"
+        "typecheck": "tsc --noEmit -p tsconfig.json",
+        "test": "vitest run test"
     }
 }
