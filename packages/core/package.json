@@ -1,6 +1,6 @@
 {
     "name": "@agentsig/core",
-    "version": "0.0.0",
+    "version": "0.1.0",
     "description": "Framework-independent HTTP Message Signatures with Ed25519 for Node.js.",
     "type": "module",
     "license": "MIT",
@@ -52,6 +52,6 @@
         "typecheck": "tsc --noEmit -p tsconfig.json"
     },
     "dependencies": {
-        "@agentsig/structured-fields": "workspace:*"
+        "@agentsig/structured-fields": "0.1.0"
     }
 }

@@ -1,2 +1,5 @@
 packages:
   - "packages/*"
+
+# Keep matching release-version dependencies linked locally; npm manifests use semver.
+linkWorkspacePackages: true

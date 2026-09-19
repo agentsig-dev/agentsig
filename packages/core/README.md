@@ -1,5 +1,7 @@
 # @agentsig/core
 
+> **Status: pre-release, offline verifier only, no network discovery, not security-reviewed**
+
 Node 20+ için framework bağımsız RFC 9421 HTTP Message Signatures motoru.
 Ed25519 kriptografisi Node'un yerleşik kripto modülünü kullanır.
 Tek çalışma zamanı bağımlılığı @agentsig/structured-fields paketidir.
@@ -8,6 +10,37 @@ ESM ve CommonJS çıktıları ile her iki biçim için tip bildirimleri sağlan�
 **Durum:** Saf RFC motoru ve ayrı çevrimdışı Web Bot Auth profil katmanı mevcuttur.
 İki profilin tam round-trip ve ESM/CJS tüketici testleri yerelde geçmiştir;
 güvenlik denetiminden geçmiş veya üretime hazır olduğu iddia edilmez.
+
+## Kurulum ve 10 satırlık kullanım
+
+**0.1.0 yayın hazırlığıdır; henüz npm'e yayımlanmadı.** Yayınlandıktan sonra:
+npm install @agentsig/core@0.1.0
+
+Aşağıdaki 10 satırlık ESM örneği Node 20+ üzerinde ağ isteği göndermeden
+imzalar ve aynı isteği iki kez doğrular. Beklenen çıktı: verified replay-detected.
+Geçici anahtar yalnızca örnek içindir; üretimde güvenilir kalıcı anahtar yönetimi
+kullanın. Doğrulayıcıyı istek başına oluşturmayın; replay geçmişi uzun ömürlü
+bağlama aittir. Varsayılan kimlik anahtar thumbprint'idir, alan adı sahipliği değildir.
+
+```js
+import { generateKeyPairSync } from "node:crypto";
+import { createWebBotAuthSigner, createOfflineVerifier } from "@agentsig/core/profiles";
+const { privateKey, publicKey } = generateKeyPairSync("ed25519");
+const jwks = { keys: [publicKey.export({ format: "jwk" })] };
+const signer = createWebBotAuthSigner({ privateKey, agentOrigin: "https://agent.example" });
+const verifier = createOfflineVerifier({ jwks, scope: "example" });
+const request = { method: "GET", targetUri: "https://merchant.example/items", headers: [] };
+const headers = await signer.sign(request);
+const signed = { ...request, headers: [...request.headers, ...headers] };
+console.log((await verifier.verify(signed)).status, (await verifier.verify(signed)).reason);
+```
+
+Örneğin işlemleri: [createWebBotAuthSigner()](src/profiles/signer.ts:39),
+[createOfflineVerifier()](src/profiles/verifier.ts:89) ve
+[OfflineVerifier.verify()](src/profiles/verification-types.ts:106).
+CommonJS tüketicileri aynı profil alt yolunu kullanabilir; iki biçim için de
+tip bildirimleri sağlanır. “Pre-release” olgunluk uyarısıdır; istenen 0.1.0 sürümü
+SemVer açısından prerelease son eki taşımaz.
 
 ## İki ayrı giriş
 

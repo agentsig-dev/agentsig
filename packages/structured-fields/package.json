@@ -1,6 +1,6 @@
 {
     "name": "@agentsig/structured-fields",
-    "version": "0.0.0",
+    "version": "0.1.0",
     "description": "Lossless RFC 9651 Structured Fields parsing and serialization.",
     "type": "module",
     "license": "MIT",

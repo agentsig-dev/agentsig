@@ -1,8 +1,41 @@
 # @agentsig/structured-fields
 
+> **Status: pre-release, offline verifier only, no network discovery, not security-reviewed**
+
+Bu bant agentsig araç takımının mevcut kapsamını belirtir. Bu paket yalnızca
+Structured Fields ayrıştırma/serileştirme altyapısıdır; kendisi çevrimdışı
+doğrulayıcı veya kriptografi sağlamaz.
+
 Node 20+ için RFC 9651 Structured Fields ayrıştırma ve kanonik serileştirme.
 Çalışma zamanı bağımlılığı yoktur; ESM ve CommonJS çıktıları sağlanır.
 Paket geliştirme aşamasındadır; güvenlik denetiminden geçmiş değildir.
+
+## Kurulum ve 10 satırlık kullanım
+
+**0.1.0 yayın hazırlığıdır; henüz npm'e yayımlanmadı.** Yayınlandıktan sonra:
+npm install @agentsig/structured-fields@0.1.0
+
+Aşağıdaki 10 satırlık ESM örneği Node 20+ üzerinde bir Dictionary alanını
+ayrıştırır, kanonik olarak serileştirir ve ham ağacı ayrıca elde eder.
+Ağ erişimi veya anahtar gerekmez.
+
+```js
+import assert from "node:assert/strict";
+import { parse, parseRaw, serialize } from "@agentsig/structured-fields";
+const wire = 'agent="https://agent.example";type=directory';
+const field = parse(wire, "dictionary");
+const canonical = serialize(field);
+assert.equal(canonical, wire);
+const raw = parseRaw(wire, "dictionary");
+assert.equal(raw.root.kind, "dictionary");
+console.log(canonical);
+console.log(raw.root.kind);
+```
+
+Örneğin işlemleri: [parse()](src/parse.ts:74),
+[parseRaw()](src/parser.ts:29) ve [serialize()](src/serializer.ts:33).
+CommonJS ve ilgili tip bildirimleri de sağlanır. “Pre-release” olgunluk
+uyarısıdır; 0.1.0 sürümü SemVer prerelease son eki taşımaz.
 
 ## API
 

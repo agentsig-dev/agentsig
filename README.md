@@ -1,6 +1,6 @@
 # agentsig
 
-> **Status: offline Web Bot Auth profiles implemented, pre-release, not security-reviewed**
+> **Status: pre-release, offline verifier only, no network discovery, not security-reviewed**
 
 Node.js için açık kaynak HTTP Message Signatures ve Web Bot Auth araç takımı.
 
@@ -17,7 +17,7 @@ npm organizasyonu: **agentsig** (GitHub organizasyonu: **agentsig-dev**).
 ## Kısa yol haritası
 
 - **M1 — mevcut:** RFC 9421 + Ed25519 motoru, ayrı Structured Fields paketi ve bağımsız fixture denetimi. Kullanıcı tarafından push edilen **core-m1** etiketi için CI matrisi yeşil olarak doğrulandı.
-- **M2 — yerel kabul kapısı geçti:** iki sabit profil, zaman politikası, replay deposu ve elle verilen JWKS ile çevrimdışı doğrulama. İki profilde tam imzalayan/doğrulayıcı round-trip ve profil ESM/CJS tüketici testleri başarılı. [M2 planı](docs/milestone-2-plan.md).
+- **M2 — kabul edildi:** iki sabit profil, zaman politikası, replay deposu ve elle verilen JWKS ile çevrimdışı doğrulama. Kullanıcı core-m2 etiketi için CI/fixture workflow başarısını ve iki profilde smoke sonucunu teyit etti. [M2 planı](docs/milestone-2-plan.md).
 - **Daha sonra:** güvenli dizin fetch/cache, istemci sarmalayıcısı, framework adaptörleri ve CLI; her aşama ayrı onaya tabidir.
 
 **Ağdan dizin keşfi/cache, adaptörler ve CLI henüz yoktur.**
@@ -77,6 +77,37 @@ zamanını hedefler. Üretimde güvenlik güncellemeleri alan bir Node sürümü
 Geliştirme araçları Node 20.19+ veya 22.12+ gerektirir; Node 24 de hedeflenir.
 Çalışma zamanı sürüm desteği, EOL sürümler için güvenlik desteği vaadi değildir.
 
+## Kurulum ve 10 satırlık kullanım
+
+**0.1.0 yayın hazırlığıdır; henüz npm'e yayımlanmadı.** Yayınlandıktan sonra:
+npm install @agentsig/core@0.1.0
+
+Yalnızca Structured Fields altyapısı için:
+npm install @agentsig/structured-fields@0.1.0
+
+Aşağıdaki 10 satırlık ESM örneği Node 20+ üzerinde ağ erişimi olmadan çalışır.
+Beklenen çıktı: verified replay-detected. Geçici anahtar örnek içindir;
+üretimde kalıcı güvenilir anahtar yönetimi ve uzun ömürlü doğrulayıcı kullanın.
+İstek başına doğrulayıcı oluşturmak bellek içi replay geçmişini kaybettirir.
+Başarı alan adı sahipliği veya erişim yetkisi değil, anahtar kimliği kanıtıdır.
+
+```js
+import { generateKeyPairSync } from "node:crypto";
+import { createWebBotAuthSigner, createOfflineVerifier } from "@agentsig/core/profiles";
+const { privateKey, publicKey } = generateKeyPairSync("ed25519");
+const jwks = { keys: [publicKey.export({ format: "jwk" })] };
+const signer = createWebBotAuthSigner({ privateKey, agentOrigin: "https://agent.example" });
+const verifier = createOfflineVerifier({ jwks, scope: "example" });
+const request = { method: "GET", targetUri: "https://merchant.example/items", headers: [] };
+const headers = await signer.sign(request);
+const signed = { ...request, headers: [...request.headers, ...headers] };
+console.log((await verifier.verify(signed)).status, (await verifier.verify(signed)).reason);
+```
+
+Örnek [profil API'sini](packages/core/src/profiles.ts) kullanır.
+“Pre-release” olgunluk uyarısıdır; istenen 0.1.0 sürümü SemVer prerelease
+son eki taşımaz. Bu hazırlık npm yayını veya dağıtım etiketi oluşturmaz.
+
 ## Yerel geliştirme
 
 pnpm 10.12.1 kullanılır. Depo kökünde sırasıyla:
@@ -108,9 +139,10 @@ Kurulum paket yayınlamaz; otomatik yayınlama veya release workflow'u yoktur.
 [Fixture kaynakları, commit ve lisans atıfları](docs/fixture-provenance.md) ·
 [CI matrisi](.github/workflows/ci.yml)
 
-CI hedefi Node 20/22/24 × Windows/Linux'tur. Kullanıcı **core-m1** için matrisi
-yeşil olarak doğrulamıştır. Daha sonraki yerel değişiklikler için bu sonuç
-devralınmaz; her commit'in uzak CI sonucu ayrı değerlendirilir.
+CI hedefi Node 20/22/24 × Windows/Linux'tur. Kullanıcı **core-m1** ve **core-m2**
+için CI başarısını doğrulamıştır. Ayrıca 08592a2 smoke betiğini iki profilde
+başarıyla çalıştırıp push ettiğini bildirmiştir. Bu yayın hazırlığının uzak CI
+sonucu henüz doğrulanmadı; önceki başarı yeni commit'lere genellenmez.
 [Fixture workflow'u](.github/workflows/fixtures.yml) tüm PR'larda bağımsız audit
 ve bayt bütünlüğü kontrollerini çalıştırır; fixture dizinlerini değiştiren PR'lar
 dahil hiçbir PR yol filtresiyle atlanmaz. Tarihsel fixture commit'ini incelemek

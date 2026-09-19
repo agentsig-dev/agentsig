@@ -1,12 +1,15 @@
 # Ertelenen işler ve güvenlik dışı uygulama seçimleri
 
-Tarih: 2026-09-18. Bu kayıt, onaylanmış güvenlik sözleşmelerini değiştirmez.
+Tarih: 2026-09-19. Bu kayıt, onaylanmış güvenlik sözleşmelerini değiştirmez.
 
 ## Karar alma sınırı
 
 Kullanıcı talimatı: doğrulayıcının yanlış doğrulanmış sonuç üretmesini
 etkilemeyen ayrıntılarda makul varsayılan seçilir, burada kaydedilir ve
 yeniden onay sorulmaz. Yanlış kabulü etkileyen belirsizliklerde onay alınır.
+Yalnızca beklenen ret kodunu ilgilendiren ayrıntılar için de makul varsayılan
+seçilir ve raporda belirtilir; tekrar onay sorulmaz. M3 güvenlik kararları ise
+ayrı plan adımında seçenekleri, artıları ve eksileriyle sunulacaktır.
 Donmuş doğrulama, imzalayan ve operatör kataloglarını değiştirmek ayrıca
 onay ve sürüm notu gerektirir.
 Her adım raporundan sonra push kullanıcı tarafından yapılır. Rapor verilmeden
@@ -76,11 +79,47 @@ Her adım raporundan sonra push kullanıcı tarafından yapılır. Rapor verilme
   tip denetimleri başarılıdır. Bağımsız M1 audit'i ve 60 ek fixture denetimi
   ayrıca geçmiştir. Bunlar Windows / Node 22 yerel sonuçlarıdır.
 
+## Kullanıcı tarafından teyit edilen M2 teslimi
+
+- Kullanıcı e8ecb27 ve 88e1fc0 commit'lerini push ettiğini, core-m2 etiketi
+  oluşturduğunu ve CI/fixture workflow'larının yeşil olduğunu bildirdi.
+- Kullanıcı 08592a2 smoke betiğini iki profilde başarıyla çalıştırıp push etti.
+  İlk kabul, replay reddi ve süresi geçmiş imza reddi doğrulandı; M2 kabul edildi.
+  Kaynak: [smoke betiği](../scripts/smoke-verify.mjs).
+- Smoke yaş senaryosu varsayılanları değiştirmez: on dakika eski saat ve
+  60 saniye ömürle yeniden imzalama, yaş kontrolünden önce sona erme reddi verir.
+  Yaş sınırları ayrıca birim testlerindedir.
+
+## 0.1.0 erken yayın hazırlığı
+
+- İki paket için minor changeset 17b98d3 commit'ine kaydedildi; Changesets
+  sürümleme işlemiyle tüketilerek paket sürümleri 0.1.0 ve changelog'lar üretildi.
+  Yeni bir sürüm artışı gerekmiyorsa aynı changeset tekrar oluşturulmamalıdır.
+- “Pre-release” README'lerde olgunluk uyarısıdır. İstenen 0.1.0 sürümü SemVer
+  prerelease son eki taşımaz; npm yayını veya dağıtım etiketi oluşturulmadı.
+- Doğrudan npm paketleme/yayınlama workspace protokolünü dönüştürmediğinden,
+  core'un Structured Fields bağımlılığı tam 0.1.0 olarak sabitlendi.
+  pnpm workspace bağlantısı açıkça etkinleştirildi; kilit dosyası yerel bağlantıyı
+  korur. Sonraki sürümlemelerde bağımlılık ve kilit dosyası birlikte denetlenmelidir.
+- Kök ve iki paket README'sinde durum bandı, yayın sonrası kurulum bilgisi ve
+  10 satırlık ESM örneği bulunur. Structured Fields bandının proje kapsamını
+  anlattığı, paketin kendi başına doğrulayıcı olmadığı ayrıca açıklanır.
+- Dışa aktarım ve tip yolları korunmuştur. Paket içerik listesi yalnızca derleme
+  çıktıları, README ve lisansa izin verir; npm manifesti otomatik dahil edilir.
+  Changelog'lar depoda kalır; testler ve kamuya açık özel test anahtarları dağıtılmaz.
+- Bu hazırlıkta kilitli çevrimdışı kurulum, derleme, tip denetimi,
+  4.284 birim testi ve 13 entegrasyon testi yerelde geçti.
+- npm paketleme önizlemesi: Structured Fields 7 dosya, 21,1 kB / 80,2 kB;
+  core 14 dosya, 76,7 kB / 346,4 kB (sıkıştırılmış / açılmış).
+  Kaynak, test ve fixture dosyaları listede yoktur. Önizleme yayın değildir.
+- Elle yayın ileride kullanıcıya aittir; önce Structured Fields 0.1.0,
+  sonra ona bağımlı core 0.1.0 yayımlanmalıdır. Yayın otomasyonu eklenmedi.
+
 ## Bekleyen teslim ve haricî doğrulamalar
 
-- Yeni değişiklikler için uzak CI matrisi; kullanıcı 6285514'e kadar 19
-  commit'i push ettiğini ve Build and test #5 ile Fixture integrity #5'in
-  yeşil olduğunu bildirdi. Bu başarı sonraki değişikliklere genellenmez.
-- Sonraki yerel commit'lerin kullanıcı tarafından push edilmesi.
-  Asistan push, paket yayını veya WG bildirimi yapmaz. Kullanıcı WG bildirimini
+- Yayın hazırlığı commit'lerinin kullanıcı tarafından push edilmesi ve yeni
+  uzak CI sonucu. M2'nin yeşil sonucu yeni değişikliklere genellenmez.
+- M3 planı bu adımda hazırlanmaz; kullanıcı push teyidinden sonra ayrı adımda
+  güvenlik seçenekleri sunulur, sessiz varsayılan veya uygulama eklenmez.
+- Asistan push, paket yayını veya WG bildirimi yapmaz. Kullanıcı WG bildirimini
   göndereceğini belirtti; gönderimin tamamlandığı henüz teyit edilmedi.
