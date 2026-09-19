@@ -178,3 +178,65 @@ describe("network verification boundary regressions", () => {
         },
     );
 });
+
+describe("full verifiers sharing a security-context discovery domain", () => {
+    it("shares one fetch and one replay domain across both profiles", async () => {
+        const h = harness();
+        const pending = deferred<DirectoryResponse>();
+        const entered = deferred<void>();
+        h.transport.mockImplementation(() => { entered.resolve(); return pending.promise; });
+        const wg = createNetworkVerifier({
+            ...h.options, allowedProfiles: ["ietf-wg-protocol-00"],
+        }, h.dependencies);
+        const cf = createNetworkVerifier({
+            ...h.options, allowedProfiles: ["cloudflare-docs-2026-07-01"],
+        }, h.dependencies);
+        const requests = await Promise.all([
+            h.signed("cross-profile-shared", "ietf-wg-protocol-00"),
+            h.signed("cross-profile-shared", "cloudflare-docs-2026-07-01"),
+        ]);
+        const verifying = [
+            wg.verify(requests[0]!),
+            cf.verify(requests[1]!),
+        ];
+        await entered.promise;
+        pending.resolve(h.response());
+        const results = await Promise.all(verifying);
+        expect(results.filter((result) => result.status === "verified")).toHaveLength(1);
+        expect(results.filter((result) => result.reason === "replay-detected")).toHaveLength(1);
+        expect(h.transport).toHaveBeenCalledTimes(1);
+        expect(h.context.memoryRecords).toBe(1);
+        expect(h.context.inFlight).toBe(0);
+    });
+
+    it("recreating a verifier does not renew cache age or bypass origin cooldown", async () => {
+        const h = harness();
+        const first = createNetworkVerifier(h.options, h.dependencies);
+        expect(await first.verify(await h.signed("first-instance")))
+            .toMatchObject({ status: "verified" });
+        h.advance(20);
+        const second = createNetworkVerifier(h.options, h.dependencies);
+        expect(await second.refresh(origin, "ietf-wg-protocol-00"))
+            .toEqual({ outcome: "failed", reason: "origin-rate" });
+        expect(await second.verify(await h.signed("second-instance")))
+            .toMatchObject({ status: "verified" });
+        expect(h.transport).toHaveBeenCalledTimes(1);
+
+        h.advance(40);
+        h.transport.mockRejectedValue(new Error("Controlled outage"));
+        expect(await second.verify(await h.signed("expired-original-cache")))
+            .toMatchObject({ status: "unverified", reason: "unknown-key" });
+        expect(h.transport).toHaveBeenCalledTimes(2);
+        expect(h.context.memoryRecords).toBe(2);
+    });
+
+    it("rejects incompatible trust settings on a reused context before any fetch", () => {
+        const h = harness();
+        createNetworkVerifier(h.options, h.dependencies);
+        expect(() => createNetworkVerifier({
+            ...h.options,
+            discovery: { network: { allowedOrigins: [origin], ca: "different-trust-root" } },
+        }, h.dependencies)).toThrow(expect.objectContaining({ code: "invalid-agent-binding" }));
+        expect(h.transport).not.toHaveBeenCalled();
+    });
+});

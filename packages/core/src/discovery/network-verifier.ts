@@ -7,7 +7,8 @@ import type {
     OfflineVerifierOptions, VerificationResult,
 } from "../profiles/verification-types.js";
 import type { SecurityContext } from "../profiles/security-context.js";
-import { DirectoryService } from "./directory-service.js";
+import type { DirectoryService } from "./directory-service.js";
+import { contextDiscovery } from "./context-discovery.js";
 import type {
     DirectoryRefreshResult, DirectoryServiceOptions,
 } from "./directory-service.js";
@@ -78,17 +79,15 @@ export function createNetworkVerifier(
     const config = resolveVerificationConfiguration({
         ...common, jwks: { keys: [] },
     } as unknown as OfflineVerifierOptions);
-    const services = new Map<WebBotAuthProfile, DirectoryService>();
-    for (const profile of config.allowedProfiles) {
-        services.set(profile, new DirectoryService({
-            ...discoveryOptions,
-            format: profile === "ietf-wg-protocol-00" ? "wg-directory-00" : "jwks",
-        }, dependencies.transport, dependencies.discoveryClock));
-    }
+    const services = contextDiscovery(
+        config.context, discoveryOptions,
+        dependencies.transport, dependencies.discoveryClock,
+    );
     const serviceFor = (profile: WebBotAuthProfile): DirectoryService => {
-        const service = services.get(profile);
-        if (!service) throw new ProfileConfigurationError("invalid-candidate-policy");
-        return service;
+        if (!config.allowedProfiles.includes(profile)) {
+            throw new ProfileConfigurationError("invalid-candidate-policy");
+        }
+        return services[profile];
     };
     const engine = createVerificationEngine(config, () => createNetworkStrategy(config, serviceFor));
     return Object.freeze({

@@ -843,3 +843,53 @@ tests also passed on local Node 20.20.2. No remote CI success is claimed for the
 changes. The network verifier remains internal: context-associated shared
 admission across profile partitions, Redis integration, public exports, and the
 maintainer-run smoke are still pending.
+
+### Security-context-associated shared discovery checkpoint
+
+One internal discovery transport/scheduler is now associated with each owned
+security context through a weak registry. Both profile partitions and compatible
+verifier instances sharing that context use the same concurrency, queue, sliding
+start-rate, and origin-cooldown state. Recreating a verifier or resetting the
+verification clock does not allocate a new coordinator or renew directory age.
+These are context-wide bounds, not process-wide or distributed limits across
+independent contexts.
+
+The registry rejects incompatible network trust configuration rather than silently
+sharing responses across different CAs, proxies, address exceptions, or origin
+admission policies. Cache configuration, observer identity, and internal test
+dependencies must also match. Explicit versus omitted cache defaults are
+conservatively distinct at this checkpoint. Separate trust domains require
+separate security contexts. No configuration fingerprint is exposed in diagnostics.
+
+Sharing transport alone was insufficient: a regression showed that a valid empty
+refresh requested through one profile left a removed key usable in the other
+profile's older cache. Each response now undergoes independent preparation for
+both profile formats before any cache commit. After all preparations, the original
+discovery deadline is checked again. Valid views commit synchronously without
+observer delivery between them; a document invalid under one profile preserves
+that profile's prior evidence and age. JOSE acceptance cannot bypass WG kid or
+algorithm validation. An empty set valid under both profiles removes keys from
+both caches, even if only one profile requested the refresh.
+
+Response distribution is performed once per shared transport promise. The
+transport does not retain an unbounded response history. A regression also
+verifies that exhausting the deadline during the second profile's preparation
+commits neither view and renews neither prior lifetime.
+
+Tests exercise shared 16-active/64-queued/32-starts-per-second limits, one
+same-origin transport operation across profiles, format isolation, cooldown and
+freshness preservation through context reset, incompatible configuration rejection,
+and cross-profile key removal. Two full verifiers sharing a context and nonce
+produce one verified result and one replay rejection after a single shared fetch.
+
+Local Node 22 validation passed builds, type checks, 5,303 unit tests across
+59 files, and 13 existing integration/consumer tests. A separate local Node
+20.20.2 run passed 51 related tests. These overlapping runs are not additive.
+The new sharing tests use controlled transport and timing; the existing seven
+full authentication race tests retain their documented real local TLS and
+test-controlled routing boundary. No remote CI success is claimed for this work.
+
+The earlier network-verifier implementation is recorded in **de12391**.
+Redis adapter/quarantine/eviction admission, real Redis service-container CI,
+public discovery exports, and the maintainer-run smoke remain unfinished.
+No push or publication was performed.

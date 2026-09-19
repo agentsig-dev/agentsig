@@ -9,14 +9,13 @@ import { DirectoryCache } from "./directory-cache.js";
 import type { DirectoryCacheOptions, DirectoryKeySelection } from "./directory-cache.js";
 import { DirectoryDocumentError } from "./directory-document.js";
 import type { DirectoryDocumentDiagnostic } from "./directory-document.js";
+import { DirectoryTransport } from "./directory-transport.js";
 import type { DirectoryResponse } from "./directory-response.js";
-import { DirectoryDnsError } from "./dns-resolution.js";
-import { DirectoryConnectionError } from "./pinned-tls.js";
 import { fetchDirectoryOnce } from "./fetch-directory.js";
 import type { DirectoryFetchOptions } from "./fetch-directory.js";
 import { snapshotDirectoryFetchOptions } from "./fetch-configuration.js";
 import type { ResolvedDirectoryFetchOptions } from "./fetch-configuration.js";
-import { DirectoryAdmissionError, DirectoryFetchScheduler } from "./fetch-scheduler.js";
+import { DirectoryAdmissionError } from "./fetch-scheduler.js";
 
 type RefreshFailure =
     | "invalid-jwks" | "address-denied" | "transport-failed" | "deadline"
@@ -65,10 +64,6 @@ function spend(budget: DirectoryFetchBudget): boolean {
     return true;
 }
 
-type TransportResult =
-    | { readonly outcome: "response"; readonly response: DirectoryResponse }
-    | { readonly outcome: "failed"; readonly reason: "address-denied" | "transport-failed" };
-
 function failed(reason: RefreshFailure, diagnostic?: Readonly<DirectoryDocumentDiagnostic>): DirectoryRefreshResult {
     return Object.freeze({
         outcome: "failed", reason,
@@ -79,17 +74,18 @@ function failed(reason: RefreshFailure, diagnostic?: Readonly<DirectoryDocumentD
 /**
  * INTERNAL integrated discovery service. No public response/clock/transport
  * injection: constructor dependencies below are exclusively internal test seams.
- * Each instance owns a format and immutable network-policy partition.
- * Public integration must preserve scheduler sharing requirements when composing
- * multiple format partitions; separate instances do not establish process-global limits.
+ * Each instance owns a format-specific validated cache. The context registry
+ * supplies one shared transport after checking network-policy compatibility.
+ * Standalone internal instances retain their own transport for isolated tests.
  */
 export class DirectoryService {
     readonly #network: Readonly<ResolvedDirectoryFetchOptions>;
     readonly #cache: DirectoryCache;
-    readonly #scheduler: DirectoryFetchScheduler<TransportResult>;
+    readonly #transport: DirectoryTransport;
     readonly #observer: ObserverDelivery<DirectoryRefreshEvent>;
     readonly #clock: () => number;
     readonly #pending = new Map<string, Promise<DirectoryRefreshResult>>();
+    readonly #appliedResponses = new WeakMap<DirectoryResponse, DirectoryRefreshResult>();
     #lastTime = 0;
     #healthy = true;
 
@@ -97,6 +93,7 @@ export class DirectoryService {
         options: DirectoryServiceOptions,
         transport: typeof fetchDirectoryOnce = fetchDirectoryOnce,
         clock: () => number = () => performance.now(),
+        sharedTransport?: DirectoryTransport,
     ) {
         // Snapshot top-level data without invoking ordinary accessors.
         if (!options || typeof options !== "object" || Array.isArray(options)) {
@@ -120,26 +117,38 @@ export class DirectoryService {
             throw new ProfileConfigurationError("invalid-agent-binding");
         }
         this.#network = snapshotDirectoryFetchOptions(own.network as DirectoryFetchOptions | undefined);
-        this.#clock = clock;
+        // Shared transport and cache must use the same monotonic time domain;
+        // verification-clock resets must never rebase it.
+        this.#clock = sharedTransport?.clock ?? clock;
         this.#cache = new DirectoryCache(own.format as JwksFormat,
-            own.cache as DirectoryCacheOptions | undefined, clock);
+            own.cache as DirectoryCacheOptions | undefined, this.#clock);
         this.#observer = createObserverDelivery(
             own.onRefresh as DirectoryServiceOptions["onRefresh"],
         );
-        this.#scheduler = new DirectoryFetchScheduler(async (origin, signal, remaining) => {
+        // This argument is internal only. The context registry establishes
+        // compatibility before allowing a service to share response bytes.
+        this.#transport = sharedTransport ?? new DirectoryTransport(this.#network, transport, this.#clock);
+        this.#transport.register((origin, response) => {
+            // Preparation never changes evidence. The shared transport checks
+            // its original deadline after EVERY profile has finished parsing.
             try {
-                const response = await transport(origin, {
-                    ...this.#network, signal, totalMilliseconds: remaining,
-                });
-                return { outcome: "response", response } as const;
+                const ticket = this.#cache.prepare(response);
+                return () => {
+                    const persisted = this.#cache.commit(origin, ticket);
+                    this.#appliedResponses.set(response,
+                        Object.freeze({ outcome: "completed", persisted }));
+                };
             } catch (error) {
-                // Only fixed, owned reason identifiers cross this boundary.
-                // Never retain backend exceptions or directory bytes in events.
-                const denied = (error instanceof DirectoryDnsError ||
-                    error instanceof DirectoryConnectionError) && error.reason === "address-denied";
-                return { outcome: "failed", reason: denied ? "address-denied" : "transport-failed" } as const;
+                if (!(error instanceof DirectoryDocumentError)) throw error;
+                const result = failed("invalid-jwks", error.diagnostic);
+                return () => {
+                    // Invalid under this profile does not constitute removal
+                    // evidence, even if another profile accepts the same bytes.
+                    this.#cache.recordFailure(origin);
+                    this.#appliedResponses.set(response, result);
+                };
             }
-        }, clock);
+        });
     }
 
     #now(): number | undefined {
@@ -187,7 +196,7 @@ export class DirectoryService {
             if (before === undefined || before - started >= 3000) {
                 return failed(before === undefined ? "clock" : "deadline");
             }
-            const fetched = await this.#scheduler.run(origin, started);
+            const fetched = await this.#transport.run(origin, started);
             const received = this.#now();
             if (received === undefined || received - started >= 3000) {
                 result = failed(received === undefined ? "clock" : "deadline");
@@ -196,16 +205,12 @@ export class DirectoryService {
                 result = failed(fetched.reason);
                 recordFailure = true;
             } else {
-                const ticket = this.#cache.prepare(fetched.response);
-                const preparedAt = this.#now();
-                if (preparedAt === undefined || preparedAt - started >= 3000) {
-                    result = failed(preparedAt === undefined ? "clock" : "deadline");
-                    recordFailure = true;
-                } else {
-                    // No await or application callback before the atomic commit.
-                    const persisted = this.#cache.commit(origin, ticket);
-                    result = Object.freeze({ outcome: "completed", persisted });
-                }
+                // The shared transport has already prepared all profile views,
+                // checked its deadline and committed each valid view once.
+                // Never parse/commit again for a coalesced caller.
+                const applied = this.#appliedResponses.get(fetched.response);
+                if (!applied) throw new Error("Missing directory response application");
+                result = applied;
             }
         } catch (error) {
             if (error instanceof DirectoryDocumentError) {
@@ -257,7 +262,7 @@ export class DirectoryService {
 
     get stats() {
         return Object.freeze({
-            ...this.#cache.stats, ...this.#scheduler.stats,
+            ...this.#cache.stats, ...this.#transport.stats,
             pendingRefreshes: this.#pending.size,
             observerErrorCount: this.#observer.observerErrorCount,
         });
