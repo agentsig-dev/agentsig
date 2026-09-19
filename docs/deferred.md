@@ -339,3 +339,34 @@ two source/policy checks. An initial audit defect used one Node BlockList for
 both families; its mapped-IPv6 matching also rejected native IPv4. Separate
 family lists fixed the audit without changing expected outcomes or source bytes.
 This audit is not evidence of implemented production SSRF or DNS-rebinding defense.
+
+### M3 address and DNS implementation checkpoint
+
+The address classifier and owned DNS resolver have been implemented internally,
+after contract fixtures in **442c2ba** and address fixtures in **d01b774**.
+They are not yet exported as a usable network verifier.
+
+The classifier uses bounded numeric address comparison and the pinned conservative
+exclusions. IPv4-mapped IPv6 is denied as DNS input; an OS-mapped socket address
+may match only an already admitted native IPv4 pin. The DNS layer waits for both
+A and AAAA results, rejects mixed forbidden answers, counts occurrences before
+deduplication, owns cancellation, and prevents a late result from reviving a
+timed-out operation. Queries use absolute DNS names without OS search expansion.
+Only ENODATA permits an empty family; other DNS failures reject the resolution.
+Multi-label ASCII hostnames without a trailing dot are required at this internal
+boundary. These narrower choices prioritize explicit, fail-closed resolution.
+
+Local core type checking and **177 targeted tests** passed: 129 address-policy
+tests and 48 resolver tests using controlled doubles, not live DNS.
+The full workspace check (build, type checks, unit tests, and existing integration
+tests) also passed. A separate run passed **113 checks** covering the independent
+address expectations, M3 contract audit, and local HTTPS test harness. These
+overlapping runs are not additive test totals.
+
+This checkpoint does not yet implement or prove the complete SSRF defense:
+the owned HTTPS connector, actual destination pinning during connection,
+proxy handling, bounded body fetching, cache/admission coordination, Redis
+adapter and recovery helper, network verifier integration, and smoke-fetch
+script remain unfinished. No production private-address exception was added.
+The existing offline API and published package version are unchanged.
+Remote CI for these local changes is unconfirmed; no push or publication occurred.
