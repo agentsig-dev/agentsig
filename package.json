@@ -24,7 +24,7 @@
         "test:watch": "vitest packages",
         "audit:fixtures": "node scripts/audit-fixtures.mjs",
         "test:fixtures": "node --test tests/fixture-integrity.test.mjs",
-        "test:integration": "node --test tests/fixture-integrity.test.mjs tests/structured-fields-consumer.test.mjs tests/core-consumer.test.mjs tests/profile-consumer.test.mjs",
+        "test:integration": "node --test tests/fixture-integrity.test.mjs tests/structured-fields-consumer.test.mjs tests/core-consumer.test.mjs tests/profile-consumer.test.mjs tests/discovery-consumer.test.mjs",
         "check": "pnpm run build && pnpm run typecheck && pnpm run test:unit && pnpm run test:integration",
         "changeset": "changeset"
     },

@@ -2,11 +2,16 @@
 
 [![npm](https://img.shields.io/npm/v/@agentsig/core.svg)](https://www.npmjs.com/package/@agentsig/core)
 
-> **Status: pre-release; offline verifier only, no network discovery; not security-reviewed**
+> **Status: pre-release; M3 discovery/Redis APIs in this checkout are unpublished; not security-reviewed**
 
-Framework-independent RFC 9421 HTTP Message Signatures and offline Web Bot Auth
+Framework-independent RFC 9421 HTTP Message Signatures and Web Bot Auth
 verification for Node 20+. Ed25519 uses Node's built-in cryptography. The only
 runtime dependency is @agentsig/structured-fields.
+
+Published **0.1.1** provides the pure engine and offline profiles. This checkout
+adds bounded HTTPS directory discovery and an optional Redis replay adapter;
+those additions are not yet available in that npm release. Package version
+metadata remains unchanged pending a separately authorized release.
 
 ESM, CommonJS, and declarations for both formats are provided. This package has
 not undergone an independent security review and does not claim production
@@ -49,16 +54,25 @@ The same profile subpath is available to CommonJS consumers. See the
 [offline verification guide](https://github.com/agentsig-dev/agentsig/blob/main/docs/offline-verification.md)
 for configuration and result semantics.
 
-## Two separate entry points
+## Separate entry points
 
-| Entry point | Responsibility |
-| --- | --- |
-| @agentsig/core | Pure RFC 9421 parsing, canonicalization, signing, and cryptographic verification |
-| @agentsig/core/profiles | Profile signing, offline verification, trusted local public JWKS loading, shared clock/replay context |
+| Entry point | Responsibility | Availability |
+| --- | --- | --- |
+| @agentsig/core | Pure RFC 9421 parsing, canonicalization, signing, and cryptographic verification | Published 0.1.1 |
+| @agentsig/core/profiles | Profile signing, offline verification, trusted local public JWKS loading, shared clock/replay context | Published 0.1.1 |
+| @agentsig/core/discovery | Bounded HTTPS directory discovery and full network verification | Unpublished M3 checkout |
+| @agentsig/core/redis | Optional Redis replay adapter and recovery-horizon helper | Unpublished M3 checkout |
 
 The pure engine has no clock, network, trust-resolution, or replay side effects.
-The profile layer combines those local authentication policies, but does not
-fetch directories or validate request bodies.
+The profile layer combines local authentication policies without loading directory
+transport. Discovery is separate from the future @agentsig/fetch outgoing client;
+Redis is optional and takes an application-owned client without adding a Redis
+runtime dependency. No entry point validates request bodies.
+
+Both module formats have separate declarations. Within either ESM or CommonJS,
+shared build chunks preserve security-context and configuration-error identities
+across subpaths. Do not mix ESM-created opaque contexts/policies with CommonJS
+instances in one process; cross-format interchangeability is not promised.
 
 The default signer profile is **ietf-wg-protocol-00**.
 **cloudflare-docs-2026-07-01** requires explicit signer selection.
@@ -124,7 +138,7 @@ Signature-Agent header, even an empty one.
 | Unknown derived component or component parameter | Explicitly rejected |
 | Unknown signature metadata | Included if its SF type is supported; no inferred semantics |
 | Local profile, JWKS, nonce, and clock policy | Separate profile entry point |
-| Network discovery and directory cache | Not implemented |
+| Network discovery and directory cache | Separate unpublished M3 discovery entry point |
 
 Signature metadata and component identifiers use RFC 8941 types; RFC 9651 Date
 and Display String extensions are not accepted in those positions. Other known
@@ -162,6 +176,96 @@ with unrelated tags. No signature headers yields an empty parsed array. This is
 the local all-pairs contract, not a claim that the RFC mandates rejection of every
 unrelated signature in every application.
 
+## Directory verification (unpublished M3)
+
+Use a repository build for this API, not the published 0.1.1 package:
+
+```js
+import { createSecurityContext } from "@agentsig/core/profiles";
+import { createNetworkVerifier } from "@agentsig/core/discovery";
+
+const context = createSecurityContext(); // Bounded in-memory replay by default.
+const verifier = createNetworkVerifier({
+    scope: "merchant",
+    context,
+    discovery: {
+        network: { allowedOrigins: ["https://agent.example"] },
+    },
+});
+// Keep verifier/context alive across requests; pass original ordered headers.
+export async function authenticate(request) {
+    return verifier.verify(request);
+}
+```
+
+Discovery is deny-by-default unless an origin is allow-listed. Explicit
+`discovery.network.mode: "open"` permits other admissible origins, not private
+addresses or disabled TLS. Configuration is trusted application input, never
+incoming request metadata. Each admitted origin uses the fixed
+`/.well-known/http-message-signatures-directory` path. A/AAAA answers are checked
+together; one forbidden address rejects the entire answer set. Numeric connection
+pinning retains the original Host, SNI, and certificate identity. Special-purpose
+address exceptions are named and bounded, not arbitrary CIDR overrides.
+
+Only HTTP 200, identity encoding, the directory media type, bounded UTF-8 JSON,
+and a completely validated key set are accepted. There are no redirects, retries,
+environment proxies, TLS-disable switches, application transport hooks, or local
+key fallback. Custom CAs and HTTPS CONNECT proxies must be explicit. A configured
+proxy is trusted infrastructure: target validation still occurs before CONNECT,
+but the client cannot observe the proxy's remote peer.
+
+A context owns shared admission across both profiles: 16 active fetches, one per
+origin, 64 queued, 32 starts per rolling second, and a 30-second per-origin start
+interval. The three-second total deadline includes queueing and document validation.
+Each verification may initiate or join at most one fetch. Separate contexts do not
+share these limits. Keep one context per compatible trust/enforcement domain.
+
+Freshness defaults to 60 seconds only without explicit freshness and is capped at
+300 seconds before age subtraction. Negative backoff defaults to 60 seconds.
+Stale evidence never verifies. Successful whole-set replacement, including an
+empty set, invalidates removed keys across both profile caches. Final acceptance
+rechecks the original thumbprint in the current fresh set after replay awaits;
+consumed nonces are not rolled back. Explicit `verifier.refresh(origin, profile)`
+uses the same admission, cooldown, and backoff rules; it is not a force-refresh bypass.
+
+A successful identity has trust source `directory-https`: HTTPS origin/key
+association, not operator reputation, authorization, or publisher-signed directory
+proof. Unusable fresh key evidence yields `unverified / unknown-key`; a fixed
+synchronous `discovery.onRefresh` observer provides separate sanitized diagnostics.
+Observer exceptions cannot change authentication. Publisher-side signed directory
+responses for the Cloudflare profile remain mandatory deferred M5 work; M3 does
+not claim that requirement or live Cloudflare acceptance.
+
+## Redis replay and operational limits (unpublished M3)
+
+The optional `createRedisReplayStore` factory takes an application-owned ready
+client with automatic retries and offline queueing disabled. Pass the returned
+store to `createSecurityContext({ store })`. There is no memory fallback or manual
+quarantine release. Setup requires `CONFIG GET maxmemory-policy` to report
+`noeviction`; narrowly scoped explicit acknowledgement is possible only when
+inspection is denied or unsupported, never to override a reported mismatch.
+
+An explicit positive recovery horizon is mandatory. `recoveryHorizonSeconds()`
+returns 360 seconds for the default single-clock policy:
+`min(maxAgeSeconds, maxLifetimeSeconds) + 2 * clockSkewSeconds`. Supply the largest
+horizon across every verifier sharing the namespace, plus the deployment's bounded
+distributed-clock allowance. The adapter cannot establish that assertion for you.
+An empty namespace starts shared quarantine, during which consumption is unavailable.
+
+The initial adapter scans and rewrites a bounded state document in **O(n)**,
+with at most 10,000 records and 32 MiB of encoded state. Lua prepares a replacement
+before a single MSET writes state, epoch, and quarantine. Logical expiration does
+not automatically delete idle namespace data. All command boundaries are 100 ms;
+timeout means unknown completion, not rollback. Full-capacity throughput/latency
+has **not** been established.
+
+The keys share one Redis Cluster hash slot, but **Cluster routing, actual
+restart/failover, replication rollback, and OOM behavior are unproven**. Real Redis
+service tests and deterministic-time Lua tests do not prove these deployment
+properties. `noeviction` is not durability or linearizability. Valid-looking partial
+deletion/rollback can evade loss detection; markers cannot detect every lost nonce.
+Arbitrary Redis/distributed clock jumps remain an operational risk.
+
 ## Resource limits and errors
 
 Core defaults use 16 KiB budgets for headers, URI, Structured Fields, and the
@@ -198,6 +302,23 @@ canonicalization, signing, and verification. Profile fixtures precede their
 implementations. Full offline round trips supplement, rather than replace,
 independent golden bytes. Fixture files are read as bytes and checked against
 pinned hashes and isolated Git line-ending behavior.
+
+The maintainer-run repository smoke is separate from automated tests:
+
+```sh
+pnpm run build
+node scripts/smoke-fetch.mjs
+```
+
+It needs no Redis, uses memory replay, and takes at least 30 seconds to preserve the
+real origin cooldown. Expected scenarios: verified after the first fetch; private
+DNS destination rejected before CONNECT/GET with unverified/unknown-key; and
+unknown-key after a second fetch removes the key. A repository-only DNS override
+and explicitly trusted local HTTPS proxy route the public numeric pin to loopback.
+Actual nested TLS and authentication remain enabled; this is not public routing or
+direct-peer proof. No system DNS/CA or production private-address policy is changed.
+Run the script as its own process. Test helpers and public fixture private keys are
+not shipped in npm packages and must never be used in production.
 
 See [provenance](https://github.com/agentsig-dev/agentsig/blob/main/docs/fixture-provenance.md).
 CI targets Node 20/22/24 on Windows/Linux. A workflow definition or past green run

@@ -956,3 +956,79 @@ remain unproven; ACL rejection is not a substitute for those tests.
 Public exports and consumers, release metadata, and the maintainer-run three-case
 network smoke remain pending. The adapter is internal and not security-reviewed.
 No push or publication was performed.
+
+### M3 public entry points and maintainer smoke preparation
+
+The maintainer confirmed that workflow correction **0deea8a** was pushed and that
+CI, fixture workflows, and real Redis service-container jobs passed. This confirms
+the preceding implementation checkpoint, not remote CI for subsequent exports.
+
+The public directory API is @agentsig/core/discovery rather than /network:
+it identifies directory discovery/full authentication without suggesting a generic
+HTTP client or overlapping the future @agentsig/fetch wrapper. The optional replay
+adapter and recovery helper live at @agentsig/core/redis. The pure main entry and
+offline /profiles entry do not load directory transport.
+
+Explicit ESM/CommonJS build splitting preserves shared internal context registries
+and configuration-error identity across subpaths within each module format. Mixing
+ESM-created opaque objects with CommonJS instances in one process is not promised.
+The public discovery factory accepts exactly one configuration argument. Internal
+transport, discovery-clock, raw-response and key-provider injection are not public
+API; deep implementation paths remain blocked by package exports.
+
+Four new fresh-process consumer checks exercise ESM/CommonJS runtime and declarations,
+including real local nested TLS, both profiles, shared context/cache, replay rejection,
+private-destination rejection before CONNECT, configuration error identity, and
+negative API typing. These supplement existing independent fixtures and full
+rotation races; they do not replace them.
+
+The maintainer-only [network smoke](../scripts/smoke-fetch.mjs) is prepared, not
+executed by the assistant. It uses built public entry points and memory replay,
+without Redis. It checks verified acceptance after the first directory GET,
+unverified/unknown-key after private DNS rejection, and unknown-key after a second
+successful GET replaces the directory with an empty set. The third case retains
+the original verifier/context, waits 30.1 real seconds for the production cooldown,
+and signs with a fresh nonce after waiting. No production clock override is added.
+
+Its repository-only helper temporarily controls process-local DNS and restores it
+during teardown. An explicit trusted local HTTPS CONNECT proxy routes numeric
+target 1.1.1.1:443 to the loopback directory. Both TLS identity checks and production
+address admission remain enabled. This proves neither public routing nor direct
+observation of the proxy's remote peer. No system DNS/CA changes or production
+private-address exception are introduced; the script runs as a standalone process.
+
+Both READMEs now distinguish published 0.1.1 from the unpublished M3 checkout.
+Their limits sections record Redis O(n) state scans/rewrites, the 10,000-record /
+32 MiB bounds, and the absence of full-capacity performance evidence. Cluster
+routing, actual restart/failover, replication rollback and OOM remain unproven.
+Noeviction and hash-slot placement do not establish durability or linearizability;
+valid-looking partial loss and arbitrary distributed clock jumps remain risks.
+Earlier references to pending exports/internal-only APIs are historical checkpoints.
+
+Package versions and the exact Structured Fields dependency remain 0.1.1.
+Release metadata/versioning and publication need separate authorization; preparing
+these exports is not a new npm release. The maintainer will run the smoke and
+perform push/tag decisions. No assistant push, tag, or publication is authorized.
+
+### Public export delivery validation
+
+Local Windows / Node 22 validation passed builds, strict type checks, 5,355 unit
+tests, and 17 integration/consumer checks. The ordinary run explicitly skipped
+22 real-Redis tests; no new real-Redis execution is claimed for this export-only
+delivery. The preceding service-container result is maintainer-confirmed above.
+
+Local Node 20.20.2 passed eight discovery/Redis/profile runtime and declaration
+consumer checks. The independent RFC audit passed, followed by 236 source,
+fixture-contract, and local HTTPS harness checks. These overlapping runs are not
+additive totals. Pinned fixture bytes were not changed.
+
+The smoke script passed syntax checking only; its three scenarios have not been
+executed by the assistant. Its maintainer-run result and remote CI for this final
+delivery remain pending.
+
+npm dry-run inventories contained only built outputs, README, LICENSE, and package
+metadata: core had 31 files (128,394 compressed / 546,878 unpacked bytes), and
+Structured Fields had seven files (20,675 / 80,384 bytes). No test helpers, fixtures,
+or private test keys were included. These are unpublished checkout inventories
+with unchanged version metadata, not descriptions of the published 0.1.1 archive.
+No archive creation, package publication, push, or tag was performed.

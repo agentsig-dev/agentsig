@@ -30,8 +30,9 @@ export interface NetworkVerifier {
 }
 
 /**
- * INTERNAL until public discovery export review. Dependencies are test-only,
- * never forwarded from application configuration or incoming request metadata.
+ * INTERNAL implementation dependencies, deliberately absent from the public
+ * discovery wrapper and declarations. Test-only; never forwarded from application
+ * configuration or incoming request metadata.
  */
 export interface NetworkVerifierDependencies {
     readonly transport?: typeof fetchDirectoryOnce;

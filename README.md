@@ -3,14 +3,19 @@
 [![npm: @agentsig/core](https://img.shields.io/npm/v/@agentsig/core.svg?label=%40agentsig%2Fcore)](https://www.npmjs.com/package/@agentsig/core)
 [![npm: @agentsig/structured-fields](https://img.shields.io/npm/v/@agentsig/structured-fields.svg?label=%40agentsig%2Fstructured-fields)](https://www.npmjs.com/package/@agentsig/structured-fields)
 
-> **Status: pre-release; offline verifier only, no network discovery; not security-reviewed**
+> **Status: pre-release; M3 discovery/Redis APIs in this checkout are unpublished; not security-reviewed**
 
 Open-source HTTP Message Signatures and Web Bot Auth tooling for Node.js.
 
 agentsig provides a profile-independent RFC 9421 Ed25519 engine, a separate
-RFC 9651 Structured Fields package, and signing/offline verification for two
-pinned Web Bot Auth profiles. Verification combines trusted local public JWKS,
-explicit identity bindings, time policies, and atomic in-memory replay protection.
+RFC 9651 Structured Fields package, and signing/verification for two pinned Web
+Bot Auth profiles. Published **0.1.1** supports offline verification with trusted
+local public JWKS, explicit identity bindings, time policies, and memory replay.
+
+This checkout additionally implements bounded HTTPS directory discovery, shared
+cache/admission coordination, and an optional Redis replay adapter. These M3
+additions are **not in published 0.1.1**; version metadata is unchanged pending a
+separately authorized release.
 
 This project is not security-reviewed and does not claim production readiness,
 IETF endorsement, or Cloudflare reference-implementation status. “Pre-release”
@@ -66,8 +71,8 @@ See the [offline verification guide](docs/offline-verification.md),
 Node HTTP-signature engines and TypeScript Web Bot Auth packages already exist.
 agentsig is not the first. Its focus is pinned profiles, independently sourced
 golden fixtures, explicit trust boundaries, default atomic replay checks, and
-Node's built-in cryptography. Safe network discovery, framework adapters, and
-client tooling remain future work.
+Node's built-in cryptography. Bounded network discovery is implemented in this
+unpublished M3 checkout; framework adapters and client tooling remain future work.
 
 The [source-based comparison](docs/core-api-proposal.md) records the versions and
 documentation examined. It is not a security audit or performance comparison.
@@ -98,7 +103,7 @@ that the accepted candidate is not replay-protected.
 | Package | Current scope |
 | --- | --- |
 | @agentsig/structured-fields | Lossless raw AST, semantic model, RFC 9651 parsing/serialization, resource limits |
-| @agentsig/core | RFC 9421 engine and separate offline Web Bot Auth profile API |
+| @agentsig/core | Published RFC 9421 engine/offline profiles; unpublished M3 discovery and Redis subpaths |
 | @agentsig/fetch | Planned; not implemented |
 | @agentsig/hono | Planned; not implemented |
 | @agentsig/fastify | Planned; not implemented |
@@ -109,8 +114,13 @@ that the accepted candidate is not replay-protected.
 - **M2:** accepted offline profile verification, time/replay integration, and dual-format consumers.
   The user confirmed green CI/fixture workflows for **core-m2** and successful
   two-profile smoke verification in commit **08592a2**.
-- **Next:** separately approved network discovery/cache, client wrappers,
-  adapters, and CLI work. See the [M2 design record](docs/milestone-2-plan.md)
+- **M3 checkout:** full network verification, bounded directory cache/transport,
+  shared cross-profile admission, and Redis replay/recovery. Public APIs live at
+  @agentsig/core/discovery and @agentsig/core/redis; the pure and offline entries
+  do not load discovery transport. Maintainer-run final smoke/tag remain separate
+  acceptance steps, not a publication.
+- **Next:** client wrappers, adapters, CLI, and publisher-signed directory responses
+  (mandatory Cloudflare-profile M5 work). See the [M3 design record](docs/milestone-3-plan.md)
   and [deferred work](docs/deferred.md).
 
 The GitHub organization is **agentsig-dev**; the npm organization is **agentsig**.
@@ -176,6 +186,23 @@ the built Structured Fields package. See [fixture provenance](docs/fixture-prove
 Golden expectations precede implementation in separate commits; they are not
 regenerated from production code to make tests pass.
 
+The maintainer-run network smoke is intentionally separate from automated checks:
+
+```sh
+pnpm run build
+node scripts/smoke-fetch.mjs
+```
+
+It uses memory replay only, needs no Redis, and waits 30.1 seconds for the normal
+origin cooldown. The three scenarios are: full verified acceptance after fetching
+a key; private DNS destination rejection before CONNECT/GET with an unverified
+result; and unknown-key after a second fetch removes that key. The test-only DNS
+answers and explicit local HTTPS proxy route numeric pin 1.1.1.1:443 to loopback.
+Real nested TLS and certificate identity checks remain enabled. This is not proof
+of public routing or direct observation of the proxy's remote peer. Run it as a
+standalone process; no production private-IP exception or system DNS/CA change
+is introduced. See the [core documentation](packages/core/README.md) for details.
+
 The [CI matrix](.github/workflows/ci.yml) targets Node 20/22/24 on Windows/Linux.
 The [fixture workflow](.github/workflows/fixtures.yml) runs on every PR without
 path filtering and fetches full history for historical fixture-commit checks.
@@ -183,10 +210,26 @@ Past green results are not evidence that later commits passed remote CI.
 
 ## Security, release, and license
 
-There is no network discovery/cache, body-digest comparison, countersignature
-support, framework adapter, or CLI in the current offline profile scope.
+The unpublished M3 discovery API defaults to origin allow-list admission. Explicit
+open mode retains destination filtering, numeric pinning, TLS, redirect rejection,
+and resource limits. Limits are shared per security context, not process-global or
+distributed. Keep compatible verifier contexts long-lived. Directory HTTPS identity
+does not establish operator reputation, authorization, or publisher-signed proof.
+Body-digest comparison, countersignatures, framework adapters, client wrappers,
+and CLI remain outside this implementation. Live Cloudflare acceptance is unproven.
+
+The initial Redis adapter performs **O(n) scans and bounded state-document
+rewrites**, capped at 10,000 records and 32 MiB of encoded state. Full-capacity
+performance is unproven. **Redis Cluster routing, actual restart/failover,
+replication rollback, and OOM behavior are not established by the tests.**
+A shared hash slot and noeviction policy do not prove durability or linearizability.
+Valid-looking partial history loss may escape detection; arbitrary distributed
+clock jumps remain an operational risk. Explicit recovery horizon and shared
+quarantine are required, with no retry or memory fallback.
+
 Never use published fixture private keys in production. Memory replay state is
 process-local; restart or explicit destructive clock reset loses that history.
+This project has not undergone an independent security audit.
 
 Releases are performed manually by the maintainer; no automatic publishing
 workflow is included. Documentation and packaging work does not itself publish

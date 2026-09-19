@@ -39,6 +39,26 @@
                 "types": "./dist/profiles.d.cts",
                 "default": "./dist/profiles.cjs"
             }
+        },
+        "./discovery": {
+            "import": {
+                "types": "./dist/discovery.d.ts",
+                "default": "./dist/discovery.js"
+            },
+            "require": {
+                "types": "./dist/discovery.d.cts",
+                "default": "./dist/discovery.cjs"
+            }
+        },
+        "./redis": {
+            "import": {
+                "types": "./dist/redis.d.ts",
+                "default": "./dist/redis.js"
+            },
+            "require": {
+                "types": "./dist/redis.d.cts",
+                "default": "./dist/redis.cjs"
+            }
         }
     },
     "files": [
@@ -48,7 +68,7 @@
     ],
     "sideEffects": false,
     "scripts": {
-        "build": "tsup src/index.ts src/profiles.ts --format esm,cjs --dts --clean --target node20",
+        "build": "tsup src/index.ts src/profiles.ts src/discovery.ts src/redis.ts --format esm,cjs --splitting --dts --clean --target node20",
         "typecheck": "tsc --noEmit -p tsconfig.json",
         "test": "vitest run test"
     },
