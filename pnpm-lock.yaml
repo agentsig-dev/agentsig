@@ -59,6 +59,12 @@ importers:
         specifier: 5.12.5
         version: 5.12.5
 
+  packages/fetch:
+    dependencies:
+      '@agentsig/core':
+        specifier: workspace:*
+        version: link:../core
+
   packages/hono:
     dependencies:
       '@agentsig/core':

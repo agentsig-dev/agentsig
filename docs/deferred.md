@@ -1340,3 +1340,26 @@ adapter smoke, establish remote CI for these changes, or constitute a security
 audit. The next delivery order is wrapper and consumers, maintainer-owned smoke
 preparation, then coordinated 0.2.0 changeset/README/package-inventory preparation.
 Stop after three local commits; no push, tag, publication or WG notification.
+
+### Signed Fetch implementation checkpoint
+
+Following independent fetch fixture commit 1f7904f, @agentsig/fetch implements
+fresh owned requests, final serialized request signing, independent pre-override
+signature-header collision checks, mandatory manual redirects, default body
+rejection and explicit identity-only forwarding. It captures native or injected
+transport at factory creation and adds no retry or re-signing loop. The approved
+exact loopback HTTP test exception does not alter directory discovery admission.
+
+Local Windows / Node 22.23.2 passed 94 targeted fetch tests and four ESM/CommonJS
+runtime/declaration consumers. The four golden vectors matched transport-boundary
+header bytes exactly. Real native loopback tests observed zero redirect-destination
+requests and the HTTP 421 resend consequence: one signing operation, two identical
+wire signatures, first verified and second replay-detected. This is not an
+exactly-once delivery guarantee or evidence about an arbitrary injected transport.
+
+Full workspace builds/type checks passed, with 5,625 passing tests and 22 skipped
+real Redis tests, plus 100 passing integration/consumer checks. Counts overlap
+targeted runs and must not be added together. The ten-line fetch README example
+was extracted and executed with its injected in-process transport, returning 204.
+No adapter smoke, remote CI, local Node 20/24 execution or security audit is claimed.
+The maintainer-owned smoke and coordinated release preparation remain next.
