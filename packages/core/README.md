@@ -62,6 +62,7 @@ for configuration and result semantics.
 | @agentsig/core/profiles | Profile signing, offline verification, trusted local public JWKS loading, shared clock/replay context | Published 0.1.1 |
 | @agentsig/core/discovery | Bounded HTTPS directory discovery and full network verification | Unpublished M3 checkout |
 | @agentsig/core/redis | Optional Redis replay adapter and recovery-horizon helper | Unpublished M3 checkout |
+| @agentsig/core/http | Owned Node HTTP/1.1 capture and explicit ingress mapping; no implicit verification | Unpublished M4 checkout |
 
 The pure engine has no clock, network, trust-resolution, or replay side effects.
 The profile layer combines local authentication policies without loading directory
@@ -265,6 +266,24 @@ service tests and deterministic-time Lua tests do not prove these deployment
 properties. `noeviction` is not durability or linearizability. Valid-looking partial
 deletion/rollback can evade loss detection; markers cannot detect every lost nonce.
 Arbitrary Redis/distributed clock jumps remain an operational risk.
+
+## HTTP mapping (unpublished M4)
+
+The @agentsig/core/http entry exports createNodeHttpMapper, mapping types, limits
+and a separately frozen seventeen-code mapping error catalog. Create the Node
+HTTP/HTTPS server through the mapper before listening; map(request) returns an
+owned pre-framework snapshot with ordered header occurrences and unchanged target
+spelling. Missing capture is rejected, never reconstructed from framework getters.
+
+An explicit target-origin allowlist is required. Direct mode ignores forwarding
+claims. Trusted ingress additionally requires configured peer IP/CIDR rules, one
+selected forwarding family, a sanitizing-ingress assertion, and external HTTPS.
+Mapping does not authenticate or authorize requests and does not read bodies.
+It does not itself implement adapter policy hooks, observer delivery or blocking.
+
+See the [HTTP mapping guide](https://github.com/agentsig-dev/agentsig/blob/main/docs/http-mapping.md)
+for early placement, parser limits, proxy trust, client hints, protocol restrictions,
+and the separate observation/enforcement contract. This API is not in npm 0.1.1.
 
 ## Resource limits and errors
 

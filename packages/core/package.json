@@ -50,6 +50,16 @@
                 "default": "./dist/discovery.cjs"
             }
         },
+        "./http": {
+            "import": {
+                "types": "./dist/http.d.ts",
+                "default": "./dist/http.js"
+            },
+            "require": {
+                "types": "./dist/http.d.cts",
+                "default": "./dist/http.cjs"
+            }
+        },
         "./redis": {
             "import": {
                 "types": "./dist/redis.d.ts",
@@ -68,7 +78,7 @@
     ],
     "sideEffects": false,
     "scripts": {
-        "build": "tsup src/index.ts src/profiles.ts src/discovery.ts src/redis.ts --format esm,cjs --splitting --dts --clean --target node20",
+        "build": "tsup src/index.ts src/profiles.ts src/discovery.ts src/redis.ts src/http.ts --format esm,cjs --splitting --dts --clean --target node20",
         "typecheck": "tsc --noEmit -p tsconfig.json",
         "test": "vitest run test"
     },

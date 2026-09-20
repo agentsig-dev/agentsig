@@ -1154,3 +1154,35 @@ These fixtures do not implement the mapper, execute framework listeners, establi
 real verification/authorization, or constitute a security audit. Fixture CI is
 configured, not yet confirmed for these changes. The mapper and adapters follow
 in separate commits; push, tags and publication remain maintainer-owned.
+
+### Shared Node HTTP mapper implementation checkpoint
+
+Following independent contract commit 45b8803, @agentsig/core/http now exposes
+owned Node HTTP/1.1 capture and mapping. Server creation fixes parser byte/count
+limits before accepting connections, captures before application dispatch, and
+stores results privately by incoming-request identity. Detached views preserve
+header occurrences and target spelling without sharing mutable byte storage.
+No verifier, discovery, replay, policy or observer is invoked by mapping alone.
+
+The [mapping guide](http-mapping.md) records configuration, ingress rules and
+limits. Conservative implementation choices reject empty Forwarded pairs and
+trailing semicolons, do not implicitly expand IPv4 trust rules to mapped IPv6
+socket peers, and keep configuration lists bounded. HTTP/HTTPS server creation
+is owned rather than retrofitting an already-running listener. Configuration
+errors use fixed TypeError text, separate from the approved mapping catalog.
+Existing verification/signing/operator catalogs and discovery SSRF policy are
+unchanged; package versions remain 0.1.1 pending M4 release preparation.
+
+Local Windows / Node 22.23.2 passed 161 targeted HTTP tests, including twelve
+real loopback TCP/TLS listener tests, strict type checking, and four fresh-process
+ESM/CommonJS runtime/declaration consumers. Full workspace validation passed
+builds, types, 5,516 tests and 21 integration/consumer checks. Twenty-two real
+Redis tests were explicitly skipped; no new Redis service execution is claimed.
+These overlapping runs are not additive totals. Remote CI and local Node 20/24
+results are not established by these runs.
+
+The real TLS test explicitly trusts the existing public test certificate and
+validates its hostname. Listener tests establish capture and mapping, not full
+signature authentication, framework authorization, public routing or a security
+audit. Framework adapters, shared policy/observer integration and their native
+context ownership tests remain subsequent work. No push, tag or publication.
