@@ -1032,3 +1032,65 @@ Structured Fields had seven files (20,675 / 80,384 bytes). No test helpers, fixt
 or private test keys were included. These are unpublished checkout inventories
 with unchanged version metadata, not descriptions of the published 0.1.1 archive.
 No archive creation, package publication, push, or tag was performed.
+
+### Maintainer acceptance of M3 and M4 planning
+
+On September 20, 2026, the maintainer confirmed that the network smoke passed:
+verified after directory discovery; unverified/unknown-key when 10.0.0.1 was
+rejected before CONNECT; and unknown-key after a successful empty-set replacement.
+The real 30-second origin cooldown was observed. The maintainer confirmed pushing
+a9f5764, creating core-m3, and green CI, and explicitly accepted M3. No new npm
+publication occurred. This supersedes the pending maintainer-smoke/CI status of
+the preceding public-export delivery, not its documented transport or Redis limits.
+
+The [M4 proposal](milestone-4-plan.md) covers @agentsig/fetch and the Hono, Fastify,
+and Express adapters. Proxy trust, early raw capture, authorization policy/context
+publication, request-body integrity, transport ownership, and a proposed shared
+@agentsig/core/http subpath await explicit approval. Recommendations in that plan
+are not accepted security defaults. No M4 production code, dependency installation,
+framework compatibility claim, or approved fixture contract is created by planning.
+
+After approval, exact framework/transport sources and independent mapping
+expectations must be pinned before implementation. All three adapters must map
+the same supported raw request to the same core header fields and target, without
+duplicating cryptography, discovery, replay, or profile verification. Every three
+local commits require a stop/report; push and publication remain maintainer-owned.
+
+### Approved M4 amendments and mandatory pre-1.0 body verification
+
+The maintainer approved M4 decisions D1-B, D2-A, D3-A, D4-A, D5-A,
+D6-A and @agentsig/core/http, with the overriding amendments recorded in the
+[M4 plan](milestone-4-plan.md#approved-m4-decisions-and-overriding-amendments).
+Earlier pending-approval statements describe historical planning only.
+
+**Actual Content-Digest verification is mandatory before 1.0.**
+Agent payment workflows include state-changing requests; a verified signing key
+and signed method/target do not establish integrity of the payment payload.
+M4 defers body hashing/comparison, exposes bodyIntegrity: "unverified", and rejects
+bodies in enforcement mode by default unless explicitly opted into identity-only
+acceptance. A signed digest field alone must never be advertised as verified body
+integrity. The later work requires independent RFC 9530 fixtures, explicit byte
+representation and encoding semantics, resource bounds, and verification before
+application side effects. It is separate from M5 publisher-signed directory proof.
+
+Trusted ingress selects RFC 7239 Forwarded or X-Forwarded-*; the unselected family
+causes rejection. Loopback peer trust is not process authentication: other local
+processes able to connect can spoof forwarding metadata. HTTP/2 is explicitly
+unsupported and cannot yield a silently translated verification result.
+
+Policy errors and configurable timeout (default one second) produce authorization
+deny and an observer event, not authentication unverified. Decisions are
+allow-verified, allow-anonymous, deny and rate-limit. Default denial/rate-limit
+statuses are configurable 401/429, with no reason in default response bodies.
+Repeated compatible installation on one request must not reverify or consume a
+nonce again.
+
+The signed fetch wrapper permits an explicitly injected application transport,
+defaulting to global fetch, always requests manual redirects, and adds no retry or
+re-signing loop. Custom transport behavior is trusted application responsibility,
+not evidence of the default transport's guarantees. Plain HTTP is restricted to
+an explicit loopback-only test option; discovery SSRF policy remains unchanged.
+
+The maintainer authorized preparing core 0.2.0 and the four new M4 packages at
+0.2.0 with Changesets, without publication. Framework peer ranges await source
+review and tests. No Structured Fields version change is implied.
