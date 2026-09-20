@@ -1285,3 +1285,58 @@ empty 500 responses rather than raw exceptions through framework error handlers.
 Application logging and arbitrary downstream response-stream failures remain
 application responsibilities. Actual body integrity is still unverified and
 mandatory deferred pre-1.0 work. No push, tag, publication or WG notification.
+
+### Approved signed Fetch contract and independent golden preparation
+
+The maintainer confirmed push and green CI for 45b8803, a8f3449, 520bd82 and
+32be1bb. Adapter milestone acceptance still requires the maintainer-run smoke;
+that script must be prepared but not executed by the assistant.
+
+The approved outgoing wrapper constructs a fresh owned request, signs its final
+serialized method/URL and stable headers, and invokes the selected transport once.
+The default transport is native global fetch captured at factory creation; explicit
+application injection is supported. Manual redirects are mandatory. No wrapper
+retry, re-signing or redirect-follow loop is permitted. Native Fetch may resend
+identical signed bytes after HTTP 421: one signing operation and one selected
+transport call are not a promise of one wire transmission or exactly-once delivery.
+
+Signature, Signature-Input and Signature-Agent are screened independently in the
+input Request and init headers before overrides. Presence, including an empty
+value, uses existing SigningError code existing-signature-headers before signing
+or transport. No frozen catalog is extended. Other wrapper validation/transport
+failures use fixed errors without raw input or nested backend causes.
+
+HTTPS is required by default. The explicitly approved allowHttpLoopbackForTests
+exception accepts only exact 127.0.0.1 and [::1] literals with a valid port.
+Localhost/DNS names, shortened or numeric IPv4 aliases, mapped IPv6 and zone IDs
+are rejected. Raw strings are checked before URL normalization. Preconstructed
+URL/Request objects expose only serialized addresses; their original spelling
+cannot be recovered or attested. This exception performs no DNS lookup and does
+not change discovery SSRF admission.
+
+Bodies are rejected by default, including explicit non-null empty bodies.
+Explicit allow-unverified mode permits identity-only forwarding without body
+hashing/comparison, buffering or replay preparation. Used/locked bodies reject.
+Abort before signing or between signing and dispatch must send nothing; a later
+abort cannot establish that a server received nothing.
+
+The separate [fetch manifest](../tests/fixtures/m4-fetch/manifest.json) pins eighteen
+files and four independently authored golden vectors across both profiles.
+Literal signature bases use the existing public test key, fixed clock and nonce;
+Node Ed25519 produces the expected signature bytes without agentsig imports.
+Header goldens describe the selected transport's Request boundary, not TCP header
+ordering or fields subsequently added by transport. They use CRLF separators with
+no terminal CRLF and are stored as binary fixtures to prevent Git conversion.
+
+The independent audit passed nine checks on local Windows / Node 22.23.2, including
+all four signatures and three real Git staging/checkout settings. Reimporting
+produced identical bytes. An initial audit count typo expected 54 collision cases;
+the actual complete product is 3 fields x 3 spellings x 2 values x 2 sources = 36.
+The corrected audit checks every combination exactly once; fixture outcomes were
+not weakened or regenerated from production implementation.
+
+This source/expectation checkpoint does not implement signed fetch, run the
+adapter smoke, establish remote CI for these changes, or constitute a security
+audit. The next delivery order is wrapper and consumers, maintainer-owned smoke
+preparation, then coordinated 0.2.0 changeset/README/package-inventory preparation.
+Stop after three local commits; no push, tag, publication or WG notification.

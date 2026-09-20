@@ -1,0 +1,5 @@
+signature: sig1=:Ucg4tJmqQjB9B+aww+BHXyn4f98CBouLd/ad95dtKtSLzo9RD1GC1havT3/TRBm/tw8HF4y/fgCtPTOQPNlNAA==:
+signature-agent: "https://agent.example"
+signature-input: sig1=("@method" "@target-uri" "signature-agent");created=1800000000;expires=1800000060;keyid="DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84";alg="ed25519";nonce="fetch-fixed-nonce";tag="web-bot-auth"
+x-repeat: one, two
+x-zeta: last

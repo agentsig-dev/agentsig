@@ -1,0 +1,121 @@
+{
+  "formatVersion": 1,
+  "license": "MIT; independently authored agentsig expectations",
+  "warning": "Public test key only. Never use fixed test keys, clocks or nonces in production.",
+  "sources": [
+    {
+      "path": "tests/fixtures/m2/generated/public-test-private.pem",
+      "sha256": "dfdc159bef3d1c3b5da1d5b2c0f8704ab4d2f603247bc730ca57aadeb8982644"
+    },
+    {
+      "path": "tests/fixtures/m2/generated/public-test-public.pem",
+      "sha256": "c91896a53deee899f14bb9a0d441acf0c748d01bd90eac7d6f68647550a8fe31"
+    },
+    {
+      "path": "tests/fixtures/m4-sources/manifest.json",
+      "sha256": "2fac07286e965caceaf09f6d34fee5c5acabd51c696bfc94cc3449e14396cc71"
+    },
+    {
+      "path": "tests/fixtures/signing/manifest.json",
+      "sha256": "705d426d43ecb161c85843c3230f7b6183b1c7b8bd967a2bd85c545e17007a93"
+    }
+  ],
+  "vectors": [
+    "ietf-wg-protocol-00/normalized-get",
+    "ietf-wg-protocol-00/identity-only-post",
+    "cloudflare-docs-2026-07-01/normalized-get",
+    "cloudflare-docs-2026-07-01/identity-only-post"
+  ],
+  "files": [
+    {
+      "path": "ietf-wg-protocol-00/normalized-get/base.txt",
+      "bytes": 356,
+      "sha256": "5b39a258ab81e68cea98faa5aa18fea83790d0a426ee66963096917acb7f8e02"
+    },
+    {
+      "path": "ietf-wg-protocol-00/normalized-get/signature.bin",
+      "bytes": 64,
+      "sha256": "7c799929a9d9e66fd6c9e5939bf112da044736332bd53137ca16dbdd673de5e1"
+    },
+    {
+      "path": "ietf-wg-protocol-00/normalized-get/headers.bin",
+      "bytes": 414,
+      "sha256": "e7a842d7ee9d675f8ced2745268cf2570b50687be544720e4f758efe825acd32"
+    },
+    {
+      "path": "ietf-wg-protocol-00/normalized-get/case.json",
+      "bytes": 1506,
+      "sha256": "910d2661d3a474e70752083cdf4608f25bd2883275c413f9d655b125a9abcd72"
+    },
+    {
+      "path": "ietf-wg-protocol-00/identity-only-post/base.txt",
+      "bytes": 344,
+      "sha256": "c6abd954b1cb101344ed8d9150329f41fd238b201148ab9c4221c03a134eaf31"
+    },
+    {
+      "path": "ietf-wg-protocol-00/identity-only-post/signature.bin",
+      "bytes": 64,
+      "sha256": "2a03b6486b54804108715c1b5e71c76393b73e84ba95efd32f3df074ae4b3d71"
+    },
+    {
+      "path": "ietf-wg-protocol-00/identity-only-post/headers.bin",
+      "bytes": 412,
+      "sha256": "1b89c345067cfe9468dfe69590428758b1efa4c4cbc5fee079c99f62303529d4"
+    },
+    {
+      "path": "ietf-wg-protocol-00/identity-only-post/case.json",
+      "bytes": 1367,
+      "sha256": "10a7d23ab6512dc33f7b3668cf52933027903226417373f370b3296fd7277859"
+    },
+    {
+      "path": "cloudflare-docs-2026-07-01/normalized-get/base.txt",
+      "bytes": 334,
+      "sha256": "c05f749b7572328913b65e2864336b8f36f6fc64059254ba1f032940ebb99c4e"
+    },
+    {
+      "path": "cloudflare-docs-2026-07-01/normalized-get/signature.bin",
+      "bytes": 64,
+      "sha256": "1a909ae208e5fb22677334ff563a1944b5f77cf1e3aaccc5f5e32a310bfef717"
+    },
+    {
+      "path": "cloudflare-docs-2026-07-01/normalized-get/headers.bin",
+      "bytes": 398,
+      "sha256": "84c381ce1b28ca9de4372df0f87af5494c991391fec298d3ce3415b99c294ba0"
+    },
+    {
+      "path": "cloudflare-docs-2026-07-01/normalized-get/case.json",
+      "bytes": 1502,
+      "sha256": "da38d543b7d72e535444c1c8bb7e864e3805c956c6520777f72df3e1ce453e86"
+    },
+    {
+      "path": "cloudflare-docs-2026-07-01/identity-only-post/base.txt",
+      "bytes": 322,
+      "sha256": "9dc168a331d5245bb2002de02f263cd071bdafc56ac9b6a8beeb327910891b1c"
+    },
+    {
+      "path": "cloudflare-docs-2026-07-01/identity-only-post/signature.bin",
+      "bytes": 64,
+      "sha256": "6e2967d39ebfb479bb9cbe8488e2c430546d0d5512ee9d056d22de1276049a93"
+    },
+    {
+      "path": "cloudflare-docs-2026-07-01/identity-only-post/headers.bin",
+      "bytes": 396,
+      "sha256": "ea13208b0266a053927f823e0cabf2632570b1d036f87360d349e79c4100f93e"
+    },
+    {
+      "path": "cloudflare-docs-2026-07-01/identity-only-post/case.json",
+      "bytes": 1363,
+      "sha256": "18c73f74c87fa3ccf0a06222acd0f7cc91d54bdaa6a75c54ddcba9b9ea77ec9e"
+    },
+    {
+      "path": "contract.json",
+      "bytes": 3030,
+      "sha256": "c3e29712ae65e05a0ddc1801c69bee2ccbcd28bcc6b4cba708b0413a30daeb2d"
+    },
+    {
+      "path": "negative-cases.json",
+      "bytes": 11056,
+      "sha256": "9328803ad2cb3137418ae8d6bea59fd5d2eebd44ef0051636cbde99d3ff9a1bf"
+    }
+  ]
+}

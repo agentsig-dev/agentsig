@@ -1,0 +1,4 @@
+content-type: application/json
+signature: sig1=:q98ZANOuR1taIJcNo6TP2NjsObM496L4pMNfsLzUBtSdzacSF5q9RhC9nDGce/iTcQV+bRlcKe0k1u6KdvHrBg==:
+signature-agent: sig1="https://agent.example"
+signature-input: sig1=("@method" "@target-uri" "signature-agent";key="sig1");created=1800000000;expires=1800000060;keyid="DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84";alg="ed25519";nonce="fetch-fixed-nonce";tag="web-bot-auth"

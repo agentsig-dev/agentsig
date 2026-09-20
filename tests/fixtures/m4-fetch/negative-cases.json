@@ -1,0 +1,452 @@
+{
+  "collisions": [
+    {
+      "source": "input-request-overridden",
+      "name": "Signature",
+      "value": "",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "init",
+      "name": "Signature",
+      "value": "",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "input-request-overridden",
+      "name": "Signature",
+      "value": "already-present",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "init",
+      "name": "Signature",
+      "value": "already-present",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "input-request-overridden",
+      "name": "signature",
+      "value": "",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "init",
+      "name": "signature",
+      "value": "",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "input-request-overridden",
+      "name": "signature",
+      "value": "already-present",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "init",
+      "name": "signature",
+      "value": "already-present",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "input-request-overridden",
+      "name": "SIGNATURE",
+      "value": "",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "init",
+      "name": "SIGNATURE",
+      "value": "",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "input-request-overridden",
+      "name": "SIGNATURE",
+      "value": "already-present",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "init",
+      "name": "SIGNATURE",
+      "value": "already-present",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "input-request-overridden",
+      "name": "Signature-Input",
+      "value": "",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "init",
+      "name": "Signature-Input",
+      "value": "",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "input-request-overridden",
+      "name": "Signature-Input",
+      "value": "already-present",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "init",
+      "name": "Signature-Input",
+      "value": "already-present",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "input-request-overridden",
+      "name": "signature-input",
+      "value": "",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "init",
+      "name": "signature-input",
+      "value": "",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "input-request-overridden",
+      "name": "signature-input",
+      "value": "already-present",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "init",
+      "name": "signature-input",
+      "value": "already-present",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "input-request-overridden",
+      "name": "SIGNATURE-INPUT",
+      "value": "",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "init",
+      "name": "SIGNATURE-INPUT",
+      "value": "",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "input-request-overridden",
+      "name": "SIGNATURE-INPUT",
+      "value": "already-present",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "init",
+      "name": "SIGNATURE-INPUT",
+      "value": "already-present",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "input-request-overridden",
+      "name": "Signature-Agent",
+      "value": "",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "init",
+      "name": "Signature-Agent",
+      "value": "",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "input-request-overridden",
+      "name": "Signature-Agent",
+      "value": "already-present",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "init",
+      "name": "Signature-Agent",
+      "value": "already-present",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "input-request-overridden",
+      "name": "signature-agent",
+      "value": "",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "init",
+      "name": "signature-agent",
+      "value": "",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "input-request-overridden",
+      "name": "signature-agent",
+      "value": "already-present",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "init",
+      "name": "signature-agent",
+      "value": "already-present",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "input-request-overridden",
+      "name": "SIGNATURE-AGENT",
+      "value": "",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "init",
+      "name": "SIGNATURE-AGENT",
+      "value": "",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "input-request-overridden",
+      "name": "SIGNATURE-AGENT",
+      "value": "already-present",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    },
+    {
+      "source": "init",
+      "name": "SIGNATURE-AGENT",
+      "value": "already-present",
+      "code": "existing-signature-headers",
+      "signingCalls": 0,
+      "transportCalls": 0
+    }
+  ],
+  "http": [
+    {
+      "input": "http://127.0.0.1/",
+      "allowedWithTestOption": true,
+      "allowedByDefault": false
+    },
+    {
+      "input": "http://127.0.0.1:8080/",
+      "allowedWithTestOption": true,
+      "allowedByDefault": false
+    },
+    {
+      "input": "http://[::1]:8080/",
+      "allowedWithTestOption": true,
+      "allowedByDefault": false
+    },
+    {
+      "input": "http://localhost/",
+      "allowedWithTestOption": false,
+      "allowedByDefault": false
+    },
+    {
+      "input": "http://127.0.0.2/",
+      "allowedWithTestOption": false,
+      "allowedByDefault": false
+    },
+    {
+      "input": "http://127.1/",
+      "allowedWithTestOption": false,
+      "allowedByDefault": false
+    },
+    {
+      "input": "http://2130706433/",
+      "allowedWithTestOption": false,
+      "allowedByDefault": false
+    },
+    {
+      "input": "http://0x7f000001/",
+      "allowedWithTestOption": false,
+      "allowedByDefault": false
+    },
+    {
+      "input": "http://0177.0.0.1/",
+      "allowedWithTestOption": false,
+      "allowedByDefault": false
+    },
+    {
+      "input": "http://127.0.0.1.example/",
+      "allowedWithTestOption": false,
+      "allowedByDefault": false
+    },
+    {
+      "input": "http://[::ffff:127.0.0.1]/",
+      "allowedWithTestOption": false,
+      "allowedByDefault": false
+    },
+    {
+      "input": "http://[0:0:0:0:0:0:0:1]/",
+      "allowedWithTestOption": false,
+      "allowedByDefault": false
+    },
+    {
+      "input": "http://[::1%25lo]/",
+      "allowedWithTestOption": false,
+      "allowedByDefault": false
+    },
+    {
+      "input": "http://127.0.0.1:0/",
+      "allowedWithTestOption": false,
+      "allowedByDefault": false
+    },
+    {
+      "input": "http://127.0.0.1:65536/",
+      "allowedWithTestOption": false,
+      "allowedByDefault": false
+    },
+    {
+      "input": "http://user@127.0.0.1/",
+      "allowedWithTestOption": false,
+      "allowedByDefault": false
+    },
+    {
+      "input": " http://127.0.0.1/",
+      "allowedWithTestOption": false,
+      "allowedByDefault": false
+    },
+    {
+      "input": "http:\\\\127.0.0.1\\",
+      "allowedWithTestOption": false,
+      "allowedByDefault": false
+    },
+    {
+      "input": "http://10.0.0.1/",
+      "allowedWithTestOption": false,
+      "allowedByDefault": false
+    }
+  ],
+  "transportResponses": [
+    {
+      "status": 200,
+      "signingCalls": 1,
+      "selectedTransportCalls": 1,
+      "wrapperRetry": false
+    },
+    {
+      "status": 301,
+      "signingCalls": 1,
+      "selectedTransportCalls": 1,
+      "wrapperRetry": false
+    },
+    {
+      "status": 302,
+      "signingCalls": 1,
+      "selectedTransportCalls": 1,
+      "wrapperRetry": false
+    },
+    {
+      "status": 307,
+      "signingCalls": 1,
+      "selectedTransportCalls": 1,
+      "wrapperRetry": false
+    },
+    {
+      "status": 308,
+      "signingCalls": 1,
+      "selectedTransportCalls": 1,
+      "wrapperRetry": false
+    },
+    {
+      "status": 401,
+      "signingCalls": 1,
+      "selectedTransportCalls": 1,
+      "wrapperRetry": false
+    },
+    {
+      "status": 429,
+      "signingCalls": 1,
+      "selectedTransportCalls": 1,
+      "wrapperRetry": false
+    },
+    {
+      "status": 500,
+      "signingCalls": 1,
+      "selectedTransportCalls": 1,
+      "wrapperRetry": false
+    },
+    {
+      "status": 503,
+      "signingCalls": 1,
+      "selectedTransportCalls": 1,
+      "wrapperRetry": false
+    }
+  ],
+  "ownership": [
+    "Reuse bodyless unsigned Request: fresh owned Request and fresh signer nonce each invocation",
+    "Input/init header mutation while signing cannot change the owned send",
+    "Signer descriptor mutation cannot change the owned send",
+    "Body stream is never cloned or teed for replay",
+    "Default transport is captured at factory creation, not looked up after signing"
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "formatVersion": 1,
+  "approvedOn": "2026-09-20",
+  "defaultTransport": "global fetch captured at factory creation",
+  "applicationTransport": "Explicit injected Fetch-compatible function is trusted application code",
+  "perInvocation": {
+    "request": "Fresh owned clean request; sign final serialized method/URL and stable headers",
+    "signingCalls": 1,
+    "transportCalls": 1,
+    "redirect": "manual",
+    "wrapperRetry": false,
+    "wrapperResign": false,
+    "exactlyOnceNetworkDelivery": false,
+    "native421": "Native Fetch may resend identical signed bytes after 421; no new nonce is issued by the wrapper"
+  },
+  "collisions": {
+    "fields": [
+      "signature",
+      "signature-input",
+      "signature-agent"
+    ],
+    "check": "Check input Request and init headers separately before overrides; even empty values reject",
+    "error": "SigningError",
+    "code": "existing-signature-headers",
+    "signingCalls": 0,
+    "transportCalls": 0
+  },
+  "body": {
+    "default": "reject",
+    "optIn": "allow-unverified",
+    "integrity": "unverified",
+    "readBufferHashRewindCloneOrTeeForReplay": false,
+    "usedOrLockedBody": "reject",
+    "explicitEmptyBody": "A non-null body still requires opt-in"
+  },
+  "destination": {
+    "default": "https only",
+    "testOption": "allowHttpLoopbackForTests",
+    "literalHosts": [
+      "127.0.0.1",
+      "[::1]"
+    ],
+    "ports": "Absent default or decimal integer 1 through 65535",
+    "rawString": "Validate HTTP exception before URL normalization",
+    "preconstructed": "Validate serialized URL/Request address only; original spelling is unrecoverable",
+    "dnsLookupForException": false,
+    "discoveryPolicyChanged": false
+  },
+  "redirects": {
+    "explicitInitFollowOrError": "reject before signing",
+    "inheritedRequestMode": "Replace with manual on the owned request, including Request's default follow",
+    "response": "Return selected transport response without wrapper follow or retry"
+  },
+  "forbiddenHeaders": [
+    "host",
+    ":authority",
+    "connection",
+    "keep-alive",
+    "proxy-authenticate",
+    "proxy-authorization",
+    "te",
+    "trailer",
+    "transfer-encoding",
+    "upgrade",
+    "content-length"
+  ],
+  "stableCoverage": "Do not guess transport-generated fields; unsupported absent additional coverage rejects through the existing signer",
+  "abort": {
+    "beforeSigning": "No signing or dispatch",
+    "afterSigningBeforeDispatch": "No dispatch",
+    "afterDispatch": "No proof that server did not receive request",
+    "diagnostic": "Fixed AbortError text, never caller abort reason"
+  },
+  "errors": {
+    "frozenCatalogsChanged": false,
+    "wrapperValidation": "Fixed TypeError without raw input or cause",
+    "transportFailure": "Fixed TypeError without raw backend error or cause",
+    "signerFailure": "Preserve existing SigningError code without raw provider failures"
+  },
+  "comparison": "Golden byte equality at the selected transport Request boundary; not TCP header ordering or transport-added headers"
+}

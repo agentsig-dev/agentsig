@@ -68,3 +68,5 @@ jobs:
         run: node --test tests/m4-http-fixture-audit.test.mjs
       - name: Audit Hono conversion boundary without executing framework code
         run: node --test tests/m4-hono-conversion-audit.test.mjs
+      - name: Audit independent signed fetch golden bytes and transport contract
+        run: node --test tests/m4-fetch-fixture-audit.test.mjs

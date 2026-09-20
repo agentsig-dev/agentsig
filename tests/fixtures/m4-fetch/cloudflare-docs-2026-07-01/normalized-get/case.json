@@ -1,0 +1,67 @@
+{
+  "id": "cloudflare-docs-2026-07-01/normalized-get",
+  "profile": "cloudflare-docs-2026-07-01",
+  "clockMilliseconds": 1800000000999.5,
+  "nonce": "fetch-fixed-nonce",
+  "agentOrigin": "https://agent.example",
+  "allowTestKeys": true,
+  "bodyPolicy": "reject",
+  "input": "HTTPS://MERCHANT.EXAMPLE:443/a/../items%2f?q=a+b&q=a%20b",
+  "init": {
+    "method": "get",
+    "headers": [
+      [
+        "X-Zeta",
+        "  last  "
+      ],
+      [
+        "X-Repeat",
+        "one"
+      ],
+      [
+        "x-repeat",
+        "two"
+      ]
+    ]
+  },
+  "expected": {
+    "method": "GET",
+    "url": "https://merchant.example/items%2f?q=a+b&q=a%20b",
+    "redirect": "manual",
+    "unsignedHeaders": [
+      [
+        "x-repeat",
+        "one, two"
+      ],
+      [
+        "x-zeta",
+        "last"
+      ]
+    ],
+    "headers": [
+      [
+        "signature",
+        "sig1=:Ucg4tJmqQjB9B+aww+BHXyn4f98CBouLd/ad95dtKtSLzo9RD1GC1havT3/TRBm/tw8HF4y/fgCtPTOQPNlNAA==:"
+      ],
+      [
+        "signature-agent",
+        "\"https://agent.example\""
+      ],
+      [
+        "signature-input",
+        "sig1=(\"@method\" \"@target-uri\" \"signature-agent\");created=1800000000;expires=1800000060;keyid=\"DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84\";alg=\"ed25519\";nonce=\"fetch-fixed-nonce\";tag=\"web-bot-auth\""
+      ],
+      [
+        "x-repeat",
+        "one, two"
+      ],
+      [
+        "x-zeta",
+        "last"
+      ]
+    ],
+    "body": null,
+    "signingCalls": 1,
+    "transportCalls": 1
+  }
+}

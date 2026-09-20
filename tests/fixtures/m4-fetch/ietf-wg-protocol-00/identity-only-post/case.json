@@ -1,0 +1,52 @@
+{
+  "id": "ietf-wg-protocol-00/identity-only-post",
+  "profile": "ietf-wg-protocol-00",
+  "clockMilliseconds": 1800000000999.5,
+  "nonce": "fetch-fixed-nonce",
+  "agentOrigin": "https://agent.example",
+  "allowTestKeys": true,
+  "bodyPolicy": "allow-unverified",
+  "input": "https://merchant.example/payments?",
+  "init": {
+    "method": "post",
+    "headers": [
+      [
+        "Content-Type",
+        "application/json"
+      ]
+    ],
+    "body": "{\"amount\":42}"
+  },
+  "expected": {
+    "method": "POST",
+    "url": "https://merchant.example/payments?",
+    "redirect": "manual",
+    "unsignedHeaders": [
+      [
+        "content-type",
+        "application/json"
+      ]
+    ],
+    "headers": [
+      [
+        "content-type",
+        "application/json"
+      ],
+      [
+        "signature",
+        "sig1=:q98ZANOuR1taIJcNo6TP2NjsObM496L4pMNfsLzUBtSdzacSF5q9RhC9nDGce/iTcQV+bRlcKe0k1u6KdvHrBg==:"
+      ],
+      [
+        "signature-agent",
+        "sig1=\"https://agent.example\""
+      ],
+      [
+        "signature-input",
+        "sig1=(\"@method\" \"@target-uri\" \"signature-agent\";key=\"sig1\");created=1800000000;expires=1800000060;keyid=\"DR68nui99ukl-GUgfzQGaU3VwqRtArw-_DCN4LFtY84\";alg=\"ed25519\";nonce=\"fetch-fixed-nonce\";tag=\"web-bot-auth\""
+      ]
+    ],
+    "body": "{\"amount\":42}",
+    "signingCalls": 1,
+    "transportCalls": 1
+  }
+}
