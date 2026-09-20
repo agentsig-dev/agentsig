@@ -3,7 +3,7 @@
 [![npm: @agentsig/core](https://img.shields.io/npm/v/@agentsig/core.svg?label=%40agentsig%2Fcore)](https://www.npmjs.com/package/@agentsig/core)
 [![npm: @agentsig/structured-fields](https://img.shields.io/npm/v/@agentsig/structured-fields.svg?label=%40agentsig%2Fstructured-fields)](https://www.npmjs.com/package/@agentsig/structured-fields)
 
-> **Status: pre-release; M3/M4 APIs are unpublished; 0.2.0 release plan prepared; not security-reviewed**
+> **Status: pre-release; 0.2.0 versioned locally, publication pending; M4 accepted; not security-reviewed**
 
 Open-source HTTP Message Signatures and Web Bot Auth tooling for Node.js.
 
@@ -15,10 +15,11 @@ local public JWKS, explicit identity bindings, time policies, and memory replay.
 This checkout additionally implements bounded HTTPS directory discovery, shared
 cache/admission coordination, an optional Redis replay adapter, and owned Node
 HTTP/1.1 mapping with Express, Fastify and Hono integrations, and signed Fetch.
-These additions are **not in published 0.1.1**. A pending Changeset targets core
-and the four integration packages at 0.2.0. It has not been consumed: core remains
-0.1.1 and new packages remain development-only 0.0.0. Publication and the
-maintainer-run adapter smoke acceptance gate remain outstanding.
+These additions are **not in published 0.1.1**. The coordinated Changeset has been
+consumed: core, fetch, Hono, Fastify and Express are versioned at **0.2.0** locally.
+Structured Fields remains **0.1.1**. The maintainer accepted M4 after all eleven
+adapter smoke scenarios passed and confirmed core-m4 and green CI. Publication
+of 0.2.0 remains pending; milestone acceptance is not a security audit.
 
 This project is not security-reviewed and does not claim production readiness,
 IETF endorsement, or Cloudflare reference-implementation status. “Pre-release”
@@ -103,15 +104,15 @@ that the accepted candidate is not replay-protected.
 
 ## Packages and milestones
 
-| Package | Current scope |
-| --- | --- |
-| @agentsig/structured-fields | Lossless raw AST, semantic model, RFC 9651 parsing/serialization, resource limits |
-| @agentsig/core | Published engine/offline profiles; unpublished discovery, Redis and HTTP subpaths |
-| @agentsig/fetch | Unpublished signed Fetch; manual redirects, explicit transport/body policy, no wrapper retry |
-| @agentsig/hono | Unpublished Node HTTP/1.1 bridge, assessment and policy integration |
-| @agentsig/fastify | Unpublished early-capture integration and policy hook |
-| @agentsig/express | Unpublished Express 4/5 middleware with owned early capture |
-| agentsig (CLI) | Planned; not implemented |
+| Package | Checkout version / release state | Current scope |
+| --- | --- | --- |
+| @agentsig/structured-fields | 0.1.1; published, unchanged | Lossless RFC 9651 AST, semantic model, parsing/serialization and resource limits |
+| @agentsig/core | 0.2.0; publication pending | RFC 9421 engine, offline profiles, discovery, Redis and HTTP subpaths |
+| @agentsig/fetch | 0.2.0; publication pending | Signed Fetch; manual redirects, explicit transport/body policy, no wrapper retry |
+| @agentsig/hono | 0.2.0; publication pending | Node HTTP/1.1 bridge, assessment and policy integration |
+| @agentsig/fastify | 0.2.0; publication pending | Early-capture integration and policy hook |
+| @agentsig/express | 0.2.0; publication pending | Express 4/5 middleware with owned early capture |
+| agentsig (CLI) | Planned; not implemented | Future command-line tooling |
 
 - **M1:** RFC 9421 Ed25519 engine, Structured Fields package, independent fixture audit.
 - **M2:** accepted offline profile verification, time/replay integration, and dual-format consumers.
@@ -122,16 +123,17 @@ that the accepted candidate is not replay-protected.
   @agentsig/core/discovery and @agentsig/core/redis; the pure and offline entries
   do not load discovery transport. The maintainer accepted M3 after its smoke
   and core-m3 tag; this was not an npm publication.
-- **M4 acceptance pending:** signed Fetch, shared HTTP mapping and three thin Node adapters, with
+- **M4 accepted:** signed Fetch, shared HTTP mapping and three thin Node adapters, with
   independent fixtures and real local listener tests. See the
   [HTTP guide](docs/http-mapping.md) and adapter READMEs:
   [Express](packages/express/README.md), [Fastify](packages/fastify/README.md),
   [Hono](packages/hono/README.md). Verification is not authorization; body
   integrity remains unverified. Hono observation has a documented conversion boundary.
   The [Fetch guide](packages/fetch/README.md) distinguishes one transport call from
-  exactly-once network delivery. The coordinated 0.2.0 Changeset is prepared, not
-  published; the maintainer-run adapter smoke remains an acceptance gate.
-- **Next:** maintainer M4 smoke/release acceptance, CLI, and publisher-signed directory responses
+  exactly-once network delivery. The maintainer confirmed all eleven adapter smoke
+  scenarios passed, including Express forwarding-chain rejection before verification.
+  The coordinated 0.2.0 Changeset is consumed; publication remains maintainer-owned.
+- **Next:** maintainer 0.2.0 publication, CLI, and publisher-signed directory responses
   (mandatory Cloudflare-profile M5 work). See the [M3 design record](docs/milestone-3-plan.md)
   and [deferred work](docs/deferred.md).
 
@@ -215,7 +217,7 @@ of public routing or direct observation of the proxy's remote peer. Run it as a
 standalone process; no production private-IP exception or system DNS/CA change
 is introduced. See the [core documentation](packages/core/README.md) for details.
 
-The separate maintainer-run adapter acceptance smoke is prepared:
+The separate adapter acceptance smoke was run successfully by the maintainer:
 
 ```sh
 pnpm run build
@@ -226,8 +228,9 @@ It uses memory replay, a local directory and sequential real framework listeners
 For each framework it checks signed allow-verified/200, exact signed-request
 replay/401 and unsigned policy-deny/401; Express additionally checks trusted ingress
 acceptance and comma-chain mapping rejection/400. Output uses one
-framework/scenario/result line per case. The script has been syntax-checked, not
-executed by the assistant. Its injected request transport and explicit directory
+framework/scenario/result line per case. The maintainer reported eleven passing
+scenarios and smoke/complete/PASS; the assistant did not execute the smoke.
+Its injected request transport and explicit directory
 CONNECT routing are test-only; real TLS hostname/certificate checks remain enabled.
 It does not prove native Fetch routing, public reachability or live Cloudflare acceptance.
 

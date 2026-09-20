@@ -1,10 +1,11 @@
 # @agentsig/fetch
 
-> **Status: unpublished M4 development package; not security-reviewed.**
+> **Status: 0.2.0 versioned locally; publication pending; not security-reviewed.**
 
-Explicit signed Fetch for Node 20+. Requires the workspace core API; coordinated
-0.2.0 release preparation is pending. No production-readiness or live Cloudflare
-acceptance claim. ESM, CommonJS and declarations are provided.
+Explicit signed Fetch for Node 20+, with an exact @agentsig/core 0.2.0 dependency.
+The coordinated Changeset has been consumed and the maintainer has accepted M4.
+Publication remains pending. No production-readiness or live Cloudflare acceptance
+claim. ESM, CommonJS and declarations are provided.
 
 ## Installation
 

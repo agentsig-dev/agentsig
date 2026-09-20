@@ -2,16 +2,18 @@
 
 [![npm](https://img.shields.io/npm/v/@agentsig/core.svg)](https://www.npmjs.com/package/@agentsig/core)
 
-> **Status: pre-release; M3 discovery/Redis APIs in this checkout are unpublished; not security-reviewed**
+> **Status: pre-release; 0.2.0 versioned locally, publication pending; not security-reviewed**
 
 Framework-independent RFC 9421 HTTP Message Signatures and Web Bot Auth
 verification for Node 20+. Ed25519 uses Node's built-in cryptography. The only
 runtime dependency is @agentsig/structured-fields.
 
-Published **0.1.1** provides the pure engine and offline profiles. This checkout
-adds bounded HTTPS directory discovery and an optional Redis replay adapter;
-those additions are not yet available in that npm release. Package version
-metadata remains unchanged pending a separately authorized release.
+Published **0.1.1** provides the pure engine and offline profiles. This checkout is
+versioned at **0.2.0**, adding bounded HTTPS directory discovery, an optional Redis
+replay adapter, and shared HTTP capture/policy integration. The coordinated
+Changeset has been consumed; publication remains pending. The maintainer accepted
+M4 after all eleven adapter smoke scenarios passed and confirmed green core-m4 CI.
+These confirmations do not establish CI success for later versioning changes.
 
 ESM, CommonJS, and declarations for both formats are provided. This package has
 not undergone an independent security review and does not claim production
@@ -20,9 +22,13 @@ maturity; it is not a SemVer prerelease suffix.
 
 ## Install
 
+After the maintainer publishes 0.2.0:
+
 ```sh
-npm install @agentsig/core
+npm install @agentsig/core@0.2.0
 ```
+
+Until publication, use the built workspace for the new APIs.
 
 Use a supported Node release that still receives security updates.
 
@@ -60,13 +66,13 @@ for configuration and result semantics.
 | --- | --- | --- |
 | @agentsig/core | Pure RFC 9421 parsing, canonicalization, signing, and cryptographic verification | Published 0.1.1 |
 | @agentsig/core/profiles | Profile signing, offline verification, trusted local public JWKS loading, shared clock/replay context | Published 0.1.1 |
-| @agentsig/core/discovery | Bounded HTTPS directory discovery and full network verification | Unpublished M3 checkout |
-| @agentsig/core/redis | Optional Redis replay adapter and recovery-horizon helper | Unpublished M3 checkout |
-| @agentsig/core/http | Owned HTTP/1.1 mapping and shared explicit verifier/policy coordination | Unpublished M4 checkout |
+| @agentsig/core/discovery | Bounded HTTPS directory discovery and full network verification | Added in 0.2.0; publication pending |
+| @agentsig/core/redis | Optional Redis replay adapter and recovery-horizon helper | Added in 0.2.0; publication pending |
+| @agentsig/core/http | Owned HTTP/1.1 mapping and shared explicit verifier/policy coordination | Added in 0.2.0; publication pending |
 
 The pure engine has no clock, network, trust-resolution, or replay side effects.
 The profile layer combines local authentication policies without loading directory
-transport. Discovery is separate from the future @agentsig/fetch outgoing client;
+transport. Discovery is separate from the @agentsig/fetch outgoing client;
 Redis is optional and takes an application-owned client without adding a Redis
 runtime dependency. No entry point validates request bodies.
 
@@ -177,7 +183,7 @@ with unrelated tags. No signature headers yields an empty parsed array. This is
 the local all-pairs contract, not a claim that the RFC mandates rejection of every
 unrelated signature in every application.
 
-## Directory verification (unpublished M3)
+## Directory verification (added in 0.2.0)
 
 Use a repository build for this API, not the published 0.1.1 package:
 
@@ -237,7 +243,7 @@ Observer exceptions cannot change authentication. Publisher-side signed director
 responses for the Cloudflare profile remain mandatory deferred M5 work; M3 does
 not claim that requirement or live Cloudflare acceptance.
 
-## Redis replay and operational limits (unpublished M3)
+## Redis replay and operational limits (added in 0.2.0)
 
 The optional `createRedisReplayStore` factory takes an application-owned ready
 client with automatic retries and offline queueing disabled. Pass the returned
@@ -267,7 +273,7 @@ properties. `noeviction` is not durability or linearizability. Valid-looking par
 deletion/rollback can evade loss detection; markers cannot detect every lost nonce.
 Arbitrary Redis/distributed clock jumps remain an operational risk.
 
-## HTTP mapping (unpublished M4)
+## HTTP mapping (added in 0.2.0)
 
 The @agentsig/core/http entry exports createNodeHttpMapper, mapping types, limits
 and a separately frozen seventeen-code mapping error catalog. Create the Node

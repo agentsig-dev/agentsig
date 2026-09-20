@@ -36,7 +36,7 @@ importers:
   packages/express:
     dependencies:
       '@agentsig/core':
-        specifier: workspace:*
+        specifier: 0.2.0
         version: link:../core
     devDependencies:
       '@types/express':
@@ -52,7 +52,7 @@ importers:
   packages/fastify:
     dependencies:
       '@agentsig/core':
-        specifier: workspace:*
+        specifier: 0.2.0
         version: link:../core
     devDependencies:
       fastify:
@@ -62,13 +62,13 @@ importers:
   packages/fetch:
     dependencies:
       '@agentsig/core':
-        specifier: workspace:*
+        specifier: 0.2.0
         version: link:../core
 
   packages/hono:
     dependencies:
       '@agentsig/core':
-        specifier: workspace:*
+        specifier: 0.2.0
         version: link:../core
     devDependencies:
       '@hono/node-server':

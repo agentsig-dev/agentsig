@@ -1,6 +1,6 @@
 # @agentsig/express
 
-> **Status: unpublished 0.2.0 release preparation; not security-reviewed.**
+> **Status: 0.2.0 versioned locally; publication pending; not security-reviewed.**
 
 ## Install after publication
 
@@ -31,8 +31,8 @@ const server = mapper.createServer(app); await new Promise(resolve => server.lis
 try { const response = await fetch("http://127.0.0.1:18881/"); console.log(response.status); await response.arrayBuffer(); } finally { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); }
 ```
 
-Unpublished M4 development package for Express 4.22.3 and 5.2.1, Node HTTP/1.1.
-Requires the repository's unpublished @agentsig/core/http API, not npm core 0.1.1.
+Version 0.2.0 for Express 4.22.3 and 5.2.1, Node HTTP/1.1.
+Requires exactly @agentsig/core 0.2.0; Express remains a pinned peer dependency.
 Not security-reviewed. ESM/CommonJS and declarations are provided; use one module
 format consistently. Broader framework peer ranges are not claimed.
 
@@ -127,9 +127,10 @@ installation and both profiles' full verification/replay chains. TLS certificate
 and hostname checks remain enabled. These are not live Cloudflare acceptance,
 remote CI evidence or a security audit.
 
-Build the workspace, then run the root adapter integration tests. Version 0.0.0
-and workspace dependency metadata are development-only pending M4 0.2.0 release
-preparation. TypeScript consumers need the Express declarations appropriate to
-their application; the adapter's API uses standard request/middleware types.
+Build the workspace, then run the root adapter integration tests. The coordinated
+Changeset is consumed and disk metadata is 0.2.0. The maintainer accepted M4 after
+its smoke passed; publication remains pending. TypeScript consumers need the
+Express declarations appropriate to their application; the adapter's API uses
+standard request/middleware types.
 
 MIT. Test fixtures and private test keys are not shipped.

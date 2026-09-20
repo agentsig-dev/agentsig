@@ -1,6 +1,6 @@
 {
     "name": "@agentsig/fetch",
-    "version": "0.0.0",
+    "version": "0.2.0",
     "description": "Explicit signed Fetch requests for agentsig on Node.js.",
     "type": "module",
     "license": "MIT",
@@ -11,6 +11,10 @@
         "type": "git",
         "url": "git+https://github.com/agentsig-dev/agentsig.git",
         "directory": "packages/fetch"
+    },
+    "homepage": "https://github.com/agentsig-dev/agentsig/tree/main/packages/fetch#readme",
+    "bugs": {
+        "url": "https://github.com/agentsig-dev/agentsig/issues"
     },
     "main": "./dist/index.cjs",
     "module": "./dist/index.js",
@@ -39,6 +43,6 @@
         "test": "vitest run test"
     },
     "dependencies": {
-        "@agentsig/core": "workspace:*"
+        "@agentsig/core": "0.2.0"
     }
 }

@@ -1,6 +1,6 @@
 {
     "name": "@agentsig/core",
-    "version": "0.1.1",
+    "version": "0.2.0",
     "description": "Framework-independent HTTP Message Signatures with Ed25519 for Node.js.",
     "type": "module",
     "license": "MIT",

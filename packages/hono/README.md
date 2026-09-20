@@ -1,6 +1,6 @@
 # @agentsig/hono
 
-> **Status: unpublished 0.2.0 release preparation; not security-reviewed.**
+> **Status: 0.2.0 versioned locally; publication pending; not security-reviewed.**
 
 ## Install after publication
 
@@ -30,15 +30,15 @@ const server = bridge.createServer(app); await new Promise(resolve => server.lis
 try { const response = await fetch("http://127.0.0.1:18883/"); console.log(response.status); await response.arrayBuffer(); } finally { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); }
 ```
 
-Unpublished M4 development package. Requires the repository's unpublished
-@agentsig/core/http API, Hono 4.13.8 and @hono/node-server 2.1.1.
+Version 0.2.0 requires @agentsig/core 0.2.0 (exact dependency),
+Hono 4.13.8 and @hono/node-server 2.1.1 (pinned peer dependencies).
 Not security-reviewed; no production-readiness claim. Node HTTP/1.1 only.
 
 ## Installation boundary
 
-Build the workspace before using this package. Published core 0.1.1 does not
-contain the required HTTP API. Package versions and workspace dependencies are
-development metadata pending the separately authorized M4 0.2.0 preparation.
+Build the workspace before using this unpublished checkout. Published core 0.1.1
+does not contain the required HTTP API. The coordinated Changeset is consumed,
+and the maintainer accepted M4 after its smoke passed; publication remains pending.
 Both ESM and CommonJS exports are provided. Use one module format consistently.
 
 Create a long-lived core verifier and mapper in application-owned configuration.

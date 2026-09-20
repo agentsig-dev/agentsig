@@ -1424,3 +1424,76 @@ final 0.2.0 artifacts. The latest full local check passed builds/types, 5,625 te
 with 22 real Redis tests skipped, and 100 integration/consumer checks. Remote CI
 for this delivery, local Node 20/24 runs, a new Redis service run, maintainer smoke
 success and an independent security audit are not claimed.
+
+### M4 acceptance and applied 0.2.0 versioning
+
+On September 20, 2026, the maintainer reported all eleven adapter smoke scenarios
+passing with smoke/complete/PASS, including Express scenario (e):
+forwarding-chain-rejected, HTTP 400, verification-not-run. The maintainer confirmed
+pushing 1f7904f, ee9fc06 and 000b6a8, creating core-m4, green CI, and acceptance
+of M4. No npm publication occurred. These confirmations supersede the earlier
+pending-smoke status, but do not establish remote CI for this versioning commit.
+The assistant did not rerun the maintainer-owned smoke.
+
+The maintainer authorized consuming the coordinated Changeset with changeset
+version. Core, fetch, hono, fastify and express now have disk version 0.2.0.
+Structured Fields and core's dependency on it remain exactly 0.1.1.
+The four integration packages depend on exactly @agentsig/core 0.2.0, with no
+workspace protocol in their manifests. pnpm retains local workspace links through
+the existing linkWorkspacePackages setting and refreshed lockfile.
+Framework peer ranges are unchanged. Package repository, homepage, bugs, files,
+exports and declaration paths are checked as part of release preparation.
+English 0.2.0 changelogs retain the M3 discovery/Redis and M4 mapping, adapter
+and signed Fetch scope, with the maintainer's acceptance distinguished from
+publication and independent security review.
+
+The fixed Changesets group is approved for the 0.x series only.
+**Before 1.0, explicitly decide the transition to independent package versioning.**
+That review must cover removal of the fixed group, cross-package dependency
+compatibility and update policy, release ordering, and consumer migration.
+Do not silently carry fixed versioning into 1.0 or change the group now.
+
+Publication remains maintainer-owned and dependency-ordered:
+1. Reuse the already published @agentsig/structured-fields 0.1.1; do not republish it.
+2. Publish @agentsig/core 0.2.0 and confirm its registry availability.
+3. Publish @agentsig/fetch, @agentsig/hono, @agentsig/fastify and @agentsig/express
+   0.2.0. These four depend on core, not on one another, so their relative order
+   is unrestricted after core is available.
+
+This delivery changes release metadata, changelogs and documentation, not runtime
+logic, frozen error catalogs or fixture bytes. Versioning is not publication:
+no assistant push, tag, npm publication or WG notification is authorized.
+
+### Final 0.2.0 versioning validation
+
+Local Windows / Node 22.23.2 validation passed locked offline installation with
+lifecycle scripts disabled, all workspace builds and strict type checks, 5,625
+tests and 100 integration/consumer checks. Twenty-two real Redis tests were
+explicitly skipped; no new Redis service execution is claimed. The maintainer's
+previous green CI and eleven-scenario smoke confirmation do not establish remote
+CI for this release-metadata change. The smoke was not rerun by the assistant.
+
+Final npm pack --dry-run --json --ignore-scripts results for the versioned packages:
+
+| Package | Version | Files | Compressed bytes | Unpacked bytes |
+| --- | --- | ---: | ---: | ---: |
+| @agentsig/core | 0.2.0 | 37 | 150097 | 640178 |
+| @agentsig/fetch | 0.2.0 | 7 | 7168 | 25136 |
+| @agentsig/hono | 0.2.0 | 7 | 6715 | 21458 |
+| @agentsig/fastify | 0.2.0 | 7 | 5608 | 14946 |
+| @agentsig/express | 0.2.0 | 7 | 5628 | 15077 |
+
+Every exported runtime/declaration target is present in its package inventory.
+Only built output, README, LICENSE and package metadata are shipped under the
+existing files allowlists; changelogs remain in the repository. No fixtures,
+source tests, smoke helpers or private test keys enter these inventories.
+All five manifests contain no workspace protocol; integration dependencies are
+exactly core 0.2.0, and core depends on Structured Fields 0.1.1. Framework peers
+retain their reviewed exact-version ranges. Repository/homepage/bugs metadata
+and files/exports/types were checked. No archives were created or published.
+
+An initial inventory-check command had a syntax error in its path-normalization
+expression and performed no validation; the corrected complete check passed.
+Runtime source, frozen catalogs, prior fixture bytes and the entire Structured
+Fields package are unchanged. This is one local release-preparation commit,
+not an assistant push, tag, publication, live acceptance test or security audit.

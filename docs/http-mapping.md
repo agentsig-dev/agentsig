@@ -1,7 +1,9 @@
 # Node HTTP/1.1 request mapping
 
-This unpublished M4 API follows independent fixtures committed in 45b8803.
-It is not available in published @agentsig/core 0.1.1 and is not security-reviewed.
+This M4 API, versioned in @agentsig/core 0.2.0 with publication pending, follows
+independent fixtures committed in 45b8803. It is not available in published 0.1.1
+and is not security-reviewed. The maintainer accepted M4 after its adapter smoke
+passed; that acceptance is separate from publication and security review.
 
 ## Owned capture
 
@@ -198,8 +200,9 @@ The framework adapters publish native views, enact empty responses and call the
 same coordinator. Integration errors return empty 500 responses. Frameworks remain
 peer dependencies only of their adapters. Current peer ranges intentionally name
 only reviewed/tested releases: Express 4.22.3 or 5.2.1, Fastify 5.12.5, and Hono
-4.13.8 with @hono/node-server 2.1.1. New packages are unpublished 0.0.0 workspace
-packages pending the separately authorized M4 0.2.0 preparation.
+4.13.8 with @hono/node-server 2.1.1. Core and the four integration packages are
+versioned at 0.2.0, with publication pending. Each integration depends on exactly
+@agentsig/core 0.2.0; workspace linking remains a development installation detail.
 
 Hono assesses before Node-to-Fetch conversion, then privately binds the converted
 request to its original incoming request. Observation can continue only when Hono

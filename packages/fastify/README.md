@@ -1,6 +1,6 @@
 # @agentsig/fastify
 
-> **Status: unpublished 0.2.0 release preparation; not security-reviewed.**
+> **Status: 0.2.0 versioned locally; publication pending; not security-reviewed.**
 
 ## Install after publication
 
@@ -30,8 +30,8 @@ app.get("/", async () => "ok"); await app.listen({ port: 18882, host: "127.0.0.1
 try { const response = await fetch("http://127.0.0.1:18882/"); console.log(response.status); await response.arrayBuffer(); } finally { app.server.closeAllConnections(); await app.close(); }
 ```
 
-Unpublished M4 development package for Fastify 5.12.5 and Node HTTP/1.1.
-Requires the repository's unpublished @agentsig/core/http API, not npm core 0.1.1.
+Version 0.2.0 for Fastify 5.12.5 and Node HTTP/1.1.
+Requires exactly @agentsig/core 0.2.0; Fastify remains a pinned peer dependency.
 Not security-reviewed. ESM/CommonJS and declarations are provided; use one module
 format consistently. Broader framework peer ranges are not claimed.
 
@@ -129,8 +129,8 @@ profiles' full verification/replay chains. TLS certificate and hostname validati
 remain enabled. These tests are not live Cloudflare acceptance, remote CI evidence
 or a security audit.
 
-Build the workspace before running the root adapter integration tests. Version
-0.0.0 and workspace dependency metadata are development-only pending the separately
-authorized M4 0.2.0 release preparation. No package publication is implied.
+Build the workspace before running the root adapter integration tests. The
+coordinated Changeset is consumed and disk metadata is 0.2.0. The maintainer
+accepted M4 after its smoke passed; package publication remains pending.
 
 MIT. Test fixtures and private test keys are not shipped.
