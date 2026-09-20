@@ -1186,3 +1186,32 @@ validates its hostname. Listener tests establish capture and mapping, not full
 signature authentication, framework authorization, public routing or a security
 audit. Framework adapters, shared policy/observer integration and their native
 context ownership tests remain subsequent work. No push, tag or publication.
+
+### Approved Hono conversion amendment and four-commit exception
+
+The maintainer approved one four-commit delivery exception to preserve fixture-first:
+45b8803 mapping expectations, a8f3449 mapper implementation, a separate Hono
+conversion fixture amendment, then the policy coordinator and three adapters.
+
+Hono shared assessment runs after owned Node capture but before Node-to-Fetch
+conversion. Enforcement denial precedes conversion. Observation continues only
+where Hono can convert the request; conversion failure returns an empty 400.
+No artificial URL, target repair or forwarding-header association is allowed.
+Converted requests bind privately to their original Node request.
+
+A real unsigned loopback TCP probe on Node 22.23.2 with @hono/node-server 2.1.1
+sent Host: [2001:DB8:0:0:0:0:0:1]:8443. The mapper correctly accepted the explicitly
+allowed numeric origin while preserving the original authority spelling. Hono's
+buildUrl host check rejected the spelling after WHATWG URL compressed the IPv6
+hostname. The converted-request callback ran zero times and the response was 400.
+This is a real input, not injected failure; it is not a TLS or signature test.
+
+The separate conversion event is framework-conversion-failed, adapter hono,
+with only a mapping status/code summary, never request values or verification
+details. It adds no mapping catalog code. No Hono context is published on failure.
+Express/Fastify do not have this Node-to-Fetch conversion boundary.
+
+The independent amendment pins successful observation, mapped-but-conversion-failed
+observation, and enforcement rejection without conversion. Six amendment checks
+and the prior 46 M4 checks passed locally. Existing fixture bytes are unchanged.
+Real tests of the completed agentsig Hono bridge remain the fourth commit's gate.

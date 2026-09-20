@@ -1,0 +1,104 @@
+{
+    "formatVersion": 1,
+    "authoredOn": "2026-09-20",
+    "provenance": "Independent expectations approved before agentsig Hono bridge implementation; actual upstream behavior separately probed over loopback TCP.",
+    "versions": {
+        "hono": "4.13.8",
+        "nodeServer": "2.1.1"
+    },
+    "contract": {
+        "order": [
+            "owned-node-capture",
+            "shared-assessment",
+            "enforcement-response-or-conversion",
+            "private-request-association",
+            "hono-context-publication"
+        ],
+        "repairTarget": false,
+        "conversionFailureStatus": 400,
+        "conversionFailureBody": "",
+        "conversionFailureEvent": "framework-conversion-failed",
+        "mappingCatalogChange": false,
+        "eventIncludesHeadersTargetsAddressesOrVerification": false,
+        "observationContinuation": "Only for requests the Hono Node bridge can convert",
+        "expressFastifyHaveFetchConversionBoundary": false,
+        "conversionFailurePublishesContext": false
+    },
+    "cases": [
+        {
+            "id": "observe-mapped-converted",
+            "mode": "observe",
+            "allowedOrigins": [
+                "http://merchant.example"
+            ],
+            "wireLatin1": "GET /a%2Fb?x=+&x=%20 HTTP/1.1\r\nHost: merchant.example\r\nConnection: close\r\n\r\n",
+            "expected": {
+                "mapping": {
+                    "status": "mapped"
+                },
+                "targetUri": "http://merchant.example/a%2Fb?x=+&x=%20",
+                "conversionAttempts": 1,
+                "convertedRequests": 1,
+                "verifierCalls": 1,
+                "handlerCalls": 1,
+                "contextPublished": true,
+                "responseStatus": 204,
+                "conversionEvents": []
+            }
+        },
+        {
+            "id": "observe-mapped-expanded-ipv6-conversion-rejected",
+            "mode": "observe",
+            "allowedOrigins": [
+                "http://[2001:db8::1]:8443"
+            ],
+            "wireLatin1": "GET / HTTP/1.1\r\nHost: [2001:DB8:0:0:0:0:0:1]:8443\r\nConnection: close\r\n\r\n",
+            "expected": {
+                "mapping": {
+                    "status": "mapped"
+                },
+                "targetUri": "http://[2001:DB8:0:0:0:0:0:1]:8443/",
+                "conversionAttempts": 1,
+                "convertedRequests": 0,
+                "verifierCalls": 1,
+                "handlerCalls": 0,
+                "contextPublished": false,
+                "responseStatus": 400,
+                "responseBody": "",
+                "conversionEvents": [
+                    {
+                        "type": "framework-conversion-failed",
+                        "adapter": "hono",
+                        "mapping": {
+                            "status": "mapped"
+                        }
+                    }
+                ]
+            },
+            "rationale": "Mapper correctly preserves valid expanded IPv6 authority spelling while comparing numeric origin identity. Hono buildUrl rejects the hostname spelling after WHATWG URL compresses it; this is a Hono conversion restriction, not malformed mapper input."
+        },
+        {
+            "id": "enforce-mapping-rejection-before-conversion",
+            "mode": "enforce",
+            "allowedOrigins": [
+                "http://merchant.example"
+            ],
+            "wireLatin1": "GET / HTTP/1.1\r\nHost: other.example\r\nConnection: close\r\n\r\n",
+            "expected": {
+                "mapping": {
+                    "status": "mapping-rejected",
+                    "code": "origin-disallowed"
+                },
+                "conversionAttempts": 0,
+                "convertedRequests": 0,
+                "verifierCalls": 0,
+                "handlerCalls": 0,
+                "contextPublished": false,
+                "responseStatus": 400,
+                "responseBody": "",
+                "conversionEvents": []
+            }
+        }
+    ],
+    "evidenceLimit": "The initial probe used Node 22.23.2 and an unsigned request over loopback TCP. It was not a TLS or signature-verification test."
+}

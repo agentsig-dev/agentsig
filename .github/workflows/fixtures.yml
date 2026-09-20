@@ -66,3 +66,5 @@ jobs:
         run: node --test tests/m4-source-audit.test.mjs
       - name: Audit independent M4 HTTP mapping and adapter contracts
         run: node --test tests/m4-http-fixture-audit.test.mjs
+      - name: Audit Hono conversion boundary without executing framework code
+        run: node --test tests/m4-hono-conversion-audit.test.mjs

@@ -1,0 +1,21 @@
+{
+  "formatVersion": 1,
+  "license": "MIT",
+  "files": [
+    {
+      "path": "cases.json",
+      "bytes": 4159,
+      "sha256": "7904b8fddb2739d081cdfe4bf83e6a829390127849ec96a267a574abbf50c8b6"
+    }
+  ],
+  "sources": [
+    {
+      "path": "../m4-http/manifest.json",
+      "sha256": "2f06312e8c4c5b99935a6cb6add0ea37cb73aa44acdd90656e191844424a1ef2"
+    },
+    {
+      "path": "../m4-sources/manifest.json",
+      "sha256": "2fac07286e965caceaf09f6d34fee5c5acabd51c696bfc94cc3449e14396cc71"
+    }
+  ]
+}
