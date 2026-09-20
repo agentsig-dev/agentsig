@@ -1215,3 +1215,73 @@ The independent amendment pins successful observation, mapped-but-conversion-fai
 observation, and enforcement rejection without conversion. Six amendment checks
 and the prior 46 M4 checks passed locally. Existing fixture bytes are unchanged.
 Real tests of the completed agentsig Hono bridge remain the fourth commit's gate.
+
+### Shared policy coordinator and three framework adapters
+
+Following mapping fixtures 45b8803, mapper a8f3449 and Hono conversion amendment
+520bd82, the shared HTTP coordinator and Express/Fastify/Hono integrations are
+implemented. The maintainer explicitly authorized this four-commit delivery
+exception to preserve the separate Hono fixture commit.
+
+The coordinator owns one compatible assessment/policy operation per incoming
+request, detached readonly views, invocation-bound decisions, bounded policy
+waiting and sanitized observer delivery. It delegates authentication to the
+application's long-lived verifier without duplicating cryptography, discovery,
+profile, clock or replay logic. Conflicting installation fails without another
+verification; compatible installation does not consume a nonce twice.
+
+Express and Fastify publish private-association-backed request getters. Fastify
+retains ordinary plugin encapsulation; install directly before protected routes
+or explicitly within their registration scope. Hono assesses before conversion,
+blocks enforcement denial before conversion, privately binds the converted request,
+and publishes context only after successful conversion. Compatible separate Hono
+middleware factories share the private binding while checking their own core
+configuration ownership. Public slot replacement cannot forge enforcement.
+
+The three Hono amendment cases now execute over actual TCP: successful observation;
+valid expanded IPv6 authority accepted by mapping but rejected by Hono conversion,
+with empty 400 and a sanitized framework-conversion-failed event; and enforcement
+mapping rejection without conversion. The Hono README includes the exact expanded
+IPv6 Host example and explains why preserving its raw spelling is correct. This
+conversion boundary does not exist in the Express/Fastify integrations.
+
+Framework peer dependencies name only reviewed/tested releases: Express 4.22.3
+or 5.2.1, Fastify 5.12.5, Hono 4.13.8 and @hono/node-server 2.1.1. Core remains
+0.1.1; adapter versions are development-only 0.0.0 with workspace core links.
+They are not ready to publish against npm core 0.1.1. Signed fetch and the approved
+coordinated 0.2.0 Changesets/version preparation remain subsequent M4 work.
+
+Validation on local Windows / Node 22.23.2:
+- Locked offline dependency installation without lifecycle scripts passed.
+- All five package builds and strict type checks passed.
+- Full unit regression passed 5,531 tests; 22 real Redis tests were explicitly
+  skipped. No new real Redis service run is claimed.
+- All 96 integration/consumer checks passed. This includes 63 real framework
+  listener checks and twelve fresh ESM/CommonJS adapter runtime/declaration checks.
+- Both profiles completed full offline verification, explicit verified permission,
+  and replay rejection through every framework over real local TLS. Test
+  certificate and hostname verification remained enabled.
+- All 282 independent audit checks passed, with unchanged prior fixture bytes.
+- Publication-free npm dry-run inventories contained seven files per adapter:
+  built output, README, LICENSE and manifest only; no fixtures or test keys.
+
+These overlapping test counts are not additive. Remote CI, local Node 20/24
+execution, live Cloudflare acceptance, network-discovery-through-adapter acceptance
+and an independent security audit are not established by this delivery.
+
+Three test-harness issues were corrected without weakening acceptance checks:
+Windows direct-file versus package-resolved ESM URL casing instantiated separate
+ownership registries; package-resolved imports now use one identity. The raw client
+now separates chunked framing from response body bytes. Test-owned Fastify
+listeners opened with server.listen are explicitly closed rather than assuming
+framework shutdown owns that externally started listener. Tests exit naturally;
+no force-exit option masks leaked listeners. Production ownership checks remained
+strict. Hono's upstream declaration requirements are met with package-local DOM
+type libraries, without disabling strict or dependency declaration checking.
+
+Non-security implementation choices: assessment copies have a 1 MiB accounting
+budget and depth 32; observer callbacks are synchronous; integration errors return
+empty 500 responses rather than raw exceptions through framework error handlers.
+Application logging and arbitrary downstream response-stream failures remain
+application responsibilities. Actual body integrity is still unverified and
+mandatory deferred pre-1.0 work. No push, tag, publication or WG notification.

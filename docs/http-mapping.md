@@ -151,3 +151,66 @@ They do not prove framework acceptance, complete signature verification, public
 network behavior or a security audit. Fresh ESM/CommonJS consumers check exports,
 declarations and inaccessible deep implementation paths. Remote CI for this
 implementation is not established by earlier source-checkpoint CI.
+
+## Shared assessment and thin adapters
+
+The subsequent createHttpAgentSig implementation coordinates an application-owned
+long-lived verifier, mapping, policy and sanitized observer delivery. It does not
+reimplement cryptography, discovery, profile grammar, clock health or replay.
+The mapper-only API above remains separate and does not invoke these operations.
+
+Construct the coordinator with mapper, verifier and explicit mode. Enforce requires
+policy; observe rejects policy/enforcement-only configuration rather than ignoring
+it. Policies receive an owned assessment and invocation-bound decision tools.
+allowVerified requires the exact current policy assessment and verified aggregate;
+a successful candidate inside a failed aggregate cannot grant that decision.
+allowAnonymous remains explicit and never changes the authentication result.
+Mapping failure cannot authorize continuation in enforcement.
+
+The coordinator privately registers work before invoking any verifier, observer or
+policy callback. Compatible instances on one incoming request share verification
+and policy work. Compatibility includes mapper, verifier object/callable, policy,
+observer and effective policy settings. Conflicting instances reject without
+another verification or nonce consumption. Separate incoming requests do not share
+acceptance. Getters require completed owned state and return detached readonly
+views; modifying public context slots or returned byte arrays cannot forge it.
+
+Policy tools cease issuing decisions after settlement or timeout. The one-second
+default deadline includes synchronous callback time, with a monotonic final check.
+The timeout signals cancellation but does not prove application work stopped, and
+JavaScript timers cannot preempt blocking synchronous work. No process-global
+policy-work bound is claimed. Replay consumption is not rolled back by denial,
+timeout, conversion failure or an ambiguous response.
+
+Observer callbacks are synchronous and receive fixed event schemas, never original
+exceptions. Throws are contained; returned/deferred asynchronous work is outside
+that synchronous exception boundary. Applications must own their logging queues.
+Unexpected verifier errors yield a fixed integration failure, not a fabricated
+unverified result. Supplied verifiers are trusted application components; the
+coordinator does not attest an arbitrary verifier implementation's claims.
+
+Assessment copies use a bounded plain-data representation: a 1 MiB accounting
+budget and depth 32, with no ordinary getters invoked. This is not exact heap
+measurement. A larger/malformed custom result fails closed as an integration error,
+rather than truncating evidence or introducing a verification catalog code.
+
+The framework adapters publish native views, enact empty responses and call the
+same coordinator. Integration errors return empty 500 responses. Frameworks remain
+peer dependencies only of their adapters. Current peer ranges intentionally name
+only reviewed/tested releases: Express 4.22.3 or 5.2.1, Fastify 5.12.5, and Hono
+4.13.8 with @hono/node-server 2.1.1. New packages are unpublished 0.0.0 workspace
+packages pending the separately authorized M4 0.2.0 preparation.
+
+Hono assesses before Node-to-Fetch conversion, then privately binds the converted
+request to its original incoming request. Observation can continue only when Hono
+can convert it. A valid expanded IPv6 Host can pass mapping and fail Hono's
+hostname check; the adapter returns empty 400, emits framework-conversion-failed
+with only the mapping status/code, and publishes no Hono context. Enforcement
+rejection does not invoke conversion. The mapping catalog is unchanged.
+Express/Fastify have no corresponding Node-to-Fetch conversion step.
+
+See the adapter guides for installation and scope:
+[Express](../packages/express/README.md), [Fastify](../packages/fastify/README.md),
+and [Hono](../packages/hono/README.md). Application/framework error handlers and
+arbitrary application response streams remain application responsibilities;
+agentsig does not promise to sanitize all framework-generated logging.

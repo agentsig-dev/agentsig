@@ -3,7 +3,7 @@
 [![npm: @agentsig/core](https://img.shields.io/npm/v/@agentsig/core.svg?label=%40agentsig%2Fcore)](https://www.npmjs.com/package/@agentsig/core)
 [![npm: @agentsig/structured-fields](https://img.shields.io/npm/v/@agentsig/structured-fields.svg?label=%40agentsig%2Fstructured-fields)](https://www.npmjs.com/package/@agentsig/structured-fields)
 
-> **Status: pre-release; M3 discovery/Redis APIs in this checkout are unpublished; not security-reviewed**
+> **Status: pre-release; M3 discovery/Redis and M4 HTTP/adapters are unpublished; not security-reviewed**
 
 Open-source HTTP Message Signatures and Web Bot Auth tooling for Node.js.
 
@@ -13,9 +13,10 @@ Bot Auth profiles. Published **0.1.1** supports offline verification with truste
 local public JWKS, explicit identity bindings, time policies, and memory replay.
 
 This checkout additionally implements bounded HTTPS directory discovery, shared
-cache/admission coordination, and an optional Redis replay adapter. These M3
-additions are **not in published 0.1.1**; version metadata is unchanged pending a
-separately authorized release.
+cache/admission coordination, an optional Redis replay adapter, and owned Node
+HTTP/1.1 mapping with Express, Fastify and Hono integrations. These additions are
+**not in published 0.1.1**. Core version metadata remains unchanged; new adapters
+use development-only 0.0.0 versions pending M4 release preparation.
 
 This project is not security-reviewed and does not claim production readiness,
 IETF endorsement, or Cloudflare reference-implementation status. “Pre-release”
@@ -71,8 +72,8 @@ See the [offline verification guide](docs/offline-verification.md),
 Node HTTP-signature engines and TypeScript Web Bot Auth packages already exist.
 agentsig is not the first. Its focus is pinned profiles, independently sourced
 golden fixtures, explicit trust boundaries, default atomic replay checks, and
-Node's built-in cryptography. Bounded network discovery is implemented in this
-unpublished M3 checkout; framework adapters and client tooling remain future work.
+Node's built-in cryptography. Network discovery and Node-only framework adapters
+are implemented in this unpublished checkout; signed fetch and CLI remain future work.
 
 The [source-based comparison](docs/core-api-proposal.md) records the versions and
 documentation examined. It is not a security audit or performance comparison.
@@ -103,11 +104,11 @@ that the accepted candidate is not replay-protected.
 | Package | Current scope |
 | --- | --- |
 | @agentsig/structured-fields | Lossless raw AST, semantic model, RFC 9651 parsing/serialization, resource limits |
-| @agentsig/core | Published RFC 9421 engine/offline profiles; unpublished M3 discovery and Redis subpaths |
+| @agentsig/core | Published engine/offline profiles; unpublished discovery, Redis and HTTP subpaths |
 | @agentsig/fetch | Planned; not implemented |
-| @agentsig/hono | Planned; not implemented |
-| @agentsig/fastify | Planned; not implemented |
-| @agentsig/express | Planned; not implemented |
+| @agentsig/hono | Unpublished Node HTTP/1.1 bridge, assessment and policy integration |
+| @agentsig/fastify | Unpublished early-capture integration and policy hook |
+| @agentsig/express | Unpublished Express 4/5 middleware with owned early capture |
 | agentsig (CLI) | Planned; not implemented |
 
 - **M1:** RFC 9421 Ed25519 engine, Structured Fields package, independent fixture audit.
@@ -117,9 +118,15 @@ that the accepted candidate is not replay-protected.
 - **M3 checkout:** full network verification, bounded directory cache/transport,
   shared cross-profile admission, and Redis replay/recovery. Public APIs live at
   @agentsig/core/discovery and @agentsig/core/redis; the pure and offline entries
-  do not load discovery transport. Maintainer-run final smoke/tag remain separate
-  acceptance steps, not a publication.
-- **Next:** client wrappers, adapters, CLI, and publisher-signed directory responses
+  do not load discovery transport. The maintainer accepted M3 after its smoke
+  and core-m3 tag; this was not an npm publication.
+- **M4 in progress:** shared HTTP mapping and three thin Node adapters, with
+  independent fixtures and real local listener tests. See the
+  [HTTP guide](docs/http-mapping.md) and adapter READMEs:
+  [Express](packages/express/README.md), [Fastify](packages/fastify/README.md),
+  [Hono](packages/hono/README.md). Verification is not authorization; body
+  integrity remains unverified. Hono observation has a documented conversion boundary.
+- **Next:** signed fetch, M4 release preparation, CLI, and publisher-signed directory responses
   (mandatory Cloudflare-profile M5 work). See the [M3 design record](docs/milestone-3-plan.md)
   and [deferred work](docs/deferred.md).
 
@@ -170,8 +177,8 @@ pnpm install --frozen-lockfile --ignore-scripts
 pnpm run check
 ```
 
-The full check builds both packages, checks types, and runs unit, golden,
-property, consumer, and fixture-integrity tests. Additional commands:
+The full check builds all workspace packages, checks types, and runs unit, golden,
+property, real adapter listener, consumer, and fixture-integrity tests. Additional commands:
 
 - `pnpm run test:unit` — unit/golden/property tests.
 - `pnpm run test:integration` — built-package and fixture-integrity tests.
@@ -215,8 +222,10 @@ open mode retains destination filtering, numeric pinning, TLS, redirect rejectio
 and resource limits. Limits are shared per security context, not process-global or
 distributed. Keep compatible verifier contexts long-lived. Directory HTTPS identity
 does not establish operator reputation, authorization, or publisher-signed proof.
-Body-digest comparison, countersignatures, framework adapters, client wrappers,
-and CLI remain outside this implementation. Live Cloudflare acceptance is unproven.
+Body-digest comparison, countersignatures, signed fetch and CLI remain outside this
+implementation. Actual body verification is mandatory before 1.0. The unpublished
+adapters default to rejecting framed bodies in enforcement, with explicit
+identity-only opt-in. Live Cloudflare acceptance is unproven.
 
 The initial Redis adapter performs **O(n) scans and bounded state-document
 rewrites**, capped at 10,000 records and 32 MiB of encoded state. Full-capacity

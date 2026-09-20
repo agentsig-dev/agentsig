@@ -17,3 +17,20 @@ export type {
     ObservedClient,
     RejectedHttpMapping,
 } from "./http/types.js";
+
+export { createHttpAgentSig } from "./http/assessment.js";
+export type {
+    AgentSigContext,
+    HttpAdapterEvent,
+    HttpAdapterName,
+    HttpAdapterOutcome,
+    HttpAgentSig,
+    HttpAgentSigOptions,
+    HttpAssessment,
+    HttpAuthorization,
+    HttpPolicyDecision,
+    HttpPolicyHook,
+    HttpPolicyTools,
+    HttpRequestVerifier,
+    VerifiedHttpAssessment,
+} from "./http/assessment-types.js";

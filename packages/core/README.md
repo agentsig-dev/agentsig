@@ -62,7 +62,7 @@ for configuration and result semantics.
 | @agentsig/core/profiles | Profile signing, offline verification, trusted local public JWKS loading, shared clock/replay context | Published 0.1.1 |
 | @agentsig/core/discovery | Bounded HTTPS directory discovery and full network verification | Unpublished M3 checkout |
 | @agentsig/core/redis | Optional Redis replay adapter and recovery-horizon helper | Unpublished M3 checkout |
-| @agentsig/core/http | Owned Node HTTP/1.1 capture and explicit ingress mapping; no implicit verification | Unpublished M4 checkout |
+| @agentsig/core/http | Owned HTTP/1.1 mapping and shared explicit verifier/policy coordination | Unpublished M4 checkout |
 
 The pure engine has no clock, network, trust-resolution, or replay side effects.
 The profile layer combines local authentication policies without loading directory
@@ -278,8 +278,18 @@ spelling. Missing capture is rejected, never reconstructed from framework getter
 An explicit target-origin allowlist is required. Direct mode ignores forwarding
 claims. Trusted ingress additionally requires configured peer IP/CIDR rules, one
 selected forwarding family, a sanitizing-ingress assertion, and external HTTPS.
-Mapping does not authenticate or authorize requests and does not read bodies.
-It does not itself implement adapter policy hooks, observer delivery or blocking.
+Mapping alone does not authenticate or authorize requests and does not read bodies.
+The separate createHttpAgentSig coordinator calls the supplied long-lived verifier
+once per compatible incoming request, owns immutable assessment copies and enacts
+the explicit observe/enforce policy. Express, Fastify and Hono adapters reuse this
+coordinator rather than duplicating cryptography, discovery, clocks or replay.
+
+Observe mode continues after mapping failure without verification or authorization.
+Enforcement permits only deny/rate-limit for mapping failure. Default responses
+are empty: mapping denial 400, policy denial 401, rate-limit 429. Policy exceptions,
+invalid decisions and the default one-second timeout deny. Compatible duplicate
+installation shares work; conflicting configuration fails without re-verification.
+Hono has a separately documented Node-to-Fetch conversion boundary.
 
 See the [HTTP mapping guide](https://github.com/agentsig-dev/agentsig/blob/main/docs/http-mapping.md)
 for early placement, parser limits, proxy trust, client hints, protocol restrictions,
