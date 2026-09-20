@@ -1,0 +1,184 @@
+{
+    "formatVersion": 1,
+    "sharedCases": "mapping-cases.json",
+    "comparison": "Exact method, targetUri, rawRequestTarget, httpVersion, ordered header names and value bytes; no normalization before comparison",
+    "frameworks": [
+        {
+            "adapter": "express",
+            "versions": [
+                "4.22.3",
+                "5.2.1"
+            ],
+            "captureBoundary": "Node listener before application dispatch and mounted middleware",
+            "nativeContext": "request.agentsig",
+            "forbiddenFallback": [
+                "request.originalUrl",
+                "request.hostname",
+                "request.protocol",
+                "request.headers"
+            ],
+            "mutationAfterCapture": {
+                "url": "/rewritten",
+                "headers": {
+                    "host": "forged.example"
+                }
+            },
+            "expected": "Use the owned original snapshot for every shared case, never the mutated routing view"
+        },
+        {
+            "adapter": "fastify",
+            "versions": [
+                "5.12.5"
+            ],
+            "captureBoundary": "Owned serverFactory listener before invoking Fastify HTTP handler and rewriteUrl",
+            "nativeContext": "request.agentsig",
+            "forbiddenFallback": [
+                "request.url",
+                "request.hostname",
+                "request.protocol",
+                "request.headers"
+            ],
+            "mutationAfterCapture": {
+                "url": "/rewritten",
+                "headers": {
+                    "host": "forged.example"
+                }
+            },
+            "expected": "Use the owned original snapshot for every shared case, never the mutated routing view"
+        },
+        {
+            "adapter": "hono",
+            "versions": [
+                "4.13.8"
+            ],
+            "nodeServerVersions": [
+                "2.1.1"
+            ],
+            "captureBoundary": "Node listener before Hono Node conversion; privately bind converted Request to the captured incoming request",
+            "nativeContext": "context variable agentsig",
+            "forbiddenFallback": [
+                "c.req.raw.url",
+                "c.req.raw.headers",
+                "c.req.path"
+            ],
+            "mutationAfterCapture": {
+                "url": "https://forged.example/rewritten",
+                "headers": {
+                    "host": "forged.example"
+                }
+            },
+            "expected": "Use the owned original snapshot for every shared case, never the normalized Fetch view"
+        }
+    ],
+    "failureModes": [
+        {
+            "mode": "observe",
+            "mapping": "rejected",
+            "policy": "absent",
+            "verifierCalls": 0,
+            "observerCalls": 1,
+            "downstreamCalls": 1,
+            "authorization": "not-evaluated",
+            "responseStatus": null
+        },
+        {
+            "mode": "enforce",
+            "mapping": "rejected",
+            "policy": "deny",
+            "verifierCalls": 0,
+            "observerCalls": 1,
+            "downstreamCalls": 0,
+            "authorization": "denied",
+            "responseStatus": 400
+        },
+        {
+            "mode": "enforce",
+            "mapping": "rejected",
+            "policy": "allow-anonymous",
+            "verifierCalls": 0,
+            "observerCalls": 1,
+            "downstreamCalls": 0,
+            "authorization": "denied",
+            "responseStatus": 400
+        },
+        {
+            "mode": "enforce",
+            "mapping": "rejected",
+            "policy": "allow-verified",
+            "verifierCalls": 0,
+            "observerCalls": 1,
+            "downstreamCalls": 0,
+            "authorization": "denied",
+            "responseStatus": 400
+        },
+        {
+            "mode": "enforce",
+            "mapping": "rejected",
+            "policy": "rate-limit",
+            "verifierCalls": 0,
+            "observerCalls": 1,
+            "downstreamCalls": 0,
+            "authorization": "rate-limited",
+            "responseStatus": 429
+        },
+        {
+            "mode": "enforce",
+            "mapping": "rejected",
+            "policy": "throws",
+            "verifierCalls": 0,
+            "observerCalls": 1,
+            "downstreamCalls": 0,
+            "authorization": "denied",
+            "responseStatus": 400
+        },
+        {
+            "mode": "enforce",
+            "mapping": "rejected",
+            "policy": "timeout-then-late-allow",
+            "verifierCalls": 0,
+            "observerCalls": 1,
+            "downstreamCalls": 0,
+            "authorization": "denied",
+            "responseStatus": 400
+        }
+    ],
+    "observer": {
+        "event": "mapping-rejected",
+        "fields": [
+            "code",
+            "adapter",
+            "ingress"
+        ],
+        "exactlyOncePerOwnedAssessment": true,
+        "throws": "Contained; mapping result, authorization and downstream count remain unchanged",
+        "rawValues": "No raw header, address, target, nonce, key or error payload",
+        "failureModesObserverCalls": "Mapping event count only; policy-error events, where applicable, are separate"
+    },
+    "ownership": [
+        {
+            "scenario": "compatible-double-installation",
+            "expectedVerifierCalls": 1,
+            "expectedAdditionalReplayConsumes": 0
+        },
+        {
+            "scenario": "context-slot-replaced",
+            "expected": "Public replacement cannot forge private authentication or enforcement state"
+        },
+        {
+            "scenario": "missing-installation",
+            "expected": "Getter fails explicitly; never fabricate unsigned assessment"
+        },
+        {
+            "scenario": "conflicting-installation",
+            "expected": "Fail without re-verification"
+        },
+        {
+            "scenario": "observer-reentry",
+            "expected": "Cannot create another mapping or verification operation for the same request"
+        },
+        {
+            "scenario": "two-distinct-requests",
+            "expected": "Independent context state; no shared mutable prototype assessment"
+        }
+    ]
+}

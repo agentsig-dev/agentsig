@@ -1120,3 +1120,37 @@ The source-only delivery stops after its first local commit as requested.
 No push, tag, publication, upstream report or maintainer smoke is performed.
 Local data-only audit success is not remote CI, live signed-request acceptance,
 Sigstore/PGP signature verification, or a security audit.
+
+### Approved M4 HTTP expectations before implementation
+
+The maintainer confirmed push and green CI for 343c1d5. Subsequent approvals
+freeze a separate seventeen-code HTTP mapping catalog and refine trusted ingress,
+target-origin comparison, unauthenticated client hints, sanitized mapping events,
+and observe/enforce behavior. The overriding decisions are recorded in the
+[M4 plan](milestone-4-plan.md#approved-http-mapping-contract-amendments).
+
+The [HTTP manifest](../tests/fixtures/m4-http/manifest.json) pins independently
+authored contracts, framework capture descriptors and mapping expectations.
+Twenty literal positive HTTP requests share exact expected ordered header fields
+and request parts across Express, Fastify and Hono. Fifty-eight negative
+descriptors cover every mapping code; a separate large-header recipe checks a
+late duplicate Host, and two malformed wire requests specify pre-capture parser
+rejection. Descriptors are not claims that malformed wire reaches Node callbacks.
+
+Local Windows / Node 22.23.2 passed 29 independent mapping-fixture checks and
+17 unchanged source checks. The first run exposed CRLF in the newly authored JSON
+files. Physical line endings were corrected to LF before the first commit, and
+parsed expectations plus escaped HTTP wire values were checked unchanged. The
+three exact staging/checkout tests now pass; no historical fixture was modified
+and no byte-equality assertion was relaxed.
+
+Non-security representation choice: the observed-client port remains an optional
+string so RFC numeric and obfuscated node-port spellings can both be represented
+without conflating the hint with a transport destination. No hint is authenticated.
+Diagnostic precedence among multiple mapping failures is implementation-defined
+except explicit HTTP/2 detection and the independently pinned single-fault cases.
+
+These fixtures do not implement the mapper, execute framework listeners, establish
+real verification/authorization, or constitute a security audit. Fixture CI is
+configured, not yet confirmed for these changes. The mapper and adapters follow
+in separate commits; push, tags and publication remain maintainer-owned.

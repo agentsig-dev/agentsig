@@ -1,0 +1,1658 @@
+{
+    "formatVersion": 1,
+    "defaults": {
+        "capture": "complete",
+        "httpVersion": "1.1",
+        "method": "GET",
+        "url": "/",
+        "rawHeaders": [
+            "Host",
+            "merchant.example"
+        ],
+        "peerAddress": "192.0.2.10",
+        "encrypted": true,
+        "ingress": {
+            "mode": "direct",
+            "allowedOrigins": [
+                "https://merchant.example"
+            ]
+        }
+    },
+    "ingressPolicies": {
+        "direct": {
+            "mode": "direct",
+            "allowedOrigins": [
+                "https://merchant.example"
+            ]
+        },
+        "direct-http": {
+            "mode": "direct",
+            "allowedOrigins": [
+                "http://merchant.example"
+            ]
+        },
+        "direct-port": {
+            "mode": "direct",
+            "allowedOrigins": [
+                "https://merchant.example:8443"
+            ]
+        },
+        "direct-ipv6": {
+            "mode": "direct",
+            "allowedOrigins": [
+                "https://[2001:db8::1]:8443"
+            ]
+        },
+        "direct-ipv4": {
+            "mode": "direct",
+            "allowedOrigins": [
+                "https://192.0.2.44"
+            ]
+        },
+        "forwarded": {
+            "mode": "trusted-ingress",
+            "family": "forwarded",
+            "allowedOrigins": [
+                "https://merchant.example"
+            ],
+            "trustedPeers": [
+                "192.0.2.0/24"
+            ],
+            "sanitizingIngress": true
+        },
+        "forwarded-port": {
+            "mode": "trusted-ingress",
+            "family": "forwarded",
+            "allowedOrigins": [
+                "https://merchant.example:8443"
+            ],
+            "trustedPeers": [
+                "192.0.2.0/24"
+            ],
+            "sanitizingIngress": true
+        },
+        "forwarded-ipv6": {
+            "mode": "trusted-ingress",
+            "family": "forwarded",
+            "allowedOrigins": [
+                "https://[2001:db8::1]:8443"
+            ],
+            "trustedPeers": [
+                "2001:db8:1::/48"
+            ],
+            "sanitizingIngress": true
+        },
+        "x-forwarded": {
+            "mode": "trusted-ingress",
+            "family": "x-forwarded",
+            "allowedOrigins": [
+                "https://merchant.example"
+            ],
+            "trustedPeers": [
+                "192.0.2.0/24"
+            ],
+            "sanitizingIngress": true
+        },
+        "x-forwarded-port": {
+            "mode": "trusted-ingress",
+            "family": "x-forwarded",
+            "allowedOrigins": [
+                "https://merchant.example:8443"
+            ],
+            "trustedPeers": [
+                "192.0.2.0/24"
+            ],
+            "sanitizingIngress": true
+        },
+        "x-loopback": {
+            "mode": "trusted-ingress",
+            "family": "x-forwarded",
+            "allowedOrigins": [
+                "https://merchant.example"
+            ],
+            "trustedPeers": [
+                "127.0.0.1/32"
+            ],
+            "sanitizingIngress": true
+        }
+    },
+    "positive": [
+        {
+            "id": "ordered-repetitions-and-unmodified-target",
+            "wireLatin1": "GET /a/%2f/%2E/../b?x=1&x=2&q=a+b&q=a%20b&escaped=%252f HTTP/1.1\r\nHost: merchant.example\r\nX-Order: first\r\nCookie: a=1\r\nx-order: second\r\nCookie: b=2\r\nX-Empty: \r\n\r\n",
+            "input": {
+                "url": "/a/%2f/%2E/../b?x=1&x=2&q=a+b&q=a%20b&escaped=%252f",
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "X-Order",
+                    "first",
+                    "Cookie",
+                    "a=1",
+                    "x-order",
+                    "second",
+                    "Cookie",
+                    "b=2",
+                    "X-Empty",
+                    ""
+                ]
+            },
+            "expected": {
+                "status": "mapped",
+                "request": {
+                    "method": "GET",
+                    "targetUri": "https://merchant.example/a/%2f/%2E/../b?x=1&x=2&q=a+b&q=a%20b&escaped=%252f",
+                    "rawRequestTarget": "/a/%2f/%2E/../b?x=1&x=2&q=a+b&q=a%20b&escaped=%252f",
+                    "httpVersion": "1.1",
+                    "headers": [
+                        [
+                            "Host",
+                            "merchant.example"
+                        ],
+                        [
+                            "X-Order",
+                            "first"
+                        ],
+                        [
+                            "Cookie",
+                            "a=1"
+                        ],
+                        [
+                            "x-order",
+                            "second"
+                        ],
+                        [
+                            "Cookie",
+                            "b=2"
+                        ],
+                        [
+                            "X-Empty",
+                            ""
+                        ]
+                    ]
+                },
+                "targetSource": "direct",
+                "internalAuthority": "merchant.example",
+                "bodyPresent": false
+            }
+        },
+        {
+            "id": "authority-spelling-default-port-empty-query",
+            "wireLatin1": "GET /items? HTTP/1.1\r\nhOsT: MeRcHaNt.ExAmPlE:443\r\n\r\n",
+            "input": {
+                "url": "/items?",
+                "rawHeaders": [
+                    "hOsT",
+                    "MeRcHaNt.ExAmPlE:443"
+                ]
+            },
+            "expected": {
+                "status": "mapped",
+                "request": {
+                    "method": "GET",
+                    "targetUri": "https://MeRcHaNt.ExAmPlE:443/items?",
+                    "rawRequestTarget": "/items?",
+                    "httpVersion": "1.1",
+                    "headers": [
+                        [
+                            "hOsT",
+                            "MeRcHaNt.ExAmPlE:443"
+                        ]
+                    ]
+                },
+                "targetSource": "direct",
+                "internalAuthority": "MeRcHaNt.ExAmPlE:443",
+                "bodyPresent": false
+            }
+        },
+        {
+            "id": "double-slash-is-path",
+            "wireLatin1": "GET //other.example/%2e%2e/a?x=%2F HTTP/1.1\r\nHost: merchant.example\r\n\r\n",
+            "input": {
+                "url": "//other.example/%2e%2e/a?x=%2F"
+            },
+            "expected": {
+                "status": "mapped",
+                "request": {
+                    "method": "GET",
+                    "targetUri": "https://merchant.example//other.example/%2e%2e/a?x=%2F",
+                    "rawRequestTarget": "//other.example/%2e%2e/a?x=%2F",
+                    "httpVersion": "1.1",
+                    "headers": [
+                        [
+                            "Host",
+                            "merchant.example"
+                        ]
+                    ]
+                },
+                "targetSource": "direct",
+                "internalAuthority": "merchant.example",
+                "bodyPresent": false
+            }
+        },
+        {
+            "id": "obs-text-is-owned-latin1-bytes",
+            "wireLatin1": "GET / HTTP/1.1\r\nHost: merchant.example\r\nX-Raw: \u0080\u00e9\u00ff\r\n\r\n",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "X-Raw",
+                    "\u0080\u00e9\u00ff"
+                ]
+            },
+            "expected": {
+                "status": "mapped",
+                "request": {
+                    "method": "GET",
+                    "targetUri": "https://merchant.example/",
+                    "rawRequestTarget": "/",
+                    "httpVersion": "1.1",
+                    "headers": [
+                        [
+                            "Host",
+                            "merchant.example"
+                        ],
+                        [
+                            "X-Raw",
+                            {
+                                "bytesHex": "80e9ff"
+                            }
+                        ]
+                    ]
+                },
+                "targetSource": "direct",
+                "internalAuthority": "merchant.example",
+                "bodyPresent": false
+            }
+        },
+        {
+            "id": "direct-ignores-forwarding-claims",
+            "wireLatin1": "GET / HTTP/1.1\r\nHost: merchant.example\r\nForwarded: host=attacker.example;proto=http\r\nX-Forwarded-Host: attacker.example\r\nX-Forwarded-For: 198.51.100.1, 198.51.100.2\r\n\r\n",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "Forwarded",
+                    "host=attacker.example;proto=http",
+                    "X-Forwarded-Host",
+                    "attacker.example",
+                    "X-Forwarded-For",
+                    "198.51.100.1, 198.51.100.2"
+                ]
+            },
+            "expected": {
+                "status": "mapped",
+                "request": {
+                    "method": "GET",
+                    "targetUri": "https://merchant.example/",
+                    "rawRequestTarget": "/",
+                    "httpVersion": "1.1",
+                    "headers": [
+                        [
+                            "Host",
+                            "merchant.example"
+                        ],
+                        [
+                            "Forwarded",
+                            "host=attacker.example;proto=http"
+                        ],
+                        [
+                            "X-Forwarded-Host",
+                            "attacker.example"
+                        ],
+                        [
+                            "X-Forwarded-For",
+                            "198.51.100.1, 198.51.100.2"
+                        ]
+                    ]
+                },
+                "targetSource": "direct",
+                "internalAuthority": "merchant.example",
+                "bodyPresent": false
+            }
+        },
+        {
+            "id": "direct-http-from-transport",
+            "policy": "direct-http",
+            "wireLatin1": "GET / HTTP/1.1\r\nHost: merchant.example\r\n\r\n",
+            "input": {
+                "encrypted": false
+            },
+            "expected": {
+                "status": "mapped",
+                "request": {
+                    "method": "GET",
+                    "targetUri": "http://merchant.example/",
+                    "rawRequestTarget": "/",
+                    "httpVersion": "1.1",
+                    "headers": [
+                        [
+                            "Host",
+                            "merchant.example"
+                        ]
+                    ]
+                },
+                "targetSource": "direct",
+                "internalAuthority": "merchant.example",
+                "bodyPresent": false
+            }
+        },
+        {
+            "id": "explicit-target-nondefault-port",
+            "policy": "direct-port",
+            "wireLatin1": "GET / HTTP/1.1\r\nHost: merchant.example:8443\r\n\r\n",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example:8443"
+                ]
+            },
+            "expected": {
+                "status": "mapped",
+                "request": {
+                    "method": "GET",
+                    "targetUri": "https://merchant.example:8443/",
+                    "rawRequestTarget": "/",
+                    "httpVersion": "1.1",
+                    "headers": [
+                        [
+                            "Host",
+                            "merchant.example:8443"
+                        ]
+                    ]
+                },
+                "targetSource": "direct",
+                "internalAuthority": "merchant.example:8443",
+                "bodyPresent": false
+            }
+        },
+        {
+            "id": "ipv6-comparison-preserves-authority",
+            "policy": "direct-ipv6",
+            "wireLatin1": "GET /%2f? HTTP/1.1\r\nHost: [2001:DB8:0:0:0:0:0:1]:8443\r\n\r\n",
+            "input": {
+                "url": "/%2f?",
+                "rawHeaders": [
+                    "Host",
+                    "[2001:DB8:0:0:0:0:0:1]:8443"
+                ]
+            },
+            "expected": {
+                "status": "mapped",
+                "request": {
+                    "method": "GET",
+                    "targetUri": "https://[2001:DB8:0:0:0:0:0:1]:8443/%2f?",
+                    "rawRequestTarget": "/%2f?",
+                    "httpVersion": "1.1",
+                    "headers": [
+                        [
+                            "Host",
+                            "[2001:DB8:0:0:0:0:0:1]:8443"
+                        ]
+                    ]
+                },
+                "targetSource": "direct",
+                "internalAuthority": "[2001:DB8:0:0:0:0:0:1]:8443",
+                "bodyPresent": false
+            }
+        },
+        {
+            "id": "explicit-target-ipv4",
+            "policy": "direct-ipv4",
+            "wireLatin1": "GET / HTTP/1.1\r\nHost: 192.0.2.44\r\n\r\n",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "192.0.2.44"
+                ]
+            },
+            "expected": {
+                "status": "mapped",
+                "request": {
+                    "method": "GET",
+                    "targetUri": "https://192.0.2.44/",
+                    "rawRequestTarget": "/",
+                    "httpVersion": "1.1",
+                    "headers": [
+                        [
+                            "Host",
+                            "192.0.2.44"
+                        ]
+                    ]
+                },
+                "targetSource": "direct",
+                "internalAuthority": "192.0.2.44",
+                "bodyPresent": false
+            }
+        },
+        {
+            "id": "trusted-forwarded-single-element",
+            "policy": "forwarded",
+            "wireLatin1": "GET /mount/%2E/../pay?x=1&x=2 HTTP/1.1\r\nHost: internal.example:8080\r\nForwarded: FoR=\"[2001:db8::2]:4711\";HoSt=\"MeRcHaNt.ExAmPlE:443\";PrOtO=https;by=_edge\r\n\r\n",
+            "input": {
+                "encrypted": false,
+                "url": "/mount/%2E/../pay?x=1&x=2",
+                "rawHeaders": [
+                    "Host",
+                    "internal.example:8080",
+                    "Forwarded",
+                    "FoR=\"[2001:db8::2]:4711\";HoSt=\"MeRcHaNt.ExAmPlE:443\";PrOtO=https;by=_edge"
+                ]
+            },
+            "expected": {
+                "status": "mapped",
+                "request": {
+                    "method": "GET",
+                    "targetUri": "https://MeRcHaNt.ExAmPlE:443/mount/%2E/../pay?x=1&x=2",
+                    "rawRequestTarget": "/mount/%2E/../pay?x=1&x=2",
+                    "httpVersion": "1.1",
+                    "headers": [
+                        [
+                            "Host",
+                            "internal.example:8080"
+                        ],
+                        [
+                            "Forwarded",
+                            "FoR=\"[2001:db8::2]:4711\";HoSt=\"MeRcHaNt.ExAmPlE:443\";PrOtO=https;by=_edge"
+                        ]
+                    ]
+                },
+                "targetSource": "trusted-ingress",
+                "internalAuthority": "internal.example:8080",
+                "bodyPresent": false,
+                "observedClient": {
+                    "kind": "ip",
+                    "address": "2001:db8::2",
+                    "port": "4711",
+                    "source": "trusted-ingress",
+                    "authenticated": false
+                }
+            }
+        },
+        {
+            "id": "forwarded-unknown-client",
+            "policy": "forwarded",
+            "wireLatin1": "GET / HTTP/1.1\r\nHost: internal.example\r\nForwarded: host=merchant.example;proto=https;for=unknown\r\n\r\n",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "internal.example",
+                    "Forwarded",
+                    "host=merchant.example;proto=https;for=unknown"
+                ]
+            },
+            "expected": {
+                "status": "mapped",
+                "request": {
+                    "method": "GET",
+                    "targetUri": "https://merchant.example/",
+                    "rawRequestTarget": "/",
+                    "httpVersion": "1.1",
+                    "headers": [
+                        [
+                            "Host",
+                            "internal.example"
+                        ],
+                        [
+                            "Forwarded",
+                            "host=merchant.example;proto=https;for=unknown"
+                        ]
+                    ]
+                },
+                "targetSource": "trusted-ingress",
+                "internalAuthority": "internal.example",
+                "bodyPresent": false,
+                "observedClient": {
+                    "kind": "unknown",
+                    "address": "unknown",
+                    "source": "trusted-ingress",
+                    "authenticated": false
+                }
+            }
+        },
+        {
+            "id": "forwarded-obfuscated-client-and-port",
+            "policy": "forwarded",
+            "wireLatin1": "GET / HTTP/1.1\r\nHost: internal.example\r\nForwarded: host=merchant.example;proto=https;for=\"_client:_port\";by=\"192.0.2.10:443\"\r\n\r\n",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "internal.example",
+                    "Forwarded",
+                    "host=merchant.example;proto=https;for=\"_client:_port\";by=\"192.0.2.10:443\""
+                ]
+            },
+            "expected": {
+                "status": "mapped",
+                "request": {
+                    "method": "GET",
+                    "targetUri": "https://merchant.example/",
+                    "rawRequestTarget": "/",
+                    "httpVersion": "1.1",
+                    "headers": [
+                        [
+                            "Host",
+                            "internal.example"
+                        ],
+                        [
+                            "Forwarded",
+                            "host=merchant.example;proto=https;for=\"_client:_port\";by=\"192.0.2.10:443\""
+                        ]
+                    ]
+                },
+                "targetSource": "trusted-ingress",
+                "internalAuthority": "internal.example",
+                "bodyPresent": false,
+                "observedClient": {
+                    "kind": "obfuscated",
+                    "address": "_client",
+                    "port": "_port",
+                    "source": "trusted-ingress",
+                    "authenticated": false
+                }
+            }
+        },
+        {
+            "id": "forwarded-absent-for-and-ignored-proxy-fields",
+            "policy": "forwarded",
+            "wireLatin1": "GET / HTTP/1.1\r\nHost: internal.example\r\nForwarded: host=merchant.example;proto=https;by=192.0.2.10\r\nX-Forwarded-Prefix: /forged\r\nX-Real-IP: 198.51.100.99\r\n\r\n",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "internal.example",
+                    "Forwarded",
+                    "host=merchant.example;proto=https;by=192.0.2.10",
+                    "X-Forwarded-Prefix",
+                    "/forged",
+                    "X-Real-IP",
+                    "198.51.100.99"
+                ]
+            },
+            "expected": {
+                "status": "mapped",
+                "request": {
+                    "method": "GET",
+                    "targetUri": "https://merchant.example/",
+                    "rawRequestTarget": "/",
+                    "httpVersion": "1.1",
+                    "headers": [
+                        [
+                            "Host",
+                            "internal.example"
+                        ],
+                        [
+                            "Forwarded",
+                            "host=merchant.example;proto=https;by=192.0.2.10"
+                        ],
+                        [
+                            "X-Forwarded-Prefix",
+                            "/forged"
+                        ],
+                        [
+                            "X-Real-IP",
+                            "198.51.100.99"
+                        ]
+                    ]
+                },
+                "targetSource": "trusted-ingress",
+                "internalAuthority": "internal.example",
+                "bodyPresent": false
+            }
+        },
+        {
+            "id": "trusted-x-forwarded-default-port-not-added",
+            "policy": "x-forwarded",
+            "wireLatin1": "GET /a%2Fb?q=+&q=%20 HTTP/1.1\r\nHost: internal.example:8080\r\nX-Forwarded-Host: merchant.example\r\nX-Forwarded-Proto: https\r\nX-Forwarded-Port: 443\r\nX-Forwarded-For: 198.51.100.3\r\n\r\n",
+            "input": {
+                "encrypted": false,
+                "url": "/a%2Fb?q=+&q=%20",
+                "rawHeaders": [
+                    "Host",
+                    "internal.example:8080",
+                    "X-Forwarded-Host",
+                    "merchant.example",
+                    "X-Forwarded-Proto",
+                    "https",
+                    "X-Forwarded-Port",
+                    "443",
+                    "X-Forwarded-For",
+                    "198.51.100.3"
+                ]
+            },
+            "expected": {
+                "status": "mapped",
+                "request": {
+                    "method": "GET",
+                    "targetUri": "https://merchant.example/a%2Fb?q=+&q=%20",
+                    "rawRequestTarget": "/a%2Fb?q=+&q=%20",
+                    "httpVersion": "1.1",
+                    "headers": [
+                        [
+                            "Host",
+                            "internal.example:8080"
+                        ],
+                        [
+                            "X-Forwarded-Host",
+                            "merchant.example"
+                        ],
+                        [
+                            "X-Forwarded-Proto",
+                            "https"
+                        ],
+                        [
+                            "X-Forwarded-Port",
+                            "443"
+                        ],
+                        [
+                            "X-Forwarded-For",
+                            "198.51.100.3"
+                        ]
+                    ]
+                },
+                "targetSource": "trusted-ingress",
+                "internalAuthority": "internal.example:8080",
+                "bodyPresent": false,
+                "observedClient": {
+                    "kind": "ip",
+                    "address": "198.51.100.3",
+                    "source": "trusted-ingress",
+                    "authenticated": false
+                }
+            }
+        },
+        {
+            "id": "trusted-x-forwarded-explicit-port-equality",
+            "policy": "x-forwarded-port",
+            "wireLatin1": "GET / HTTP/1.1\r\nHost: internal.example\r\nX-Forwarded-Host: merchant.example:8443\r\nX-Forwarded-Proto: https\r\nX-Forwarded-Port: 8443\r\n\r\n",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "internal.example",
+                    "X-Forwarded-Host",
+                    "merchant.example:8443",
+                    "X-Forwarded-Proto",
+                    "https",
+                    "X-Forwarded-Port",
+                    "8443"
+                ]
+            },
+            "expected": {
+                "status": "mapped",
+                "request": {
+                    "method": "GET",
+                    "targetUri": "https://merchant.example:8443/",
+                    "rawRequestTarget": "/",
+                    "httpVersion": "1.1",
+                    "headers": [
+                        [
+                            "Host",
+                            "internal.example"
+                        ],
+                        [
+                            "X-Forwarded-Host",
+                            "merchant.example:8443"
+                        ],
+                        [
+                            "X-Forwarded-Proto",
+                            "https"
+                        ],
+                        [
+                            "X-Forwarded-Port",
+                            "8443"
+                        ]
+                    ]
+                },
+                "targetSource": "trusted-ingress",
+                "internalAuthority": "internal.example",
+                "bodyPresent": false
+            }
+        },
+        {
+            "id": "trusted-x-forwarded-without-port-or-for",
+            "policy": "x-forwarded",
+            "wireLatin1": "GET / HTTP/1.1\r\nHost: internal.example\r\nX-Forwarded-Host: merchant.example\r\nX-Forwarded-Proto: https\r\nX-Forwarded-Server: ignored\r\nX-Forwarded-Ssl: off\r\n\r\n",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "internal.example",
+                    "X-Forwarded-Host",
+                    "merchant.example",
+                    "X-Forwarded-Proto",
+                    "https",
+                    "X-Forwarded-Server",
+                    "ignored",
+                    "X-Forwarded-Ssl",
+                    "off"
+                ]
+            },
+            "expected": {
+                "status": "mapped",
+                "request": {
+                    "method": "GET",
+                    "targetUri": "https://merchant.example/",
+                    "rawRequestTarget": "/",
+                    "httpVersion": "1.1",
+                    "headers": [
+                        [
+                            "Host",
+                            "internal.example"
+                        ],
+                        [
+                            "X-Forwarded-Host",
+                            "merchant.example"
+                        ],
+                        [
+                            "X-Forwarded-Proto",
+                            "https"
+                        ],
+                        [
+                            "X-Forwarded-Server",
+                            "ignored"
+                        ],
+                        [
+                            "X-Forwarded-Ssl",
+                            "off"
+                        ]
+                    ]
+                },
+                "targetSource": "trusted-ingress",
+                "internalAuthority": "internal.example",
+                "bodyPresent": false
+            }
+        },
+        {
+            "id": "explicit-loopback-peer-trust",
+            "policy": "x-loopback",
+            "wireLatin1": "GET / HTTP/1.1\r\nHost: internal.example\r\nX-Forwarded-Host: merchant.example\r\nX-Forwarded-Proto: https\r\nX-Forwarded-For: 2001:db8::2\r\n\r\n",
+            "input": {
+                "peerAddress": "127.0.0.1",
+                "rawHeaders": [
+                    "Host",
+                    "internal.example",
+                    "X-Forwarded-Host",
+                    "merchant.example",
+                    "X-Forwarded-Proto",
+                    "https",
+                    "X-Forwarded-For",
+                    "2001:db8::2"
+                ]
+            },
+            "expected": {
+                "status": "mapped",
+                "request": {
+                    "method": "GET",
+                    "targetUri": "https://merchant.example/",
+                    "rawRequestTarget": "/",
+                    "httpVersion": "1.1",
+                    "headers": [
+                        [
+                            "Host",
+                            "internal.example"
+                        ],
+                        [
+                            "X-Forwarded-Host",
+                            "merchant.example"
+                        ],
+                        [
+                            "X-Forwarded-Proto",
+                            "https"
+                        ],
+                        [
+                            "X-Forwarded-For",
+                            "2001:db8::2"
+                        ]
+                    ]
+                },
+                "targetSource": "trusted-ingress",
+                "internalAuthority": "internal.example",
+                "bodyPresent": false,
+                "observedClient": {
+                    "kind": "ip",
+                    "address": "2001:db8::2",
+                    "source": "trusted-ingress",
+                    "authenticated": false
+                }
+            }
+        },
+        {
+            "id": "get-body-framing-is-not-integrity",
+            "wireLatin1": "GET / HTTP/1.1\r\nHost: merchant.example\r\nContent-Length: 1\r\n\r\nx",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "Content-Length",
+                    "1"
+                ]
+            },
+            "expected": {
+                "status": "mapped",
+                "request": {
+                    "method": "GET",
+                    "targetUri": "https://merchant.example/",
+                    "rawRequestTarget": "/",
+                    "httpVersion": "1.1",
+                    "headers": [
+                        [
+                            "Host",
+                            "merchant.example"
+                        ],
+                        [
+                            "Content-Length",
+                            "1"
+                        ]
+                    ]
+                },
+                "targetSource": "direct",
+                "internalAuthority": "merchant.example",
+                "bodyPresent": true
+            }
+        },
+        {
+            "id": "chunked-body-is-not-read-by-mapper",
+            "wireLatin1": "POST / HTTP/1.1\r\nHost: merchant.example\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n",
+            "input": {
+                "method": "POST",
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "Transfer-Encoding",
+                    "chunked"
+                ]
+            },
+            "expected": {
+                "status": "mapped",
+                "request": {
+                    "method": "POST",
+                    "targetUri": "https://merchant.example/",
+                    "rawRequestTarget": "/",
+                    "httpVersion": "1.1",
+                    "headers": [
+                        [
+                            "Host",
+                            "merchant.example"
+                        ],
+                        [
+                            "Transfer-Encoding",
+                            "chunked"
+                        ]
+                    ]
+                },
+                "targetSource": "direct",
+                "internalAuthority": "merchant.example",
+                "bodyPresent": true
+            }
+        },
+        {
+            "id": "zero-content-length-is-bodyless",
+            "wireLatin1": "POST / HTTP/1.1\r\nHost: merchant.example\r\nContent-Length: 0\r\n\r\n",
+            "input": {
+                "method": "POST",
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "Content-Length",
+                    "0"
+                ]
+            },
+            "expected": {
+                "status": "mapped",
+                "request": {
+                    "method": "POST",
+                    "targetUri": "https://merchant.example/",
+                    "rawRequestTarget": "/",
+                    "httpVersion": "1.1",
+                    "headers": [
+                        [
+                            "Host",
+                            "merchant.example"
+                        ],
+                        [
+                            "Content-Length",
+                            "0"
+                        ]
+                    ]
+                },
+                "targetSource": "direct",
+                "internalAuthority": "merchant.example",
+                "bodyPresent": false
+            }
+        }
+    ],
+    "negative": [
+        {
+            "id": "capture-missing",
+            "input": {
+                "capture": "missing"
+            },
+            "code": "capture-missing"
+        },
+        {
+            "id": "capture-incomplete",
+            "input": {
+                "capture": "incomplete"
+            },
+            "code": "capture-incomplete"
+        },
+        {
+            "id": "http2-with-authority-no-host",
+            "input": {
+                "httpVersion": "2.0",
+                "rawHeaders": [
+                    ":authority",
+                    "merchant.example",
+                    ":path",
+                    "/"
+                ]
+            },
+            "code": "http2-unsupported"
+        },
+        {
+            "id": "http2-with-neither-host-nor-authority",
+            "input": {
+                "httpVersion": "2.0",
+                "rawHeaders": []
+            },
+            "code": "http2-unsupported"
+        },
+        {
+            "id": "http10-unsupported",
+            "input": {
+                "httpVersion": "1.0"
+            },
+            "code": "request-unsupported"
+        },
+        {
+            "id": "http3-unsupported",
+            "input": {
+                "httpVersion": "3.0"
+            },
+            "code": "request-unsupported"
+        },
+        {
+            "id": "absolute-form-unsupported",
+            "input": {
+                "url": "https://merchant.example/"
+            },
+            "code": "request-unsupported"
+        },
+        {
+            "id": "asterisk-form-unsupported",
+            "input": {
+                "method": "OPTIONS",
+                "url": "*"
+            },
+            "code": "request-unsupported"
+        },
+        {
+            "id": "connect-authority-form-unsupported",
+            "input": {
+                "method": "CONNECT",
+                "url": "merchant.example:443"
+            },
+            "code": "request-unsupported"
+        },
+        {
+            "id": "invalid-percent-escape",
+            "input": {
+                "url": "/bad%2"
+            },
+            "code": "request-malformed"
+        },
+        {
+            "id": "fragment-not-stripped",
+            "input": {
+                "url": "/path#fragment"
+            },
+            "code": "request-malformed"
+        },
+        {
+            "id": "backslash-not-repaired",
+            "input": {
+                "url": "/a\\b"
+            },
+            "code": "request-malformed"
+        },
+        {
+            "id": "invalid-method-token",
+            "input": {
+                "method": "G ET"
+            },
+            "code": "request-malformed"
+        },
+        {
+            "id": "host-and-authority-absent",
+            "input": {
+                "rawHeaders": [
+                    "X-Test",
+                    "value"
+                ]
+            },
+            "code": "host-missing"
+        },
+        {
+            "id": "host-duplicate-identical",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "host",
+                    "merchant.example"
+                ]
+            },
+            "code": "host-ambiguous"
+        },
+        {
+            "id": "host-duplicate-conflicting",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "Host",
+                    "other.example"
+                ]
+            },
+            "code": "host-ambiguous"
+        },
+        {
+            "id": "host-userinfo",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "user@merchant.example"
+                ]
+            },
+            "code": "request-malformed"
+        },
+        {
+            "id": "host-empty-port",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example:"
+                ]
+            },
+            "code": "request-malformed"
+        },
+        {
+            "id": "host-space",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    " merchant.example"
+                ]
+            },
+            "code": "request-malformed"
+        },
+        {
+            "id": "host-numeric-alias",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "0xc000022c"
+                ]
+            },
+            "code": "request-malformed"
+        },
+        {
+            "id": "host-port-out-of-range",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example:65536"
+                ]
+            },
+            "code": "request-malformed"
+        },
+        {
+            "id": "odd-header-array",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "X-Test"
+                ]
+            },
+            "code": "headers-malformed"
+        },
+        {
+            "id": "http1-pseudo-header-no-fallback",
+            "input": {
+                "rawHeaders": [
+                    ":authority",
+                    "merchant.example"
+                ]
+            },
+            "code": "headers-malformed"
+        },
+        {
+            "id": "header-control",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "X-Test",
+                    "a\u0000b"
+                ]
+            },
+            "code": "headers-malformed"
+        },
+        {
+            "id": "header-non-latin1",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "X-Test",
+                    "\u0100"
+                ]
+            },
+            "code": "headers-malformed"
+        },
+        {
+            "id": "disallowed-origin",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "other.example"
+                ]
+            },
+            "code": "origin-disallowed"
+        },
+        {
+            "id": "untrusted-peer-no-direct-fallback",
+            "policy": "forwarded",
+            "input": {
+                "peerAddress": "198.51.100.2",
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "Forwarded",
+                    "host=merchant.example;proto=https"
+                ]
+            },
+            "code": "ingress-peer-untrusted"
+        },
+        {
+            "id": "loopback-not-implicitly-trusted",
+            "policy": "x-forwarded",
+            "input": {
+                "peerAddress": "127.0.0.1",
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "X-Forwarded-Host",
+                    "merchant.example",
+                    "X-Forwarded-Proto",
+                    "https"
+                ]
+            },
+            "code": "ingress-peer-untrusted"
+        },
+        {
+            "id": "forwarded-http-rejected",
+            "policy": "forwarded",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "Forwarded",
+                    "host=merchant.example;proto=http"
+                ]
+            },
+            "code": "ingress-https-required"
+        },
+        {
+            "id": "x-forwarded-http-rejected",
+            "policy": "x-forwarded",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "X-Forwarded-Host",
+                    "merchant.example",
+                    "X-Forwarded-Proto",
+                    "http"
+                ]
+            },
+            "code": "ingress-https-required"
+        },
+        {
+            "id": "forwarded-absent",
+            "policy": "forwarded",
+            "input": {},
+            "code": "forwarding-missing"
+        },
+        {
+            "id": "forwarded-proto-absent",
+            "policy": "forwarded",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "Forwarded",
+                    "host=merchant.example"
+                ]
+            },
+            "code": "forwarding-missing"
+        },
+        {
+            "id": "x-forwarded-proto-absent",
+            "policy": "x-forwarded",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "X-Forwarded-Host",
+                    "merchant.example"
+                ]
+            },
+            "code": "forwarding-missing"
+        },
+        {
+            "id": "forwarded-duplicate-case-insensitive-parameter",
+            "policy": "forwarded",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "Forwarded",
+                    "host=merchant.example;HOST=merchant.example;proto=https"
+                ]
+            },
+            "code": "forwarding-malformed"
+        },
+        {
+            "id": "forwarded-unknown-parameter",
+            "policy": "forwarded",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "Forwarded",
+                    "host=merchant.example;proto=https;ext=ignored"
+                ]
+            },
+            "code": "forwarding-malformed"
+        },
+        {
+            "id": "forwarded-unterminated-quote",
+            "policy": "forwarded",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "Forwarded",
+                    "host=\"merchant.example;proto=https"
+                ]
+            },
+            "code": "forwarding-malformed"
+        },
+        {
+            "id": "forwarded-invalid-node",
+            "policy": "forwarded",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "Forwarded",
+                    "host=merchant.example;proto=https;for=hostname.example"
+                ]
+            },
+            "code": "forwarding-malformed"
+        },
+        {
+            "id": "forwarded-invalid-by",
+            "policy": "forwarded",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "Forwarded",
+                    "host=merchant.example;proto=https;by=_"
+                ]
+            },
+            "code": "forwarding-malformed"
+        },
+        {
+            "id": "forwarded-chain",
+            "policy": "forwarded",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "Forwarded",
+                    "host=merchant.example;proto=https, host=merchant.example;proto=https"
+                ]
+            },
+            "code": "forwarding-chain-rejected"
+        },
+        {
+            "id": "forwarded-repeated-field",
+            "policy": "forwarded",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "Forwarded",
+                    "host=merchant.example;proto=https",
+                    "Forwarded",
+                    "for=unknown"
+                ]
+            },
+            "code": "forwarding-chain-rejected"
+        },
+        {
+            "id": "x-forwarded-for-chain",
+            "policy": "x-forwarded",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "X-Forwarded-Host",
+                    "merchant.example",
+                    "X-Forwarded-Proto",
+                    "https",
+                    "X-Forwarded-For",
+                    "198.51.100.1, 198.51.100.2"
+                ]
+            },
+            "code": "forwarding-chain-rejected"
+        },
+        {
+            "id": "x-forwarded-host-repeated",
+            "policy": "x-forwarded",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "X-Forwarded-Host",
+                    "merchant.example",
+                    "x-forwarded-host",
+                    "merchant.example",
+                    "X-Forwarded-Proto",
+                    "https"
+                ]
+            },
+            "code": "forwarding-chain-rejected"
+        },
+        {
+            "id": "x-forwarded-port-repeated",
+            "policy": "x-forwarded",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "X-Forwarded-Host",
+                    "merchant.example",
+                    "X-Forwarded-Proto",
+                    "https",
+                    "X-Forwarded-Port",
+                    "443",
+                    "X-Forwarded-Port",
+                    "443"
+                ]
+            },
+            "code": "forwarding-chain-rejected"
+        },
+        {
+            "id": "families-mixed-forwarded-mode",
+            "policy": "forwarded",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "Forwarded",
+                    "host=merchant.example;proto=https",
+                    "X-Forwarded-Host",
+                    "merchant.example"
+                ]
+            },
+            "code": "forwarding-families-mixed"
+        },
+        {
+            "id": "families-mixed-x-mode",
+            "policy": "x-forwarded",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "Forwarded",
+                    "host=merchant.example;proto=https",
+                    "X-Forwarded-Host",
+                    "merchant.example",
+                    "X-Forwarded-Proto",
+                    "https"
+                ]
+            },
+            "code": "forwarding-families-mixed"
+        },
+        {
+            "id": "forwarded-with-x-port-only",
+            "policy": "forwarded",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "Forwarded",
+                    "host=merchant.example;proto=https",
+                    "X-Forwarded-Port",
+                    "443"
+                ]
+            },
+            "code": "forwarding-families-mixed"
+        },
+        {
+            "id": "x-port-inconsistent-with-portless-host",
+            "policy": "x-forwarded",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "X-Forwarded-Host",
+                    "merchant.example",
+                    "X-Forwarded-Proto",
+                    "https",
+                    "X-Forwarded-Port",
+                    "8443"
+                ]
+            },
+            "code": "forwarding-port-inconsistent"
+        },
+        {
+            "id": "x-port-inconsistent-with-explicit-host",
+            "policy": "x-forwarded-port",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "X-Forwarded-Host",
+                    "merchant.example:8443",
+                    "X-Forwarded-Proto",
+                    "https",
+                    "X-Forwarded-Port",
+                    "443"
+                ]
+            },
+            "code": "forwarding-port-inconsistent"
+        },
+        {
+            "id": "x-port-zero",
+            "policy": "x-forwarded",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "X-Forwarded-Host",
+                    "merchant.example",
+                    "X-Forwarded-Proto",
+                    "https",
+                    "X-Forwarded-Port",
+                    "0"
+                ]
+            },
+            "code": "forwarding-malformed"
+        },
+        {
+            "id": "x-port-overflow",
+            "policy": "x-forwarded",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "X-Forwarded-Host",
+                    "merchant.example",
+                    "X-Forwarded-Proto",
+                    "https",
+                    "X-Forwarded-Port",
+                    "65536"
+                ]
+            },
+            "code": "forwarding-malformed"
+        },
+        {
+            "id": "x-port-fractional",
+            "policy": "x-forwarded",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "X-Forwarded-Host",
+                    "merchant.example",
+                    "X-Forwarded-Proto",
+                    "https",
+                    "X-Forwarded-Port",
+                    "443.0"
+                ]
+            },
+            "code": "forwarding-malformed"
+        },
+        {
+            "id": "x-for-not-ip",
+            "policy": "x-forwarded",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "X-Forwarded-Host",
+                    "merchant.example",
+                    "X-Forwarded-Proto",
+                    "https",
+                    "X-Forwarded-For",
+                    "unknown"
+                ]
+            },
+            "code": "forwarding-malformed"
+        },
+        {
+            "id": "x-for-ip-with-port",
+            "policy": "x-forwarded",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "X-Forwarded-Host",
+                    "merchant.example",
+                    "X-Forwarded-Proto",
+                    "https",
+                    "X-Forwarded-For",
+                    "198.51.100.1:1234"
+                ]
+            },
+            "code": "forwarding-malformed"
+        },
+        {
+            "id": "forwarded-host-userinfo",
+            "policy": "forwarded",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "Forwarded",
+                    "host=\"user@merchant.example\";proto=https"
+                ]
+            },
+            "code": "request-malformed"
+        },
+        {
+            "id": "forwarded-disallowed-origin",
+            "policy": "forwarded",
+            "input": {
+                "rawHeaders": [
+                    "Host",
+                    "merchant.example",
+                    "Forwarded",
+                    "host=other.example;proto=https"
+                ]
+            },
+            "code": "origin-disallowed"
+        },
+        {
+            "id": "host-still-required-behind-ingress",
+            "policy": "forwarded",
+            "input": {
+                "rawHeaders": [
+                    "Forwarded",
+                    "host=merchant.example;proto=https"
+                ]
+            },
+            "code": "host-missing"
+        },
+        {
+            "id": "header-budget",
+            "limits": {
+                "maxHeaderBytes": 20
+            },
+            "input": {},
+            "code": "resource-limit"
+        },
+        {
+            "id": "target-budget",
+            "limits": {
+                "maxTargetUriBytes": 20
+            },
+            "input": {},
+            "code": "resource-limit"
+        }
+    ],
+    "largeCases": [
+        {
+            "id": "late-duplicate-host",
+            "recipe": {
+                "first": [
+                    "Host",
+                    "merchant.example"
+                ],
+                "repeat": [
+                    "X",
+                    "a"
+                ],
+                "count": 2100,
+                "last": [
+                    "host",
+                    "other.example"
+                ]
+            },
+            "expected": {
+                "status": "mapping-rejected",
+                "code": "host-ambiguous"
+            },
+            "requirement": "A 16384-byte configured parser budget with compatible count ceiling must not hide the last field"
+        }
+    ],
+    "parserCases": [
+        {
+            "id": "invalid-header-token",
+            "wireLatin1": "GET / HTTP/1.1\r\nHost: merchant.example\r\nBad Header: value\r\n\r\n",
+            "expectedDefaultStatus": 400,
+            "captureCalls": 0
+        },
+        {
+            "id": "conflicting-content-length",
+            "wireLatin1": "POST / HTTP/1.1\r\nHost: merchant.example\r\nContent-Length: 1\r\nContent-Length: 2\r\n\r\nxx",
+            "expectedDefaultStatus": 400,
+            "captureCalls": 0
+        }
+    ]
+}

@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "authoredOn": "2026-09-20",
+  "license": "MIT",
+  "sources": [
+    {
+      "path": "../m4-sources/manifest.json",
+      "sha256": "2fac07286e965caceaf09f6d34fee5c5acabd51c696bfc94cc3449e14396cc71"
+    }
+  ],
+  "files": [
+    {
+      "path": "contract.json",
+      "bytes": 8229,
+      "sha256": "27bb9eccbd4d3edb69781e3cc65ec5224f71512a2e480760f45eb5a59e83e60f",
+      "provenance": "Independent maintainer-approved M4 expectations; no production imports or generated mapper output"
+    },
+    {
+      "path": "frameworks.json",
+      "bytes": 6246,
+      "sha256": "16175a62f6a407ec8061c65ba8d6b1f589cc2259c422a176cc41bcd7ce521867",
+      "provenance": "Independent maintainer-approved M4 expectations; no production imports or generated mapper output"
+    },
+    {
+      "path": "mapping-cases.json",
+      "bytes": 54398,
+      "sha256": "2f40268a6ff18f5489f3001dc596dfbee6000acdc6f0a76b24233fb9ed3b4cd0",
+      "provenance": "Independent maintainer-approved M4 expectations; no production imports or generated mapper output"
+    }
+  ]
+}

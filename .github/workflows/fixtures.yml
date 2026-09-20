@@ -64,3 +64,5 @@ jobs:
         run: node --test tests/m3-rotation-audit.test.mjs
       - name: Audit pinned M4 framework and transport sources without executing upstream code
         run: node --test tests/m4-source-audit.test.mjs
+      - name: Audit independent M4 HTTP mapping and adapter contracts
+        run: node --test tests/m4-http-fixture-audit.test.mjs

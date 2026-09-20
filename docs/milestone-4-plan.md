@@ -501,3 +501,73 @@ neither cryptographic replay behavior nor TLS behavior. Independent fetch contra
 fixtures must distinguish wrapper call/sign counts from observed wire requests;
 later signed listener tests must exercise the replay consequence separately.
 No behavior on other Node/Undici versions is established by this one probe.
+
+### Approved HTTP mapping contract amendments
+
+The maintainer confirmed pushing source-fixture commit 343c1d5 and green CI.
+That confirmation covers the source checkpoint only, not subsequent HTTP work.
+The following additional decisions were approved on September 20, 2026 and
+override conflicting earlier proposal text.
+
+The [independent HTTP contract](../tests/fixtures/m4-http/contract.json) pins a
+separate, closed version-1 set of seventeen mapping codes. No common error union
+with verification, signing or operator catalogs is introduced. Even the spelling
+resource-limit belongs to a distinct mapping boundary. Changes to this catalog
+require separate approval and release notes. Missing or incomplete capture,
+HTTP/2, malformed/unsupported requests, Host ambiguity, peer trust, forwarding
+grammar/chains/family conflicts/port consistency and origin admission remain
+mapping outcomes, not fabricated unsigned or unverified results.
+
+Target-origin validation is separate from agent-identity-origin validation.
+Compare lowercase host and effective port against an explicit allowed-origin set.
+Explicitly allowed IPv4/IPv6 targets and non-default ports are supported. Reject
+userinfo and parser repair; do not perform implicit IDNA conversion or numeric
+IPv4 alias repair. Preserve observed authority, path and query spelling for the
+signature input. Canonical comparison does not rewrite signed bytes.
+
+Trusted ingress requires HTTPS and one sanitizing, explicitly trusted socket peer.
+Forwarded accepts one occurrence and one element, with required host/proto and
+optional for/by. Parameter names are case-insensitive; duplicates and unknown
+parameters reject. Parse RFC 7239 token/quoted-string syntax and validate for/by
+as RFC node identifiers, including unknown and obfuscated forms. Neither value
+establishes authenticated identity or socket-peer trust.
+
+X-Forwarded-Host and X-Forwarded-Proto are required exactly once.
+X-Forwarded-For is optional, at most once, and contains one canonical IPv4 or IPv6
+address without a port. Chains reject. X-Forwarded-Port is optional, at most once,
+and is an integer from 1 through 65535. It must equal the explicit host port,
+or 443 when the host is portless. It does not add a port to a portless authority.
+Forwarded conflicts only with X-Forwarded-Host/Proto/Port/For. Other X-Forwarded-*
+fields and X-Real-IP are preserved but ignored for trust; their presence alone
+does not reject. Direct mode continues to ignore forwarding claims for trust.
+
+A validated for value is an optional observed-client hint to policy, explicitly
+authenticated: false and source: trusted-ingress. Distinguish ip, unknown and
+obfuscated kinds; a supplied node port is separate. Do not substitute by or the
+socket peer when for is absent. The library makes no authorization or rate-limit
+decision based on this hint.
+
+Every owned mapping failure emits a sanitized observer event containing code,
+adapter and ingress mode (direct/trusted-ingress), never raw headers, addresses,
+targets or underlying error text. Observer failure cannot change the outcome.
+
+**Observe mode is an explicit exception to the earlier blanket mapping-failure
+blocking rule:** publish mapping-rejected plus the code, skip verification, and
+continue with authorization not-evaluated. Count and investigate mapping failures
+during observation before switching to enforcement; observation is not protection.
+
+In enforcement mode, pass mapping-rejected to the policy hook without calling
+verification, discovery or replay. Only deny/rate-limit can take effect; any
+continuation decision becomes deny. Mapping denial defaults to configurable 400,
+including ingress-peer-untrusted and origin-disallowed. This is separate from
+ordinary policy denial's configurable 401; rate-limit defaults to 429. Default
+response bodies disclose no reason code. Policy errors/timeouts deny, and a late
+decision cannot revive a request.
+
+HTTP-parser rejection before application capture is a separate test category.
+For ordinary malformed requests Node emits clientError and, absent an application
+listener and where a response can be sent safely, sends 400 and closes the socket.
+Not every parser/transport failure is 400: header overflow uses 431, and other
+special cases exist in the pinned Node sources. Installing a clientError handler
+changes ownership of error handling. Adapters do not claim to observe requests
+that never reached capture; do not log raw parser error packets or messages.
