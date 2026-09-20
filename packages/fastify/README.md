@@ -1,5 +1,35 @@
 # @agentsig/fastify
 
+> **Status: unpublished 0.2.0 release preparation; not security-reviewed.**
+
+## Install after publication
+
+```sh
+npm install @agentsig/fastify@0.2.0 @agentsig/core@0.2.0 fastify@5.12.5
+```
+
+Until publication, use the built workspace. The command above does not imply
+that 0.2.0 is already available.
+
+## Ten-line runnable local example
+
+Expected output: 401. This unsigned loopback request demonstrates explicit denial,
+not successful authentication. The key and plaintext listener are demonstration
+infrastructure only.
+
+```js
+import { generateKeyPairSync } from "node:crypto";
+import { createOfflineVerifier } from "@agentsig/core/profiles";
+import { createNodeHttpMapper } from "@agentsig/core/http";
+import Fastify from "fastify";
+import { agentSigPlugin } from "@agentsig/fastify";
+const { publicKey } = generateKeyPairSync("ed25519");
+const verifier = createOfflineVerifier({ jwks: { keys: [publicKey.export({ format: "jwk" })] }, scope: "example" }), mapper = createNodeHttpMapper({ ingress: { allowedOrigins: ["http://127.0.0.1:18882"] } });
+const app = Fastify({ serverFactory: listener => mapper.createServer(listener) }); await agentSigPlugin(app, { mapper, verifier, mode: "enforce", policy: (_a, tools) => tools.deny() });
+app.get("/", async () => "ok"); await app.listen({ port: 18882, host: "127.0.0.1" });
+try { const response = await fetch("http://127.0.0.1:18882/"); console.log(response.status); await response.arrayBuffer(); } finally { app.server.closeAllConnections(); await app.close(); }
+```
+
 Unpublished M4 development package for Fastify 5.12.5 and Node HTTP/1.1.
 Requires the repository's unpublished @agentsig/core/http API, not npm core 0.1.1.
 Not security-reviewed. ESM/CommonJS and declarations are provided; use one module

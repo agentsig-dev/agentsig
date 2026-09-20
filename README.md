@@ -3,7 +3,7 @@
 [![npm: @agentsig/core](https://img.shields.io/npm/v/@agentsig/core.svg?label=%40agentsig%2Fcore)](https://www.npmjs.com/package/@agentsig/core)
 [![npm: @agentsig/structured-fields](https://img.shields.io/npm/v/@agentsig/structured-fields.svg?label=%40agentsig%2Fstructured-fields)](https://www.npmjs.com/package/@agentsig/structured-fields)
 
-> **Status: pre-release; M3 discovery/Redis and M4 HTTP/adapters are unpublished; not security-reviewed**
+> **Status: pre-release; M3/M4 APIs are unpublished; 0.2.0 release plan prepared; not security-reviewed**
 
 Open-source HTTP Message Signatures and Web Bot Auth tooling for Node.js.
 
@@ -14,9 +14,11 @@ local public JWKS, explicit identity bindings, time policies, and memory replay.
 
 This checkout additionally implements bounded HTTPS directory discovery, shared
 cache/admission coordination, an optional Redis replay adapter, and owned Node
-HTTP/1.1 mapping with Express, Fastify and Hono integrations. These additions are
-**not in published 0.1.1**. Core version metadata remains unchanged; new adapters
-use development-only 0.0.0 versions pending M4 release preparation.
+HTTP/1.1 mapping with Express, Fastify and Hono integrations, and signed Fetch.
+These additions are **not in published 0.1.1**. A pending Changeset targets core
+and the four integration packages at 0.2.0. It has not been consumed: core remains
+0.1.1 and new packages remain development-only 0.0.0. Publication and the
+maintainer-run adapter smoke acceptance gate remain outstanding.
 
 This project is not security-reviewed and does not claim production readiness,
 IETF endorsement, or Cloudflare reference-implementation status. “Pre-release”
@@ -72,8 +74,8 @@ See the [offline verification guide](docs/offline-verification.md),
 Node HTTP-signature engines and TypeScript Web Bot Auth packages already exist.
 agentsig is not the first. Its focus is pinned profiles, independently sourced
 golden fixtures, explicit trust boundaries, default atomic replay checks, and
-Node's built-in cryptography. Network discovery and Node-only framework adapters
-are implemented in this unpublished checkout; signed fetch and CLI remain future work.
+Node's built-in cryptography. Network discovery, signed Fetch and Node-only
+framework adapters are implemented in this unpublished checkout; CLI remains future work.
 
 The [source-based comparison](docs/core-api-proposal.md) records the versions and
 documentation examined. It is not a security audit or performance comparison.
@@ -105,7 +107,7 @@ that the accepted candidate is not replay-protected.
 | --- | --- |
 | @agentsig/structured-fields | Lossless raw AST, semantic model, RFC 9651 parsing/serialization, resource limits |
 | @agentsig/core | Published engine/offline profiles; unpublished discovery, Redis and HTTP subpaths |
-| @agentsig/fetch | Planned; not implemented |
+| @agentsig/fetch | Unpublished signed Fetch; manual redirects, explicit transport/body policy, no wrapper retry |
 | @agentsig/hono | Unpublished Node HTTP/1.1 bridge, assessment and policy integration |
 | @agentsig/fastify | Unpublished early-capture integration and policy hook |
 | @agentsig/express | Unpublished Express 4/5 middleware with owned early capture |
@@ -120,13 +122,16 @@ that the accepted candidate is not replay-protected.
   @agentsig/core/discovery and @agentsig/core/redis; the pure and offline entries
   do not load discovery transport. The maintainer accepted M3 after its smoke
   and core-m3 tag; this was not an npm publication.
-- **M4 in progress:** shared HTTP mapping and three thin Node adapters, with
+- **M4 acceptance pending:** signed Fetch, shared HTTP mapping and three thin Node adapters, with
   independent fixtures and real local listener tests. See the
   [HTTP guide](docs/http-mapping.md) and adapter READMEs:
   [Express](packages/express/README.md), [Fastify](packages/fastify/README.md),
   [Hono](packages/hono/README.md). Verification is not authorization; body
   integrity remains unverified. Hono observation has a documented conversion boundary.
-- **Next:** signed fetch, M4 release preparation, CLI, and publisher-signed directory responses
+  The [Fetch guide](packages/fetch/README.md) distinguishes one transport call from
+  exactly-once network delivery. The coordinated 0.2.0 Changeset is prepared, not
+  published; the maintainer-run adapter smoke remains an acceptance gate.
+- **Next:** maintainer M4 smoke/release acceptance, CLI, and publisher-signed directory responses
   (mandatory Cloudflare-profile M5 work). See the [M3 design record](docs/milestone-3-plan.md)
   and [deferred work](docs/deferred.md).
 
@@ -210,6 +215,22 @@ of public routing or direct observation of the proxy's remote peer. Run it as a
 standalone process; no production private-IP exception or system DNS/CA change
 is introduced. See the [core documentation](packages/core/README.md) for details.
 
+The separate maintainer-run adapter acceptance smoke is prepared:
+
+```sh
+pnpm run build
+node scripts/smoke-adapters.mjs
+```
+
+It uses memory replay, a local directory and sequential real framework listeners.
+For each framework it checks signed allow-verified/200, exact signed-request
+replay/401 and unsigned policy-deny/401; Express additionally checks trusted ingress
+acceptance and comma-chain mapping rejection/400. Output uses one
+framework/scenario/result line per case. The script has been syntax-checked, not
+executed by the assistant. Its injected request transport and explicit directory
+CONNECT routing are test-only; real TLS hostname/certificate checks remain enabled.
+It does not prove native Fetch routing, public reachability or live Cloudflare acceptance.
+
 The [CI matrix](.github/workflows/ci.yml) targets Node 20/22/24 on Windows/Linux.
 The [fixture workflow](.github/workflows/fixtures.yml) runs on every PR without
 path filtering and fetches full history for historical fixture-commit checks.
@@ -222,7 +243,7 @@ open mode retains destination filtering, numeric pinning, TLS, redirect rejectio
 and resource limits. Limits are shared per security context, not process-global or
 distributed. Keep compatible verifier contexts long-lived. Directory HTTPS identity
 does not establish operator reputation, authorization, or publisher-signed proof.
-Body-digest comparison, countersignatures, signed fetch and CLI remain outside this
+Body-digest comparison, countersignatures and CLI remain outside this
 implementation. Actual body verification is mandatory before 1.0. The unpublished
 adapters default to rejecting framed bodies in enforcement, with explicit
 identity-only opt-in. Live Cloudflare acceptance is unproven.

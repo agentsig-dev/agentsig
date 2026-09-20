@@ -1363,3 +1363,64 @@ targeted runs and must not be added together. The ten-line fetch README example
 was extracted and executed with its injected in-process transport, returning 204.
 No adapter smoke, remote CI, local Node 20/24 execution or security audit is claimed.
 The maintainer-owned smoke and coordinated release preparation remain next.
+
+### Maintainer adapter smoke and coordinated 0.2.0 release preparation
+
+The maintainer-owned scripts/smoke-adapters.mjs is prepared and syntax-checked
+only. The assistant did not execute or import it. It uses memory replay and the
+existing local directory harness, then sequential real Express/Fastify/Hono TLS
+listeners. Each direct listener checks signed allow-verified/200, exact signed
+request replay/replay-detected/401, and unsigned policy-deny/401. A separate
+Express trusted-ingress listener checks valid forwarding acceptance and comma-chain
+mapping rejection/400 before verification. Replays bypass the signing wrapper to
+preserve the original signature and nonce, not generate a fresh signed request.
+
+The smoke uses explicit injected application transport to route signed HTTPS
+requests to local listeners while preserving certificate/hostname checks. Directory
+DNS and numeric CONNECT routing are test-controlled as in the M3 harness. This is
+not native Fetch routing evidence, public-network reachability, or live Cloudflare
+acceptance. Output is framework/scenario/result; failures use fixed diagnostics,
+never raw assertions, headers, keys or nonces. Maintainer smoke success remains
+the adapter acceptance gate.
+
+A pending coordinated minor Changeset covers core, fetch, hono, fastify and express.
+The Changesets fixed group aligns these five packages to the highest current base,
+so the inspected release plan targets 0.2.0 for all five rather than 0.1.0 for the
+new packages. Structured Fields is outside the group and remains 0.1.1.
+This is a release-metadata choice, not a security-policy change. The fixed group
+also couples future releases until explicitly revised.
+
+The Changeset has NOT been consumed. Disk metadata remains core 0.1.1 and the
+four new packages 0.0.0; the release plan's aligned oldVersion values are not
+publication history. Before publication, the maintainer must accept the smoke,
+consume the Changeset, refresh the lockfile, rebuild/test, and inspect the actual
+versioned archives. Workspace core dependency ranges must be rewritten by the
+workspace pack/publish tooling or explicitly converted to matching release semver;
+raw npm dry-run inventory does not prove dependency rewriting or publishability.
+No version, tag, package publication, push or upstream notification was performed.
+
+Every new package README is English and includes status, post-publication install
+instructions, a ten-line runnable example and limits. All four examples were
+extracted from the READMEs and executed locally: fetch returned 204 through its
+in-process injected transport; Express/Fastify/Hono returned 401 for unsigned
+loopback requests under explicit denial policy. Those demonstrations are not the
+maintainer acceptance smoke. The Hono IPv6 conversion example remains explicit,
+and body-integrity and HTTP/2 limitations are retained.
+
+Publication-free npm pack --dry-run --json --ignore-scripts inventories:
+
+| Package / current disk version | Files | Compressed bytes | Unpacked bytes |
+| --- | ---: | ---: | ---: |
+| @agentsig/core 0.1.1 | 37 | 149947 | 639862 |
+| @agentsig/fetch 0.0.0 | 7 | 7126 | 24923 |
+| @agentsig/hono 0.0.0 | 7 | 6671 | 21328 |
+| @agentsig/fastify 0.0.0 | 7 | 5574 | 14851 |
+| @agentsig/express 0.0.0 | 7 | 5564 | 14930 |
+
+Only built output, README, LICENSE and package metadata were listed; no source
+tests, fixtures, smoke helpers or private test keys were included. No archives
+were created. These inventories describe unpublished checkout metadata, not
+final 0.2.0 artifacts. The latest full local check passed builds/types, 5,625 tests
+with 22 real Redis tests skipped, and 100 integration/consumer checks. Remote CI
+for this delivery, local Node 20/24 runs, a new Redis service run, maintainer smoke
+success and an independent security audit are not claimed.

@@ -1,5 +1,35 @@
 # @agentsig/hono
 
+> **Status: unpublished 0.2.0 release preparation; not security-reviewed.**
+
+## Install after publication
+
+```sh
+npm install @agentsig/hono@0.2.0 @agentsig/core@0.2.0 hono@4.13.8 @hono/node-server@2.1.1
+```
+
+Until publication, use the built workspace. The command above does not imply
+that 0.2.0 is already available.
+
+## Ten-line runnable local example
+
+Expected output: 401. This unsigned loopback request demonstrates explicit denial,
+not successful authentication. The key and plaintext listener are demonstration
+infrastructure only.
+
+```js
+import { generateKeyPairSync } from "node:crypto";
+import { createOfflineVerifier } from "@agentsig/core/profiles";
+import { createNodeHttpMapper } from "@agentsig/core/http";
+import { Hono } from "hono";
+import { agentSig } from "@agentsig/hono";
+const { publicKey } = generateKeyPairSync("ed25519");
+const verifier = createOfflineVerifier({ jwks: { keys: [publicKey.export({ format: "jwk" })] }, scope: "example" }), mapper = createNodeHttpMapper({ ingress: { allowedOrigins: ["http://127.0.0.1:18883"] } });
+const app = new Hono(), bridge = agentSig({ mapper, verifier, mode: "enforce", policy: (_a, tools) => tools.deny() }); app.use("*", bridge.middleware); app.get("/", c => c.text("ok"));
+const server = bridge.createServer(app); await new Promise(resolve => server.listen(18883, "127.0.0.1", resolve));
+try { const response = await fetch("http://127.0.0.1:18883/"); console.log(response.status); await response.arrayBuffer(); } finally { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); }
+```
+
 Unpublished M4 development package. Requires the repository's unpublished
 @agentsig/core/http API, Hono 4.13.8 and @hono/node-server 2.1.1.
 Not security-reviewed; no production-readiness claim. Node HTTP/1.1 only.

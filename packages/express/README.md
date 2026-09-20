@@ -1,5 +1,36 @@
 # @agentsig/express
 
+> **Status: unpublished 0.2.0 release preparation; not security-reviewed.**
+
+## Install after publication
+
+```sh
+npm install @agentsig/express@0.2.0 @agentsig/core@0.2.0 express@5.2.1
+npm install --save-dev @types/express@5.0.6
+```
+
+Until publication, use the built workspace. The commands above are not a claim
+that 0.2.0 is already available.
+
+## Ten-line runnable local example
+
+Expected output: 401. This unsigned loopback request demonstrates explicit denial,
+not successful authentication. The ephemeral key and plaintext listener are local
+demonstration infrastructure, not a production deployment.
+
+```js
+import { generateKeyPairSync } from "node:crypto";
+import { createOfflineVerifier } from "@agentsig/core/profiles";
+import { createNodeHttpMapper } from "@agentsig/core/http";
+import express from "express";
+import { agentSig } from "@agentsig/express";
+const { publicKey } = generateKeyPairSync("ed25519");
+const verifier = createOfflineVerifier({ jwks: { keys: [publicKey.export({ format: "jwk" })] }, scope: "example" }), mapper = createNodeHttpMapper({ ingress: { allowedOrigins: ["http://127.0.0.1:18881"] } });
+const app = express(); app.use(agentSig({ mapper, verifier, mode: "enforce", policy: (_a, tools) => tools.deny() })); app.get("/", (_req, res) => res.sendStatus(200));
+const server = mapper.createServer(app); await new Promise(resolve => server.listen(18881, "127.0.0.1", resolve));
+try { const response = await fetch("http://127.0.0.1:18881/"); console.log(response.status); await response.arrayBuffer(); } finally { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); }
+```
+
 Unpublished M4 development package for Express 4.22.3 and 5.2.1, Node HTTP/1.1.
 Requires the repository's unpublished @agentsig/core/http API, not npm core 0.1.1.
 Not security-reviewed. ESM/CommonJS and declarations are provided; use one module
