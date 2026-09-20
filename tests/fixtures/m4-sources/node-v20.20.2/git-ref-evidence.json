@@ -1,0 +1,36 @@
+[
+  {
+    "ref": "refs/tags/v20.20.2",
+    "node_id": "MDM6UmVmMjcxOTM3Nzk6cmVmcy90YWdzL3YyMC4yMC4y",
+    "url": "https://api.github.com/repos/nodejs/node/git/refs/tags/v20.20.2",
+    "object": {
+      "sha": "35e07843146797923006aa01c6daabf4f53a4fb9",
+      "type": "tag",
+      "url": "https://api.github.com/repos/nodejs/node/git/tags/35e07843146797923006aa01c6daabf4f53a4fb9"
+    }
+  },
+  {
+    "node_id": "TA_kwDOAZ7xs9oAKDM1ZTA3ODQzMTQ2Nzk3OTIzMDA2YWEwMWM2ZGFhYmY0ZjUzYTRmYjk",
+    "sha": "35e07843146797923006aa01c6daabf4f53a4fb9",
+    "url": "https://api.github.com/repos/nodejs/node/git/tags/35e07843146797923006aa01c6daabf4f53a4fb9",
+    "tagger": {
+      "name": "Marco Ippolito",
+      "email": "marcoippolito54@gmail.com",
+      "date": "2026-03-24T20:30:22Z"
+    },
+    "object": {
+      "sha": "3626fea570e44896ad99aaf3bf6e59def5adede5",
+      "type": "commit",
+      "url": "https://api.github.com/repos/nodejs/node/git/commits/3626fea570e44896ad99aaf3bf6e59def5adede5"
+    },
+    "tag": "v20.20.2",
+    "message": "2026-03-24 Node.js v20.20.2 Iron (LTS) Release\nGit-EVTag-v0-SHA512: 4ed7232f6ead5187c6431d63bce8df80e7f776799f0ea2045948651655a09593e74cf142af308bb0e6c092de06dcc7d1166b3a5cbac617389504626188c7f7b9\n-----BEGIN PGP SIGNATURE-----\n\niQIzBAABCAAdFiEEzGj1oxBv9EgyLkjtJ/XjjVsKIV8FAmnC9F4ACgkQJ/XjjVsK\nIV+dJQ//QeWu1YYs/8FSxNrVb4nuTzcIPPp+OMpKcRWrESD//QvThpoUJx5cPUit\nJ34Y22/TVvmm7r71FkKUarBHYh9rWWqr1zqlFpvYyqn1rCBs9cTgM4azBE6JSm5T\n76GuS9UujNhoGKzqh5sBOBZvwCxClxEE+3QtAqialZNwQR6hQtM+Q1ITIf5vOKPA\n3mKvEUZXMDenUTz/EdXSQs3EZPAYwEoBs69ocBEbvg26xZUvVmo8+IjLjwIb+XHM\nLprjwocGEh8wKAcXqKhqP/dKJCMOGGNQ+bRj5JOoL66reB2HCOeCfyYvspNhN0Y/\nz7w9KF+QWx8jXS9TjNeikED3sPPG9rOW/7GzT+LVnmyRg2pEZTvVTPAl/o3emJ/v\nz69Imv2gp9AKJWEwz7oVsB/K+F228YdkdkGA4I4lQIyZUGB96AMstH6TE1BP/lK7\nHHSbDvQqZR4QVX/osfPdbEkH+ar9fgMXQlD9tEYclsecWD12J65gUbGX5m2HPbQK\nY6SlZ+67sUEOwRcT3LwZtZYgKYMDmYHL4g1LiblFRl5O2saHkiTX4TFPaE+zpUBk\nRLvBRnQ4Poo7s1hkZo1iOuojtP2AP9um6hhHbdCW3s50NivvO3TnArm+B9Ao8F2B\nS3/cE/7ia8L8UWEPbsJy4EvJGlmF2NceX6nnKAfy4MAZ/AQsJ+U=\n=jB//\n-----END PGP SIGNATURE-----\n",
+    "verification": {
+      "verified": true,
+      "reason": "valid",
+      "signature": "-----BEGIN PGP SIGNATURE-----\n\niQIzBAABCAAdFiEEzGj1oxBv9EgyLkjtJ/XjjVsKIV8FAmnC9F4ACgkQJ/XjjVsK\nIV+dJQ//QeWu1YYs/8FSxNrVb4nuTzcIPPp+OMpKcRWrESD//QvThpoUJx5cPUit\nJ34Y22/TVvmm7r71FkKUarBHYh9rWWqr1zqlFpvYyqn1rCBs9cTgM4azBE6JSm5T\n76GuS9UujNhoGKzqh5sBOBZvwCxClxEE+3QtAqialZNwQR6hQtM+Q1ITIf5vOKPA\n3mKvEUZXMDenUTz/EdXSQs3EZPAYwEoBs69ocBEbvg26xZUvVmo8+IjLjwIb+XHM\nLprjwocGEh8wKAcXqKhqP/dKJCMOGGNQ+bRj5JOoL66reB2HCOeCfyYvspNhN0Y/\nz7w9KF+QWx8jXS9TjNeikED3sPPG9rOW/7GzT+LVnmyRg2pEZTvVTPAl/o3emJ/v\nz69Imv2gp9AKJWEwz7oVsB/K+F228YdkdkGA4I4lQIyZUGB96AMstH6TE1BP/lK7\nHHSbDvQqZR4QVX/osfPdbEkH+ar9fgMXQlD9tEYclsecWD12J65gUbGX5m2HPbQK\nY6SlZ+67sUEOwRcT3LwZtZYgKYMDmYHL4g1LiblFRl5O2saHkiTX4TFPaE+zpUBk\nRLvBRnQ4Poo7s1hkZo1iOuojtP2AP9um6hhHbdCW3s50NivvO3TnArm+B9Ao8F2B\nS3/cE/7ia8L8UWEPbsJy4EvJGlmF2NceX6nnKAfy4MAZ/AQsJ+U=\n=jB//\n-----END PGP SIGNATURE-----\n",
+      "payload": "object 3626fea570e44896ad99aaf3bf6e59def5adede5\ntype commit\ntag v20.20.2\ntagger Marco Ippolito <marcoippolito54@gmail.com> 1774384222 +0100\n\n2026-03-24 Node.js v20.20.2 Iron (LTS) Release\nGit-EVTag-v0-SHA512: 4ed7232f6ead5187c6431d63bce8df80e7f776799f0ea2045948651655a09593e74cf142af308bb0e6c092de06dcc7d1166b3a5cbac617389504626188c7f7b9\n",
+      "verified_at": "2026-03-24T20:32:01Z"
+    }
+  }
+]

@@ -1,0 +1,12 @@
+[
+  {
+    "ref": "refs/tags/v5.12.5",
+    "node_id": "MDM6UmVmNjk0OTUxNzA6cmVmcy90YWdzL3Y1LjEyLjU=",
+    "url": "https://api.github.com/repos/fastify/fastify/git/refs/tags/v5.12.5",
+    "object": {
+      "sha": "ba235fdcd9a83a4c7ccf793f7b2596a8f65389b6",
+      "type": "commit",
+      "url": "https://api.github.com/repos/fastify/fastify/git/commits/ba235fdcd9a83a4c7ccf793f7b2596a8f65389b6"
+    }
+  }
+]

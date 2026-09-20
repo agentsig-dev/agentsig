@@ -1,0 +1,1132 @@
+{
+  "formatVersion": 1,
+  "retrievedOn": "2026-09-20",
+  "purpose": "M4 source review only; not implementation or framework acceptance evidence",
+  "warning": "Upstream source is retained as data and must not be imported or executed by fixture audits.",
+  "files": [
+    {
+      "path": "express-4.22.3/LICENSE",
+      "bytes": 1249,
+      "sha256": "95a5762890e5c1c9808921cef095661fc482c5e1f0bba31446ac85595df6237c",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "express",
+        "version": "4.22.3",
+        "url": "https://registry.npmjs.org/express/-/express-4.22.3.tgz",
+        "archiveIntegrity": "sha512-Bdcs4+3qlpVlx2NRn6fgX2Ue2/gGRaPeawebgclM0ERSCqDpA+owF1fdPwjJUTAJWMTuAaxjDf+hzb0/4eKvvw==",
+        "member": "package/LICENSE",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "899b52494e74327905c16164decdc6e51f803af8"
+      }
+    },
+    {
+      "path": "express-4.22.3/archive-members.txt",
+      "bytes": 392,
+      "sha256": "2bef89048f785d244341e85c4dd313424b5506204413b8a9a6dc0c85cbd62672",
+      "provenance": {
+        "kind": "archive-inventory",
+        "url": "https://registry.npmjs.org/express/-/express-4.22.3.tgz",
+        "archiveIntegrity": "sha512-Bdcs4+3qlpVlx2NRn6fgX2Ue2/gGRaPeawebgclM0ERSCqDpA+owF1fdPwjJUTAJWMTuAaxjDf+hzb0/4eKvvw==",
+        "transformation": "tar -tf output; no upstream code execution"
+      }
+    },
+    {
+      "path": "express-4.22.3/git-ref-evidence.json",
+      "bytes": 404,
+      "sha256": "a06da5e56fee2cc70788bd10a029625dc6d49c2c57d8ad060474e0f9991a554c",
+      "provenance": {
+        "kind": "git-reference-evidence",
+        "url": "https://api.github.com/repos/expressjs/express/git/ref/tags/v4.22.3",
+        "commit": "899b52494e74327905c16164decdc6e51f803af8",
+        "transformation": "GitHub API objects serialized as JSON"
+      }
+    },
+    {
+      "path": "express-4.22.3/lib/application.js",
+      "bytes": 14593,
+      "sha256": "5901b32f609ba349351bf7406dbdc0c4c57b77ce6f7215ea67ccca5ac2a28e88",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "express",
+        "version": "4.22.3",
+        "url": "https://registry.npmjs.org/express/-/express-4.22.3.tgz",
+        "archiveIntegrity": "sha512-Bdcs4+3qlpVlx2NRn6fgX2Ue2/gGRaPeawebgclM0ERSCqDpA+owF1fdPwjJUTAJWMTuAaxjDf+hzb0/4eKvvw==",
+        "member": "package/lib/application.js",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "899b52494e74327905c16164decdc6e51f803af8"
+      }
+    },
+    {
+      "path": "express-4.22.3/lib/request.js",
+      "bytes": 12535,
+      "sha256": "d0fccc63aae894e929166fc585df2af3f75a540da537395ce6298f784fc5b635",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "express",
+        "version": "4.22.3",
+        "url": "https://registry.npmjs.org/express/-/express-4.22.3.tgz",
+        "archiveIntegrity": "sha512-Bdcs4+3qlpVlx2NRn6fgX2Ue2/gGRaPeawebgclM0ERSCqDpA+owF1fdPwjJUTAJWMTuAaxjDf+hzb0/4eKvvw==",
+        "member": "package/lib/request.js",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "899b52494e74327905c16164decdc6e51f803af8"
+      }
+    },
+    {
+      "path": "express-4.22.3/lib/router/index.js",
+      "bytes": 15123,
+      "sha256": "19c5ca9b025396612dbe464d07fbe7104ff9170c4d6a1c7e5507df4dbbf4d5cb",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "express",
+        "version": "4.22.3",
+        "url": "https://registry.npmjs.org/express/-/express-4.22.3.tgz",
+        "archiveIntegrity": "sha512-Bdcs4+3qlpVlx2NRn6fgX2Ue2/gGRaPeawebgclM0ERSCqDpA+owF1fdPwjJUTAJWMTuAaxjDf+hzb0/4eKvvw==",
+        "member": "package/lib/router/index.js",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "899b52494e74327905c16164decdc6e51f803af8"
+      }
+    },
+    {
+      "path": "express-4.22.3/package.json",
+      "bytes": 2821,
+      "sha256": "0a1770344ae7215b2a8e4f31be9f08d726253d4ded2c8b820ec1db8c7c00d000",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "express",
+        "version": "4.22.3",
+        "url": "https://registry.npmjs.org/express/-/express-4.22.3.tgz",
+        "archiveIntegrity": "sha512-Bdcs4+3qlpVlx2NRn6fgX2Ue2/gGRaPeawebgclM0ERSCqDpA+owF1fdPwjJUTAJWMTuAaxjDf+hzb0/4eKvvw==",
+        "member": "package/package.json",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "899b52494e74327905c16164decdc6e51f803af8"
+      }
+    },
+    {
+      "path": "express-4.22.3/registry-metadata.json",
+      "bytes": 3935,
+      "sha256": "3a4938fed38cd2c6bf9bf3656629dc2f91edcb8a19b1fbf5214c66acc8c91c16",
+      "provenance": {
+        "kind": "registry-metadata",
+        "url": "https://registry.npmjs.org/express/4.22.3",
+        "transformation": "none"
+      }
+    },
+    {
+      "path": "express-5.2.1/LICENSE",
+      "bytes": 1249,
+      "sha256": "95a5762890e5c1c9808921cef095661fc482c5e1f0bba31446ac85595df6237c",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "express",
+        "version": "5.2.1",
+        "url": "https://registry.npmjs.org/express/-/express-5.2.1.tgz",
+        "archiveIntegrity": "sha512-hIS4idWWai69NezIdRt2xFVofaF4j+6INOpJlVOLDO8zXGpUVEVzIYk12UUi2JzjEzWL3IOAxcTubgz9Po0yXw==",
+        "member": "package/LICENSE",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "dbac741a49a5a64336b70c06e85c2e2706e36336"
+      }
+    },
+    {
+      "path": "express-5.2.1/archive-members.txt",
+      "bytes": 220,
+      "sha256": "85b67823fe818f9410b3de7c116e1ff9c417b46a8d63fedeb88476ea4d42ef4c",
+      "provenance": {
+        "kind": "archive-inventory",
+        "url": "https://registry.npmjs.org/express/-/express-5.2.1.tgz",
+        "archiveIntegrity": "sha512-hIS4idWWai69NezIdRt2xFVofaF4j+6INOpJlVOLDO8zXGpUVEVzIYk12UUi2JzjEzWL3IOAxcTubgz9Po0yXw==",
+        "transformation": "tar -tf output; no upstream code execution"
+      }
+    },
+    {
+      "path": "express-5.2.1/git-ref-evidence.json",
+      "bytes": 402,
+      "sha256": "ec4a606ec25e8ae1819c0effc8a0d402aa8ee0245a9af50c6d81dd6a5c4f2949",
+      "provenance": {
+        "kind": "git-reference-evidence",
+        "url": "https://api.github.com/repos/expressjs/express/git/ref/tags/v5.2.1",
+        "commit": "dbac741a49a5a64336b70c06e85c2e2706e36336",
+        "transformation": "GitHub API objects serialized as JSON"
+      }
+    },
+    {
+      "path": "express-5.2.1/lib/application.js",
+      "bytes": 13971,
+      "sha256": "93933d053fb70337594e0826536acfe0e9787007e199878dbd357b99f026e5c7",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "express",
+        "version": "5.2.1",
+        "url": "https://registry.npmjs.org/express/-/express-5.2.1.tgz",
+        "archiveIntegrity": "sha512-hIS4idWWai69NezIdRt2xFVofaF4j+6INOpJlVOLDO8zXGpUVEVzIYk12UUi2JzjEzWL3IOAxcTubgz9Po0yXw==",
+        "member": "package/lib/application.js",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "dbac741a49a5a64336b70c06e85c2e2706e36336"
+      }
+    },
+    {
+      "path": "express-5.2.1/lib/request.js",
+      "bytes": 11688,
+      "sha256": "c6915039cdb51527eb70c14f13a8a481e87500bdcb187e9895645c002417b887",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "express",
+        "version": "5.2.1",
+        "url": "https://registry.npmjs.org/express/-/express-5.2.1.tgz",
+        "archiveIntegrity": "sha512-hIS4idWWai69NezIdRt2xFVofaF4j+6INOpJlVOLDO8zXGpUVEVzIYk12UUi2JzjEzWL3IOAxcTubgz9Po0yXw==",
+        "member": "package/lib/request.js",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "dbac741a49a5a64336b70c06e85c2e2706e36336"
+      }
+    },
+    {
+      "path": "express-5.2.1/package.json",
+      "bytes": 2731,
+      "sha256": "2980b885bad92f757a2d44674e905cf875867d5685111d8ab8f285635b11367d",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "express",
+        "version": "5.2.1",
+        "url": "https://registry.npmjs.org/express/-/express-5.2.1.tgz",
+        "archiveIntegrity": "sha512-hIS4idWWai69NezIdRt2xFVofaF4j+6INOpJlVOLDO8zXGpUVEVzIYk12UUi2JzjEzWL3IOAxcTubgz9Po0yXw==",
+        "member": "package/package.json",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "dbac741a49a5a64336b70c06e85c2e2706e36336"
+      }
+    },
+    {
+      "path": "express-5.2.1/registry-metadata.json",
+      "bytes": 3508,
+      "sha256": "3d7d6a94d17c24abeecb500b77f93227e2d8914eb87989db93d7ac3e7ca2134e",
+      "provenance": {
+        "kind": "registry-metadata",
+        "url": "https://registry.npmjs.org/express/5.2.1",
+        "transformation": "none"
+      }
+    },
+    {
+      "path": "fastify-5.12.5/LICENSE",
+      "bytes": 1123,
+      "sha256": "23c91863859171455a536380991b4160fee4e19e2d8dc353ecf7143cc4e53ca2",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "fastify",
+        "version": "5.12.5",
+        "url": "https://registry.npmjs.org/fastify/-/fastify-5.12.5.tgz",
+        "archiveIntegrity": "sha512-OB2k1dlxs5/NAABqeKV2FUHkSD2BbENsCak8yULVcymn3fHIPDVa9TI3SDnJSWYSllZmSYuZXy2gTnsT+Sut1A==",
+        "member": "package/LICENSE",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "ba235fdcd9a83a4c7ccf793f7b2596a8f65389b6"
+      }
+    },
+    {
+      "path": "fastify-5.12.5/archive-members.txt",
+      "bytes": 13230,
+      "sha256": "080460f57d612266f716a012e911f08ac076034b118c848455a35edd962ad02c",
+      "provenance": {
+        "kind": "archive-inventory",
+        "url": "https://registry.npmjs.org/fastify/-/fastify-5.12.5.tgz",
+        "archiveIntegrity": "sha512-OB2k1dlxs5/NAABqeKV2FUHkSD2BbENsCak8yULVcymn3fHIPDVa9TI3SDnJSWYSllZmSYuZXy2gTnsT+Sut1A==",
+        "transformation": "tar -tf output; no upstream code execution"
+      }
+    },
+    {
+      "path": "fastify-5.12.5/fastify.js",
+      "bytes": 34573,
+      "sha256": "31a0ebd3ee5fd9f525ccb37c312e3b94757cf53bfa481f41ee364ce75d83c0ae",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "fastify",
+        "version": "5.12.5",
+        "url": "https://registry.npmjs.org/fastify/-/fastify-5.12.5.tgz",
+        "archiveIntegrity": "sha512-OB2k1dlxs5/NAABqeKV2FUHkSD2BbENsCak8yULVcymn3fHIPDVa9TI3SDnJSWYSllZmSYuZXy2gTnsT+Sut1A==",
+        "member": "package/fastify.js",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "ba235fdcd9a83a4c7ccf793f7b2596a8f65389b6"
+      }
+    },
+    {
+      "path": "fastify-5.12.5/git-ref-evidence.json",
+      "bytes": 404,
+      "sha256": "56d675cb9eec06e8b6c5d860d9a4dffc10127bb787a3a3e423d374a7a237b6bd",
+      "provenance": {
+        "kind": "git-reference-evidence",
+        "url": "https://api.github.com/repos/fastify/fastify/git/ref/tags/v5.12.5",
+        "commit": "ba235fdcd9a83a4c7ccf793f7b2596a8f65389b6",
+        "transformation": "GitHub API objects serialized as JSON"
+      }
+    },
+    {
+      "path": "fastify-5.12.5/lib/request.js",
+      "bytes": 10870,
+      "sha256": "a2df9953425dd3a69f30e8cdaf364f8d70b24363e45004d6f2d0d21b2d9e88d9",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "fastify",
+        "version": "5.12.5",
+        "url": "https://registry.npmjs.org/fastify/-/fastify-5.12.5.tgz",
+        "archiveIntegrity": "sha512-OB2k1dlxs5/NAABqeKV2FUHkSD2BbENsCak8yULVcymn3fHIPDVa9TI3SDnJSWYSllZmSYuZXy2gTnsT+Sut1A==",
+        "member": "package/lib/request.js",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "ba235fdcd9a83a4c7ccf793f7b2596a8f65389b6"
+      }
+    },
+    {
+      "path": "fastify-5.12.5/lib/route.js",
+      "bytes": 23445,
+      "sha256": "eb46caeb2bff2409e49fdba6aa29b84c2ed2c009649d7c90eefdd5c83def1051",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "fastify",
+        "version": "5.12.5",
+        "url": "https://registry.npmjs.org/fastify/-/fastify-5.12.5.tgz",
+        "archiveIntegrity": "sha512-OB2k1dlxs5/NAABqeKV2FUHkSD2BbENsCak8yULVcymn3fHIPDVa9TI3SDnJSWYSllZmSYuZXy2gTnsT+Sut1A==",
+        "member": "package/lib/route.js",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "ba235fdcd9a83a4c7ccf793f7b2596a8f65389b6"
+      }
+    },
+    {
+      "path": "fastify-5.12.5/lib/server.js",
+      "bytes": 14233,
+      "sha256": "514f454d947a1d33668d403876fe45acff5e4da245f8f90748ab64d7a8699a54",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "fastify",
+        "version": "5.12.5",
+        "url": "https://registry.npmjs.org/fastify/-/fastify-5.12.5.tgz",
+        "archiveIntegrity": "sha512-OB2k1dlxs5/NAABqeKV2FUHkSD2BbENsCak8yULVcymn3fHIPDVa9TI3SDnJSWYSllZmSYuZXy2gTnsT+Sut1A==",
+        "member": "package/lib/server.js",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "ba235fdcd9a83a4c7ccf793f7b2596a8f65389b6"
+      }
+    },
+    {
+      "path": "fastify-5.12.5/package.json",
+      "bytes": 6973,
+      "sha256": "e3757c52e771fe055fd9c19731057f5dc6c10f1d4944da8093fc957a21bbd9aa",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "fastify",
+        "version": "5.12.5",
+        "url": "https://registry.npmjs.org/fastify/-/fastify-5.12.5.tgz",
+        "archiveIntegrity": "sha512-OB2k1dlxs5/NAABqeKV2FUHkSD2BbENsCak8yULVcymn3fHIPDVa9TI3SDnJSWYSllZmSYuZXy2gTnsT+Sut1A==",
+        "member": "package/package.json",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "ba235fdcd9a83a4c7ccf793f7b2596a8f65389b6"
+      }
+    },
+    {
+      "path": "fastify-5.12.5/registry-metadata.json",
+      "bytes": 6979,
+      "sha256": "b22c225e1e9b710472842b4035d5f8652ab01b3787d7601c586502ba4cc68190",
+      "provenance": {
+        "kind": "registry-metadata",
+        "url": "https://registry.npmjs.org/fastify/5.12.5",
+        "transformation": "none"
+      }
+    },
+    {
+      "path": "fastify-5.12.5/types/server-factory.d.ts",
+      "bytes": 968,
+      "sha256": "44b227ad122395768f07a8f1b84041b096220335b34ff7af3b8caa61731b294d",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "fastify",
+        "version": "5.12.5",
+        "url": "https://registry.npmjs.org/fastify/-/fastify-5.12.5.tgz",
+        "archiveIntegrity": "sha512-OB2k1dlxs5/NAABqeKV2FUHkSD2BbENsCak8yULVcymn3fHIPDVa9TI3SDnJSWYSllZmSYuZXy2gTnsT+Sut1A==",
+        "member": "package/types/server-factory.d.ts",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "ba235fdcd9a83a4c7ccf793f7b2596a8f65389b6"
+      }
+    },
+    {
+      "path": "hono-4.13.8/LICENSE",
+      "bytes": 1101,
+      "sha256": "a6ab98e5c77b9070c443eaff2ff81034a6f8cc05a7524d5098eb0f24defa0115",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "hono",
+        "version": "4.13.8",
+        "url": "https://registry.npmjs.org/hono/-/hono-4.13.8.tgz",
+        "archiveIntegrity": "sha512-/Gng7NfoykZl2pjukW5Z6+8Yxm3BPRf86GTbQnt0SbySkvax4fyL4H3HhY1cCpBGmiW9XDRFzRV+CXK2W8QudQ==",
+        "member": "package/LICENSE",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "098e11912ab244c5c33931de007f04dc8e3c2929"
+      }
+    },
+    {
+      "path": "hono-4.13.8/archive-members.txt",
+      "bytes": 23930,
+      "sha256": "1a0e0e1c6c2fcbb764a9c0be24c846ab79f88eadfda08aa96e85872224fac0e9",
+      "provenance": {
+        "kind": "archive-inventory",
+        "url": "https://registry.npmjs.org/hono/-/hono-4.13.8.tgz",
+        "archiveIntegrity": "sha512-/Gng7NfoykZl2pjukW5Z6+8Yxm3BPRf86GTbQnt0SbySkvax4fyL4H3HhY1cCpBGmiW9XDRFzRV+CXK2W8QudQ==",
+        "transformation": "tar -tf output; no upstream code execution"
+      }
+    },
+    {
+      "path": "hono-4.13.8/dist/context.js",
+      "bytes": 11368,
+      "sha256": "596def24d7b592aad5248df8b79f9a774f81a2153f94bc2c647880c26bde9819",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "hono",
+        "version": "4.13.8",
+        "url": "https://registry.npmjs.org/hono/-/hono-4.13.8.tgz",
+        "archiveIntegrity": "sha512-/Gng7NfoykZl2pjukW5Z6+8Yxm3BPRf86GTbQnt0SbySkvax4fyL4H3HhY1cCpBGmiW9XDRFzRV+CXK2W8QudQ==",
+        "member": "package/dist/context.js",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "098e11912ab244c5c33931de007f04dc8e3c2929"
+      }
+    },
+    {
+      "path": "hono-4.13.8/dist/hono-base.js",
+      "bytes": 11514,
+      "sha256": "e77830d42ef43d2a58815923b306405754fb66c4f15f8a2fafa132d68bb09f7d",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "hono",
+        "version": "4.13.8",
+        "url": "https://registry.npmjs.org/hono/-/hono-4.13.8.tgz",
+        "archiveIntegrity": "sha512-/Gng7NfoykZl2pjukW5Z6+8Yxm3BPRf86GTbQnt0SbySkvax4fyL4H3HhY1cCpBGmiW9XDRFzRV+CXK2W8QudQ==",
+        "member": "package/dist/hono-base.js",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "098e11912ab244c5c33931de007f04dc8e3c2929"
+      }
+    },
+    {
+      "path": "hono-4.13.8/dist/request.js",
+      "bytes": 8352,
+      "sha256": "50b5aea4c6f894bb332570bbcc33943fa4158155862d8e3c4b602f5a64ede83a",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "hono",
+        "version": "4.13.8",
+        "url": "https://registry.npmjs.org/hono/-/hono-4.13.8.tgz",
+        "archiveIntegrity": "sha512-/Gng7NfoykZl2pjukW5Z6+8Yxm3BPRf86GTbQnt0SbySkvax4fyL4H3HhY1cCpBGmiW9XDRFzRV+CXK2W8QudQ==",
+        "member": "package/dist/request.js",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "098e11912ab244c5c33931de007f04dc8e3c2929"
+      }
+    },
+    {
+      "path": "hono-4.13.8/git-ref-evidence.json",
+      "bytes": 1186,
+      "sha256": "a5174ba8c404a5bdf673cddd5956bd24f3deba31d89eb4a518225756e7450877",
+      "provenance": {
+        "kind": "git-reference-evidence",
+        "url": "https://api.github.com/repos/honojs/hono/git/ref/tags/v4.13.8",
+        "commit": "098e11912ab244c5c33931de007f04dc8e3c2929",
+        "transformation": "GitHub API objects serialized as JSON"
+      }
+    },
+    {
+      "path": "hono-4.13.8/package.json",
+      "bytes": 23613,
+      "sha256": "cafef790692456673dfe5e8644161830cfff3331cb34414c2baf576bb4135052",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "hono",
+        "version": "4.13.8",
+        "url": "https://registry.npmjs.org/hono/-/hono-4.13.8.tgz",
+        "archiveIntegrity": "sha512-/Gng7NfoykZl2pjukW5Z6+8Yxm3BPRf86GTbQnt0SbySkvax4fyL4H3HhY1cCpBGmiW9XDRFzRV+CXK2W8QudQ==",
+        "member": "package/package.json",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "098e11912ab244c5c33931de007f04dc8e3c2929"
+      }
+    },
+    {
+      "path": "hono-4.13.8/registry-metadata.json",
+      "bytes": 19877,
+      "sha256": "0242e9f5f83ed61510f77cb4b95eaa0d57a006896f99f763080a090b5d1272d9",
+      "provenance": {
+        "kind": "registry-metadata",
+        "url": "https://registry.npmjs.org/hono/4.13.8",
+        "transformation": "none"
+      }
+    },
+    {
+      "path": "hono-node-server-2.1.1/LICENSE",
+      "bytes": 1101,
+      "sha256": "6895190430d809c4c57a7582ecc2f99acbc2ea39a5dfad20262a41d5b3e91733",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "@hono/node-server",
+        "version": "2.1.1",
+        "url": "https://registry.npmjs.org/@hono/node-server/-/node-server-2.1.1.tgz",
+        "archiveIntegrity": "sha512-ELuehkj5VCBdgEw9zs+ivkKwyzzUCSQuE96YmiPvn1ECBoZCczbFXJLeEGMTYjphP6gydh4pHMqEYPVMYUVgQg==",
+        "member": "package/LICENSE",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "73c03adfb01928fcd5f5b20faebd5d692f83fc93"
+      }
+    },
+    {
+      "path": "hono-node-server-2.1.1/archive-members.txt",
+      "bytes": 860,
+      "sha256": "c41af64101f4341415339338b2004b65556b9e84ca350ceee3ca754230411d72",
+      "provenance": {
+        "kind": "archive-inventory",
+        "url": "https://registry.npmjs.org/@hono/node-server/-/node-server-2.1.1.tgz",
+        "archiveIntegrity": "sha512-ELuehkj5VCBdgEw9zs+ivkKwyzzUCSQuE96YmiPvn1ECBoZCczbFXJLeEGMTYjphP6gydh4pHMqEYPVMYUVgQg==",
+        "transformation": "tar -tf output; no upstream code execution"
+      }
+    },
+    {
+      "path": "hono-node-server-2.1.1/dist/index.d.mts",
+      "bytes": 4192,
+      "sha256": "34b7ca9e007d7f740b33dc65da10ddbe25829dd7a82ca1935c7b47e50b744843",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "@hono/node-server",
+        "version": "2.1.1",
+        "url": "https://registry.npmjs.org/@hono/node-server/-/node-server-2.1.1.tgz",
+        "archiveIntegrity": "sha512-ELuehkj5VCBdgEw9zs+ivkKwyzzUCSQuE96YmiPvn1ECBoZCczbFXJLeEGMTYjphP6gydh4pHMqEYPVMYUVgQg==",
+        "member": "package/dist/index.d.mts",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "73c03adfb01928fcd5f5b20faebd5d692f83fc93"
+      }
+    },
+    {
+      "path": "hono-node-server-2.1.1/dist/index.mjs",
+      "bytes": 44659,
+      "sha256": "77075ab3ee0cea06341cddad66510d3f87f9d85993d5cde64005d21d16b22ef6",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "@hono/node-server",
+        "version": "2.1.1",
+        "url": "https://registry.npmjs.org/@hono/node-server/-/node-server-2.1.1.tgz",
+        "archiveIntegrity": "sha512-ELuehkj5VCBdgEw9zs+ivkKwyzzUCSQuE96YmiPvn1ECBoZCczbFXJLeEGMTYjphP6gydh4pHMqEYPVMYUVgQg==",
+        "member": "package/dist/index.mjs",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "73c03adfb01928fcd5f5b20faebd5d692f83fc93"
+      }
+    },
+    {
+      "path": "hono-node-server-2.1.1/git-ref-evidence.json",
+      "bytes": 1208,
+      "sha256": "d92c58303c0c89dff2d41d331b29ed83e5e1fc21dcec4835bcfafb5b8999fd36",
+      "provenance": {
+        "kind": "git-reference-evidence",
+        "url": "https://api.github.com/repos/honojs/node-server/git/ref/tags/v2.1.1",
+        "commit": "73c03adfb01928fcd5f5b20faebd5d692f83fc93",
+        "transformation": "GitHub API objects serialized as JSON"
+      }
+    },
+    {
+      "path": "hono-node-server-2.1.1/package.json",
+      "bytes": 3121,
+      "sha256": "66f3aa3ddef3a6b54c5b99ec22e76cc85b1f5bcabe9bb7849675edd0f7221553",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "@hono/node-server",
+        "version": "2.1.1",
+        "url": "https://registry.npmjs.org/@hono/node-server/-/node-server-2.1.1.tgz",
+        "archiveIntegrity": "sha512-ELuehkj5VCBdgEw9zs+ivkKwyzzUCSQuE96YmiPvn1ECBoZCczbFXJLeEGMTYjphP6gydh4pHMqEYPVMYUVgQg==",
+        "member": "package/package.json",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "73c03adfb01928fcd5f5b20faebd5d692f83fc93"
+      }
+    },
+    {
+      "path": "hono-node-server-2.1.1/registry-attestations.json",
+      "bytes": 14155,
+      "sha256": "7afef8070b24483f0cdce63e59886e3c3851d29ee5e56c9390e52d6bef85921c",
+      "provenance": {
+        "kind": "registry-attestations",
+        "url": "https://registry.npmjs.org/-/npm/v1/attestations/@hono%2fnode-server@2.1.1",
+        "commit": "73c03adfb01928fcd5f5b20faebd5d692f83fc93",
+        "transformation": "none",
+        "verification": "Payload consistency checked; Sigstore signatures not independently verified"
+      }
+    },
+    {
+      "path": "hono-node-server-2.1.1/registry-metadata.json",
+      "bytes": 3456,
+      "sha256": "0c4eb0b50db7d9b3af329cf2a816960f7b8c70ecd9f7ffafc9c3ffec30bc8d8a",
+      "provenance": {
+        "kind": "registry-metadata",
+        "url": "https://registry.npmjs.org/%40hono%2Fnode-server/2.1.1",
+        "transformation": "none"
+      }
+    },
+    {
+      "path": "node-v20.20.2/LICENSE",
+      "bytes": 116359,
+      "sha256": "70c7a59521f41ccfe5bb0193677b77a44ed43ad4fe59203fa408afa538214949",
+      "provenance": {
+        "kind": "immutable-git-source",
+        "url": "https://raw.githubusercontent.com/nodejs/node/3626fea570e44896ad99aaf3bf6e59def5adede5/LICENSE",
+        "commit": "3626fea570e44896ad99aaf3bf6e59def5adede5",
+        "transformation": "none",
+        "license": "See retained Node and Undici license files"
+      }
+    },
+    {
+      "path": "node-v20.20.2/deps/undici/src/LICENSE",
+      "bytes": 1090,
+      "sha256": "a6db8096b2707bc0102d256917d4d33f298ba36d8c3f25de067a2b5bb379db27",
+      "provenance": {
+        "kind": "immutable-git-source",
+        "url": "https://raw.githubusercontent.com/nodejs/node/3626fea570e44896ad99aaf3bf6e59def5adede5/deps/undici/src/LICENSE",
+        "commit": "3626fea570e44896ad99aaf3bf6e59def5adede5",
+        "transformation": "none",
+        "license": "See retained Node and Undici license files"
+      }
+    },
+    {
+      "path": "node-v20.20.2/deps/undici/src/lib/web/fetch/LICENSE",
+      "bytes": 1071,
+      "sha256": "a21d6c8d3fc631198b97e57584697f7f9c37805c71c6cf9a12e4442b40394b88",
+      "provenance": {
+        "kind": "immutable-git-source",
+        "url": "https://raw.githubusercontent.com/nodejs/node/3626fea570e44896ad99aaf3bf6e59def5adede5/deps/undici/src/lib/web/fetch/LICENSE",
+        "commit": "3626fea570e44896ad99aaf3bf6e59def5adede5",
+        "license": "MIT; Ethan Arrowood attribution",
+        "transformation": "none"
+      }
+    },
+    {
+      "path": "node-v20.20.2/deps/undici/src/lib/web/fetch/index.js",
+      "bytes": 82477,
+      "sha256": "ec5fa587004c3d852f4e29ca4726eff00bede5cc4793dc6431b0c13ca0576c9f",
+      "provenance": {
+        "kind": "immutable-git-source",
+        "url": "https://raw.githubusercontent.com/nodejs/node/3626fea570e44896ad99aaf3bf6e59def5adede5/deps/undici/src/lib/web/fetch/index.js",
+        "commit": "3626fea570e44896ad99aaf3bf6e59def5adede5",
+        "transformation": "none",
+        "license": "See retained Node and Undici license files"
+      }
+    },
+    {
+      "path": "node-v20.20.2/deps/undici/src/package.json",
+      "bytes": 6290,
+      "sha256": "4bc53e0eaaec114da4ecd6a75e033621c115026e6b2eb9245d0892fdbe321e2a",
+      "provenance": {
+        "kind": "immutable-git-source",
+        "url": "https://raw.githubusercontent.com/nodejs/node/3626fea570e44896ad99aaf3bf6e59def5adede5/deps/undici/src/package.json",
+        "commit": "3626fea570e44896ad99aaf3bf6e59def5adede5",
+        "transformation": "none",
+        "license": "See retained Node and Undici license files"
+      }
+    },
+    {
+      "path": "node-v20.20.2/git-ref-evidence.json",
+      "bytes": 3448,
+      "sha256": "8bce5ce820e24774651e0e7e797fbea16ef65429838a8f48a9e258a36afc6ef8",
+      "provenance": {
+        "kind": "git-reference-evidence",
+        "transformation": "GitHub API objects serialized as JSON"
+      }
+    },
+    {
+      "path": "node-v20.20.2/lib/_http_common.js",
+      "bytes": 8203,
+      "sha256": "14daf1910622eaab8851a0be2a82a978348ba379d5b1e40fb98b323fd801b4bc",
+      "provenance": {
+        "kind": "immutable-git-source",
+        "url": "https://raw.githubusercontent.com/nodejs/node/3626fea570e44896ad99aaf3bf6e59def5adede5/lib/_http_common.js",
+        "commit": "3626fea570e44896ad99aaf3bf6e59def5adede5",
+        "transformation": "none",
+        "license": "See retained Node and Undici license files"
+      }
+    },
+    {
+      "path": "node-v20.20.2/lib/_http_incoming.js",
+      "bytes": 14794,
+      "sha256": "a9d24cee0072c196cc4e804abf5a0c491cdb548a77d3f4d7085df2b8e3a7e579",
+      "provenance": {
+        "kind": "immutable-git-source",
+        "url": "https://raw.githubusercontent.com/nodejs/node/3626fea570e44896ad99aaf3bf6e59def5adede5/lib/_http_incoming.js",
+        "commit": "3626fea570e44896ad99aaf3bf6e59def5adede5",
+        "transformation": "none",
+        "license": "See retained Node and Undici license files"
+      }
+    },
+    {
+      "path": "node-v20.20.2/lib/_http_server.js",
+      "bytes": 38448,
+      "sha256": "33a9d4c02e42c9aae28d3d2e80c05094985696e44434355e533b87466ebfa6b9",
+      "provenance": {
+        "kind": "immutable-git-source",
+        "url": "https://raw.githubusercontent.com/nodejs/node/3626fea570e44896ad99aaf3bf6e59def5adede5/lib/_http_server.js",
+        "commit": "3626fea570e44896ad99aaf3bf6e59def5adede5",
+        "transformation": "none",
+        "license": "See retained Node and Undici license files"
+      }
+    },
+    {
+      "path": "node-v22.23.2/LICENSE",
+      "bytes": 145485,
+      "sha256": "c738ae413cf561f174e34f6961f8ca458aae2369a73640dda6234c629b98bcc4",
+      "provenance": {
+        "kind": "immutable-git-source",
+        "url": "https://raw.githubusercontent.com/nodejs/node/aa4c77582be995286fc6e00aaf530dc7ade102a9/LICENSE",
+        "commit": "aa4c77582be995286fc6e00aaf530dc7ade102a9",
+        "transformation": "none",
+        "license": "See retained Node and Undici license files"
+      }
+    },
+    {
+      "path": "node-v22.23.2/deps/undici/src/LICENSE",
+      "bytes": 1090,
+      "sha256": "a6db8096b2707bc0102d256917d4d33f298ba36d8c3f25de067a2b5bb379db27",
+      "provenance": {
+        "kind": "immutable-git-source",
+        "url": "https://raw.githubusercontent.com/nodejs/node/aa4c77582be995286fc6e00aaf530dc7ade102a9/deps/undici/src/LICENSE",
+        "commit": "aa4c77582be995286fc6e00aaf530dc7ade102a9",
+        "transformation": "none",
+        "license": "See retained Node and Undici license files"
+      }
+    },
+    {
+      "path": "node-v22.23.2/deps/undici/src/lib/web/fetch/LICENSE",
+      "bytes": 1071,
+      "sha256": "a21d6c8d3fc631198b97e57584697f7f9c37805c71c6cf9a12e4442b40394b88",
+      "provenance": {
+        "kind": "immutable-git-source",
+        "url": "https://raw.githubusercontent.com/nodejs/node/aa4c77582be995286fc6e00aaf530dc7ade102a9/deps/undici/src/lib/web/fetch/LICENSE",
+        "commit": "aa4c77582be995286fc6e00aaf530dc7ade102a9",
+        "license": "MIT; Ethan Arrowood attribution",
+        "transformation": "none"
+      }
+    },
+    {
+      "path": "node-v22.23.2/deps/undici/src/lib/web/fetch/index.js",
+      "bytes": 82477,
+      "sha256": "ec5fa587004c3d852f4e29ca4726eff00bede5cc4793dc6431b0c13ca0576c9f",
+      "provenance": {
+        "kind": "immutable-git-source",
+        "url": "https://raw.githubusercontent.com/nodejs/node/aa4c77582be995286fc6e00aaf530dc7ade102a9/deps/undici/src/lib/web/fetch/index.js",
+        "commit": "aa4c77582be995286fc6e00aaf530dc7ade102a9",
+        "transformation": "none",
+        "license": "See retained Node and Undici license files"
+      }
+    },
+    {
+      "path": "node-v22.23.2/deps/undici/src/package.json",
+      "bytes": 6290,
+      "sha256": "f529aa8b145f6e270a72700ceb6c8dd3b87f742313078ea9f774a9d2ce8c865d",
+      "provenance": {
+        "kind": "immutable-git-source",
+        "url": "https://raw.githubusercontent.com/nodejs/node/aa4c77582be995286fc6e00aaf530dc7ade102a9/deps/undici/src/package.json",
+        "commit": "aa4c77582be995286fc6e00aaf530dc7ade102a9",
+        "transformation": "none",
+        "license": "See retained Node and Undici license files"
+      }
+    },
+    {
+      "path": "node-v22.23.2/git-ref-evidence.json",
+      "bytes": 3522,
+      "sha256": "b2a0de77e7eb160b563eeb50b153f62f672c9303446b2c6d74db5cf501e80aa8",
+      "provenance": {
+        "kind": "git-reference-evidence",
+        "transformation": "GitHub API objects serialized as JSON"
+      }
+    },
+    {
+      "path": "node-v22.23.2/lib/_http_common.js",
+      "bytes": 10056,
+      "sha256": "7ea6da4166c21411750cb9ec335fa312c6be96f5b8d464236404f82ac18b4be2",
+      "provenance": {
+        "kind": "immutable-git-source",
+        "url": "https://raw.githubusercontent.com/nodejs/node/aa4c77582be995286fc6e00aaf530dc7ade102a9/lib/_http_common.js",
+        "commit": "aa4c77582be995286fc6e00aaf530dc7ade102a9",
+        "transformation": "none",
+        "license": "See retained Node and Undici license files"
+      }
+    },
+    {
+      "path": "node-v22.23.2/lib/_http_incoming.js",
+      "bytes": 14784,
+      "sha256": "b5450c4392e01b05faf0b3331082439991b2e1f6b75f6ec4c3a30a5dc5442fd4",
+      "provenance": {
+        "kind": "immutable-git-source",
+        "url": "https://raw.githubusercontent.com/nodejs/node/aa4c77582be995286fc6e00aaf530dc7ade102a9/lib/_http_incoming.js",
+        "commit": "aa4c77582be995286fc6e00aaf530dc7ade102a9",
+        "transformation": "none",
+        "license": "See retained Node and Undici license files"
+      }
+    },
+    {
+      "path": "node-v22.23.2/lib/_http_server.js",
+      "bytes": 40340,
+      "sha256": "213f73e67e3792c19920440b1bcc9684ac2c0c55b49fe1b764bfc8a81560c09c",
+      "provenance": {
+        "kind": "immutable-git-source",
+        "url": "https://raw.githubusercontent.com/nodejs/node/aa4c77582be995286fc6e00aaf530dc7ade102a9/lib/_http_server.js",
+        "commit": "aa4c77582be995286fc6e00aaf530dc7ade102a9",
+        "transformation": "none",
+        "license": "See retained Node and Undici license files"
+      }
+    },
+    {
+      "path": "node-v24.21.0/LICENSE",
+      "bytes": 157609,
+      "sha256": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace",
+      "provenance": {
+        "kind": "immutable-git-source",
+        "url": "https://raw.githubusercontent.com/nodejs/node/955266bfdd854cd280dffd47548673914484e4c0/LICENSE",
+        "commit": "955266bfdd854cd280dffd47548673914484e4c0",
+        "license": "See retained Node and Undici license files",
+        "transformation": "none"
+      }
+    },
+    {
+      "path": "node-v24.21.0/deps/undici/src/LICENSE",
+      "bytes": 1090,
+      "sha256": "a6db8096b2707bc0102d256917d4d33f298ba36d8c3f25de067a2b5bb379db27",
+      "provenance": {
+        "kind": "immutable-git-source",
+        "url": "https://raw.githubusercontent.com/nodejs/node/955266bfdd854cd280dffd47548673914484e4c0/deps/undici/src/LICENSE",
+        "commit": "955266bfdd854cd280dffd47548673914484e4c0",
+        "license": "See retained Node and Undici license files",
+        "transformation": "none"
+      }
+    },
+    {
+      "path": "node-v24.21.0/deps/undici/src/lib/web/fetch/LICENSE",
+      "bytes": 1071,
+      "sha256": "a21d6c8d3fc631198b97e57584697f7f9c37805c71c6cf9a12e4442b40394b88",
+      "provenance": {
+        "kind": "immutable-git-source",
+        "url": "https://raw.githubusercontent.com/nodejs/node/955266bfdd854cd280dffd47548673914484e4c0/deps/undici/src/lib/web/fetch/LICENSE",
+        "commit": "955266bfdd854cd280dffd47548673914484e4c0",
+        "license": "See retained Node and Undici license files",
+        "transformation": "none"
+      }
+    },
+    {
+      "path": "node-v24.21.0/deps/undici/src/lib/web/fetch/index.js",
+      "bytes": 89634,
+      "sha256": "de99d1d1944b747c6428a73f8ad72f687c1c66a568af5aaae90c9dd22aaa2aa7",
+      "provenance": {
+        "kind": "immutable-git-source",
+        "url": "https://raw.githubusercontent.com/nodejs/node/955266bfdd854cd280dffd47548673914484e4c0/deps/undici/src/lib/web/fetch/index.js",
+        "commit": "955266bfdd854cd280dffd47548673914484e4c0",
+        "license": "See retained Node and Undici license files",
+        "transformation": "none"
+      }
+    },
+    {
+      "path": "node-v24.21.0/deps/undici/src/package.json",
+      "bytes": 6333,
+      "sha256": "10e55f4adb6a43e72823ea235ff6a0c777db1ef68e3a1c810f0246e1b9332d8b",
+      "provenance": {
+        "kind": "immutable-git-source",
+        "url": "https://raw.githubusercontent.com/nodejs/node/955266bfdd854cd280dffd47548673914484e4c0/deps/undici/src/package.json",
+        "commit": "955266bfdd854cd280dffd47548673914484e4c0",
+        "license": "See retained Node and Undici license files",
+        "transformation": "none"
+      }
+    },
+    {
+      "path": "node-v24.21.0/git-ref-evidence.json",
+      "bytes": 2320,
+      "sha256": "331037d52f8b8fc5f7f82657d3265fa0b72836b4c63ee241e4ab6170a3212c42",
+      "provenance": {
+        "kind": "git-reference-evidence",
+        "url": "https://api.github.com/repos/nodejs/node/git/ref/tags/v24.21.0",
+        "commit": "955266bfdd854cd280dffd47548673914484e4c0",
+        "transformation": "GitHub API objects serialized as JSON"
+      }
+    },
+    {
+      "path": "node-v24.21.0/lib/_http_common.js",
+      "bytes": 11516,
+      "sha256": "76d4cf8b96390cb8afeaafdbb9335e8ac18502a603e403fa0d42ee0ec09f4cb5",
+      "provenance": {
+        "kind": "immutable-git-source",
+        "url": "https://raw.githubusercontent.com/nodejs/node/955266bfdd854cd280dffd47548673914484e4c0/lib/_http_common.js",
+        "commit": "955266bfdd854cd280dffd47548673914484e4c0",
+        "license": "See retained Node and Undici license files",
+        "transformation": "none"
+      }
+    },
+    {
+      "path": "node-v24.21.0/lib/_http_incoming.js",
+      "bytes": 16697,
+      "sha256": "e98e6f9c9743e2bfc8435c630874f22a4a9010159a6028298d58406a1dd2d9e3",
+      "provenance": {
+        "kind": "immutable-git-source",
+        "url": "https://raw.githubusercontent.com/nodejs/node/955266bfdd854cd280dffd47548673914484e4c0/lib/_http_incoming.js",
+        "commit": "955266bfdd854cd280dffd47548673914484e4c0",
+        "license": "See retained Node and Undici license files",
+        "transformation": "none"
+      }
+    },
+    {
+      "path": "node-v24.21.0/lib/_http_server.js",
+      "bytes": 43902,
+      "sha256": "cd81e1020a8f2b3f6731b2db28648d889ec99db4fbff45ed608821bcc4209be9",
+      "provenance": {
+        "kind": "immutable-git-source",
+        "url": "https://raw.githubusercontent.com/nodejs/node/955266bfdd854cd280dffd47548673914484e4c0/lib/_http_server.js",
+        "commit": "955266bfdd854cd280dffd47548673914484e4c0",
+        "license": "See retained Node and Undici license files",
+        "transformation": "none"
+      }
+    },
+    {
+      "path": "rfc7239.txt",
+      "bytes": 35003,
+      "sha256": "f15c45c9e079684bc4284d041be63285923962448cb0d8540d54106c68c2a40d",
+      "provenance": {
+        "kind": "rfc-source",
+        "url": "https://www.rfc-editor.org/rfc/rfc7239.txt",
+        "license": "IETF Trust Legal Provisions; full original notices retained",
+        "transformation": "none"
+      }
+    },
+    {
+      "path": "router-2.2.0/LICENSE",
+      "bytes": 1128,
+      "sha256": "d0bca4e517157b7a6120c085f5fe43a35b90c095e3bbeb9e67f220c608506a16",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "router",
+        "version": "2.2.0",
+        "url": "https://registry.npmjs.org/router/-/router-2.2.0.tgz",
+        "archiveIntegrity": "sha512-nLTrUKm2UyiL7rlhapu/Zl45FwNgkZGaCpZbIHajDYgwlJCOzLSk+cIPAnsEqV955GjILJnKbdQC1nVPz+gAYQ==",
+        "member": "package/LICENSE",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "e6d6b609fc355e558174ccd5b1db646f739fe88c"
+      }
+    },
+    {
+      "path": "router-2.2.0/archive-members.txt",
+      "bytes": 140,
+      "sha256": "6b6ef9630d0fe680d8d1de2aa11f1b00d9d99e4cba86bcd3717c02dfe89208f5",
+      "provenance": {
+        "kind": "archive-inventory",
+        "url": "https://registry.npmjs.org/router/-/router-2.2.0.tgz",
+        "archiveIntegrity": "sha512-nLTrUKm2UyiL7rlhapu/Zl45FwNgkZGaCpZbIHajDYgwlJCOzLSk+cIPAnsEqV955GjILJnKbdQC1nVPz+gAYQ==",
+        "transformation": "tar -tf output; no upstream code execution"
+      }
+    },
+    {
+      "path": "router-2.2.0/git-ref-evidence.json",
+      "bytes": 402,
+      "sha256": "75dd74f0d6803855f08df630c90a9ed6c712629be1f76ffc7c58b5054e5397f1",
+      "provenance": {
+        "kind": "git-reference-evidence",
+        "url": "https://api.github.com/repos/pillarjs/router/git/ref/tags/v2.2.0",
+        "commit": "e6d6b609fc355e558174ccd5b1db646f739fe88c",
+        "transformation": "GitHub API objects serialized as JSON"
+      }
+    },
+    {
+      "path": "router-2.2.0/index.js",
+      "bytes": 15866,
+      "sha256": "fcc39d49329e5701e3fbd195060834398434b8e136a59949a654f6f402f6e31b",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "router",
+        "version": "2.2.0",
+        "url": "https://registry.npmjs.org/router/-/router-2.2.0.tgz",
+        "archiveIntegrity": "sha512-nLTrUKm2UyiL7rlhapu/Zl45FwNgkZGaCpZbIHajDYgwlJCOzLSk+cIPAnsEqV955GjILJnKbdQC1nVPz+gAYQ==",
+        "member": "package/index.js",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "e6d6b609fc355e558174ccd5b1db646f739fe88c"
+      }
+    },
+    {
+      "path": "router-2.2.0/package.json",
+      "bytes": 1142,
+      "sha256": "b77062595f89476fab6acbcde5fa8dfac3be7d7b9b0b0b69d48c84ebc13c9a06",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "router",
+        "version": "2.2.0",
+        "url": "https://registry.npmjs.org/router/-/router-2.2.0.tgz",
+        "archiveIntegrity": "sha512-nLTrUKm2UyiL7rlhapu/Zl45FwNgkZGaCpZbIHajDYgwlJCOzLSk+cIPAnsEqV955GjILJnKbdQC1nVPz+gAYQ==",
+        "member": "package/package.json",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "e6d6b609fc355e558174ccd5b1db646f739fe88c"
+      }
+    },
+    {
+      "path": "router-2.2.0/registry-metadata.json",
+      "bytes": 2075,
+      "sha256": "c707e46b8d50e6074c3e8906d631ee7faa178ebac9b4bd785adbdd438300b6bc",
+      "provenance": {
+        "kind": "registry-metadata",
+        "url": "https://registry.npmjs.org/router/2.2.0",
+        "transformation": "none"
+      }
+    },
+    {
+      "path": "undici-6.28.0/LICENSE",
+      "bytes": 1090,
+      "sha256": "a6db8096b2707bc0102d256917d4d33f298ba36d8c3f25de067a2b5bb379db27",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "undici",
+        "version": "6.28.0",
+        "url": "https://registry.npmjs.org/undici/-/undici-6.28.0.tgz",
+        "archiveIntegrity": "sha512-LIY910g9TI13YS95lrMFrs8Rm/u/irgHeTWoKCoteeJ04CUJ92eEfj0rVn+7VKMPBpUPiUoBKfhNyLI23EE/KA==",
+        "member": "package/LICENSE",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "01a912e49a50c48009ed2639d2a457a6ec26752a"
+      }
+    },
+    {
+      "path": "undici-6.28.0/archive-members.txt",
+      "bytes": 6025,
+      "sha256": "eaaba2870f7448469fdcea5a97e137d5c3fd4bffec0937d4a901b71d2ef30c70",
+      "provenance": {
+        "kind": "archive-inventory",
+        "url": "https://registry.npmjs.org/undici/-/undici-6.28.0.tgz",
+        "archiveIntegrity": "sha512-LIY910g9TI13YS95lrMFrs8Rm/u/irgHeTWoKCoteeJ04CUJ92eEfj0rVn+7VKMPBpUPiUoBKfhNyLI23EE/KA==",
+        "transformation": "tar -tf output; no upstream code execution"
+      }
+    },
+    {
+      "path": "undici-6.28.0/git-ref-evidence.json",
+      "bytes": 400,
+      "sha256": "d0e74ac90fbfe2985cdbf28ee84c70efa7826e7d3ee408641f0ea8a476e81479",
+      "provenance": {
+        "kind": "git-reference-evidence",
+        "url": "https://api.github.com/repos/nodejs/undici/git/ref/tags/v6.28.0",
+        "commit": "01a912e49a50c48009ed2639d2a457a6ec26752a",
+        "transformation": "GitHub API objects serialized as JSON"
+      }
+    },
+    {
+      "path": "undici-6.28.0/lib/dispatcher/client-h1.js",
+      "bytes": 40409,
+      "sha256": "41f689e08a3b3c9ece2b181cd77d5a4919c6db2c930dc3f8432028b500dbe6ec",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "undici",
+        "version": "6.28.0",
+        "url": "https://registry.npmjs.org/undici/-/undici-6.28.0.tgz",
+        "archiveIntegrity": "sha512-LIY910g9TI13YS95lrMFrs8Rm/u/irgHeTWoKCoteeJ04CUJ92eEfj0rVn+7VKMPBpUPiUoBKfhNyLI23EE/KA==",
+        "member": "package/lib/dispatcher/client-h1.js",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "01a912e49a50c48009ed2639d2a457a6ec26752a"
+      }
+    },
+    {
+      "path": "undici-6.28.0/lib/handler/retry-handler.js",
+      "bytes": 10860,
+      "sha256": "7efa2ca22dc394d7b9383d600e7cc01e403e0dfb7192ba04100299cf7423b544",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "undici",
+        "version": "6.28.0",
+        "url": "https://registry.npmjs.org/undici/-/undici-6.28.0.tgz",
+        "archiveIntegrity": "sha512-LIY910g9TI13YS95lrMFrs8Rm/u/irgHeTWoKCoteeJ04CUJ92eEfj0rVn+7VKMPBpUPiUoBKfhNyLI23EE/KA==",
+        "member": "package/lib/handler/retry-handler.js",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "01a912e49a50c48009ed2639d2a457a6ec26752a"
+      }
+    },
+    {
+      "path": "undici-6.28.0/lib/web/fetch/LICENSE",
+      "bytes": 1071,
+      "sha256": "a21d6c8d3fc631198b97e57584697f7f9c37805c71c6cf9a12e4442b40394b88",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "undici",
+        "version": "6.28.0",
+        "url": "https://registry.npmjs.org/undici/-/undici-6.28.0.tgz",
+        "archiveIntegrity": "sha512-LIY910g9TI13YS95lrMFrs8Rm/u/irgHeTWoKCoteeJ04CUJ92eEfj0rVn+7VKMPBpUPiUoBKfhNyLI23EE/KA==",
+        "member": "package/lib/web/fetch/LICENSE",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "01a912e49a50c48009ed2639d2a457a6ec26752a"
+      }
+    },
+    {
+      "path": "undici-6.28.0/lib/web/fetch/index.js",
+      "bytes": 82477,
+      "sha256": "ec5fa587004c3d852f4e29ca4726eff00bede5cc4793dc6431b0c13ca0576c9f",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "undici",
+        "version": "6.28.0",
+        "url": "https://registry.npmjs.org/undici/-/undici-6.28.0.tgz",
+        "archiveIntegrity": "sha512-LIY910g9TI13YS95lrMFrs8Rm/u/irgHeTWoKCoteeJ04CUJ92eEfj0rVn+7VKMPBpUPiUoBKfhNyLI23EE/KA==",
+        "member": "package/lib/web/fetch/index.js",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "01a912e49a50c48009ed2639d2a457a6ec26752a"
+      }
+    },
+    {
+      "path": "undici-6.28.0/lib/web/fetch/request.js",
+      "bytes": 34565,
+      "sha256": "eed7953967abb30acad4c7ae54417e61d2c53bd3393a6f1929270865724345ad",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "undici",
+        "version": "6.28.0",
+        "url": "https://registry.npmjs.org/undici/-/undici-6.28.0.tgz",
+        "archiveIntegrity": "sha512-LIY910g9TI13YS95lrMFrs8Rm/u/irgHeTWoKCoteeJ04CUJ92eEfj0rVn+7VKMPBpUPiUoBKfhNyLI23EE/KA==",
+        "member": "package/lib/web/fetch/request.js",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "01a912e49a50c48009ed2639d2a457a6ec26752a"
+      }
+    },
+    {
+      "path": "undici-6.28.0/package.json",
+      "bytes": 6290,
+      "sha256": "f529aa8b145f6e270a72700ceb6c8dd3b87f742313078ea9f774a9d2ce8c865d",
+      "provenance": {
+        "kind": "npm-archive-member",
+        "package": "undici",
+        "version": "6.28.0",
+        "url": "https://registry.npmjs.org/undici/-/undici-6.28.0.tgz",
+        "archiveIntegrity": "sha512-LIY910g9TI13YS95lrMFrs8Rm/u/irgHeTWoKCoteeJ04CUJ92eEfj0rVn+7VKMPBpUPiUoBKfhNyLI23EE/KA==",
+        "member": "package/package.json",
+        "license": "MIT",
+        "transformation": "none",
+        "commit": "01a912e49a50c48009ed2639d2a457a6ec26752a"
+      }
+    },
+    {
+      "path": "undici-6.28.0/registry-metadata.json",
+      "bytes": 6734,
+      "sha256": "ba900eb45342024880d9d1910f294eab946dddf18c1d32fbd461ddb8b5fab8dc",
+      "provenance": {
+        "kind": "registry-metadata",
+        "url": "https://registry.npmjs.org/undici/6.28.0",
+        "transformation": "none"
+      }
+    }
+  ]
+}

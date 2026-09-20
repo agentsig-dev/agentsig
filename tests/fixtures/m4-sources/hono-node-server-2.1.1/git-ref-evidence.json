@@ -1,0 +1,36 @@
+[
+  {
+    "ref": "refs/tags/v2.1.1",
+    "node_id": "REF_kwDOH-h1q7ByZWZzL3RhZ3MvdjIuMS4x",
+    "url": "https://api.github.com/repos/honojs/node-server/git/refs/tags/v2.1.1",
+    "object": {
+      "sha": "0919f8f2184fbb4743735a15df593f8e56e8033a",
+      "type": "tag",
+      "url": "https://api.github.com/repos/honojs/node-server/git/tags/0919f8f2184fbb4743735a15df593f8e56e8033a"
+    }
+  },
+  {
+    "node_id": "TA_kwDOH-h1q9oAKDA5MTlmOGYyMTg0ZmJiNDc0MzczNWExNWRmNTkzZjhlNTZlODAzM2E",
+    "sha": "0919f8f2184fbb4743735a15df593f8e56e8033a",
+    "url": "https://api.github.com/repos/honojs/node-server/git/tags/0919f8f2184fbb4743735a15df593f8e56e8033a",
+    "tagger": {
+      "name": "Yusuke Wada",
+      "email": "yusuke@kamawada.com",
+      "date": "2026-08-14T01:10:12Z"
+    },
+    "object": {
+      "sha": "73c03adfb01928fcd5f5b20faebd5d692f83fc93",
+      "type": "commit",
+      "url": "https://api.github.com/repos/honojs/node-server/git/commits/73c03adfb01928fcd5f5b20faebd5d692f83fc93"
+    },
+    "tag": "v2.1.1",
+    "message": "2.1.1\n",
+    "verification": {
+      "verified": false,
+      "reason": "unsigned",
+      "signature": null,
+      "payload": null,
+      "verified_at": null
+    }
+  }
+]

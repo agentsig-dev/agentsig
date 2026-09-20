@@ -8,3 +8,6 @@
 # Binary signatures and key encodings must never undergo text conversion.
 *.bin -text -diff -merge !eol
 *.der -text -diff -merge !eol
+
+# Upstream M4 sources are byte snapshots, including any embedded CR bytes.
+tests/fixtures/m4-sources/** -text !eol

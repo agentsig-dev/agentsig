@@ -1,0 +1,12 @@
+[
+  {
+    "ref": "refs/tags/v6.28.0",
+    "node_id": "MDM6UmVmMTMzMDkyOTcyOnJlZnMvdGFncy92Ni4yOC4w",
+    "url": "https://api.github.com/repos/nodejs/undici/git/refs/tags/v6.28.0",
+    "object": {
+      "sha": "01a912e49a50c48009ed2639d2a457a6ec26752a",
+      "type": "commit",
+      "url": "https://api.github.com/repos/nodejs/undici/git/commits/01a912e49a50c48009ed2639d2a457a6ec26752a"
+    }
+  }
+]

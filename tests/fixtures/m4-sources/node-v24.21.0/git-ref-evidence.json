@@ -1,0 +1,36 @@
+[
+  {
+    "ref": "refs/tags/v24.21.0",
+    "node_id": "MDM6UmVmMjcxOTM3Nzk6cmVmcy90YWdzL3YyNC4yMS4w",
+    "url": "https://api.github.com/repos/nodejs/node/git/refs/tags/v24.21.0",
+    "object": {
+      "sha": "f37d7da830134b5314a14ced553273786a2bb4cd",
+      "type": "tag",
+      "url": "https://api.github.com/repos/nodejs/node/git/tags/f37d7da830134b5314a14ced553273786a2bb4cd"
+    }
+  },
+  {
+    "node_id": "TA_kwDOAZ7xs9oAKGYzN2Q3ZGE4MzAxMzRiNTMxNGExNGNlZDU1MzI3Mzc4NmEyYmI0Y2Q",
+    "sha": "f37d7da830134b5314a14ced553273786a2bb4cd",
+    "url": "https://api.github.com/repos/nodejs/node/git/tags/f37d7da830134b5314a14ced553273786a2bb4cd",
+    "tagger": {
+      "name": "Antoine du Hamel",
+      "email": "duhamelantoine1995@gmail.com",
+      "date": "2026-09-08T21:38:22Z"
+    },
+    "object": {
+      "sha": "955266bfdd854cd280dffd47548673914484e4c0",
+      "type": "commit",
+      "url": "https://api.github.com/repos/nodejs/node/git/commits/955266bfdd854cd280dffd47548673914484e4c0"
+    },
+    "tag": "v24.21.0",
+    "message": "2026-09-08 Node.js v24.21.0 Krypton (LTS) Release\nGit-EVTag-v0-SHA512: 952b56a19093e759f9784bdc41f6bfd48c39d8df3d98dec008fbc383e2b9bb9ef402e00ed8b691046e0707b82cbf1d64fa9937d8302f3a8dbbad12138d3f5f50\n-----BEGIN PGP SIGNATURE-----\n\niJMEABYKADsWIQRb6KP2yKXAHRBsCtggsaOQsWjTVgUCaqCATh0cZHVoYW1lbGFu\ndG9pbmUxOTk1QGdtYWlsLmNvbQAKCRAgsaOQsWjTVgIYAQDhpP72xjF2QKQ7igcn\nUx8nNnGYpF1TCXF1fa/zpicYLAD/XAr7HBUOmfNcNIrAfOZQcIseP+JYRtrZHkS2\ndHxt6wg=\n=y7lL\n-----END PGP SIGNATURE-----\n",
+    "verification": {
+      "verified": true,
+      "reason": "valid",
+      "signature": "-----BEGIN PGP SIGNATURE-----\n\niJMEABYKADsWIQRb6KP2yKXAHRBsCtggsaOQsWjTVgUCaqCATh0cZHVoYW1lbGFu\ndG9pbmUxOTk1QGdtYWlsLmNvbQAKCRAgsaOQsWjTVgIYAQDhpP72xjF2QKQ7igcn\nUx8nNnGYpF1TCXF1fa/zpicYLAD/XAr7HBUOmfNcNIrAfOZQcIseP+JYRtrZHkS2\ndHxt6wg=\n=y7lL\n-----END PGP SIGNATURE-----\n",
+      "payload": "object 955266bfdd854cd280dffd47548673914484e4c0\ntype commit\ntag v24.21.0\ntagger Antoine du Hamel <duhamelantoine1995@gmail.com> 1788903502 +0200\n\n2026-09-08 Node.js v24.21.0 Krypton (LTS) Release\nGit-EVTag-v0-SHA512: 952b56a19093e759f9784bdc41f6bfd48c39d8df3d98dec008fbc383e2b9bb9ef402e00ed8b691046e0707b82cbf1d64fa9937d8302f3a8dbbad12138d3f5f50\n",
+      "verified_at": "2026-09-08T21:47:30Z"
+    }
+  }
+]

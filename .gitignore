@@ -1,5 +1,10 @@
 node_modules/
 dist/
+# Published upstream distributions retained as immutable M4 source fixtures.
+!tests/fixtures/m4-sources/hono-4.13.8/dist/
+!tests/fixtures/m4-sources/hono-4.13.8/dist/**
+!tests/fixtures/m4-sources/hono-node-server-2.1.1/dist/
+!tests/fixtures/m4-sources/hono-node-server-2.1.1/dist/**
 coverage/
 .vitest/
 *.tsbuildinfo

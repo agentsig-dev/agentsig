@@ -1094,3 +1094,29 @@ an explicit loopback-only test option; discovery SSRF policy remains unchanged.
 The maintainer authorized preparing core 0.2.0 and the four new M4 packages at
 0.2.0 with Changesets, without publication. Framework peer ranges await source
 review and tests. No Structured Fields version change is implied.
+
+### M4 source-fixture handoff checkpoint
+
+The inherited source snapshots were retained after fresh upstream byte comparisons.
+The [source review](m4-source-review.md) records the completed 85-file inventory,
+seven npm release-commit chains, Hono Node publication evidence, Node 20/22/24
+sources and bundled Undici versions, and early-capture constraints.
+
+Five Hono distribution files were accidentally excluded by the general build-output
+ignore rule. Narrow exceptions now include them. This upstream-only directory uses
+byte-preserving Git attributes rather than line-ending conversion; three isolated
+Git staging/checkout tests cover the manifest and every retained file. Earlier
+fixture bytes, production code, frozen error catalogs and package versions are
+unchanged. The M4 source audit is now included in the fixture CI matrix.
+
+Non-security delivery choice: retain the reviewed exact framework versions as
+initial test candidates; do not infer broad major-version peer compatibility.
+Peer ranges, shared raw-request expectations, mapper/adapters and signed listener
+acceptance remain subsequent work. Source landmarks do not substitute for those
+tests. Hono global replacement, body cleanup and raw response-error handling are
+explicit later integration/test obligations, not silently accepted defaults.
+
+The source-only delivery stops after its first local commit as requested.
+No push, tag, publication, upstream report or maintainer smoke is performed.
+Local data-only audit success is not remote CI, live signed-request acceptance,
+Sigstore/PGP signature verification, or a security audit.

@@ -120,3 +120,25 @@ reference supplied by the user is
 See the [fixture review](m2-fixture-review.md) and
 [report text](wg-e2-1-report-draft.md). Original example bytes are preserved;
 an issue reference does not imply that upstream has resolved the discrepancy.
+
+## M4 framework and transport sources
+
+The separate [M4 source manifest](../tests/fixtures/m4-sources/manifest.json)
+pins 85 source/evidence files before HTTP mapping implementation. The
+[source review](m4-source-review.md) records exact framework, Node and Undici
+versions/commits, retained licenses, retrieval checks and evidence limitations.
+It is not a mapping golden dataset or a framework compatibility certification.
+
+The [data-only audit](../tests/m4-source-audit.test.mjs) checks byte lengths,
+hashes, complete inventory, release-reference chains, selected source landmarks,
+and Hono Node publication-payload consistency. It never imports retained upstream
+code. The npm archives were checked against SHA-512 integrity and selected members
+compared byte for byte during preparation; offline CI checks the retained evidence,
+not fresh network downloads or independent Sigstore/PGP signatures.
+
+Unlike normalized project text, this directory retains original upstream bytes,
+including embedded CR bytes. Its narrow Git attribute override disables text
+conversion. Narrow ignore exceptions include the five selected Hono distribution
+files; no general build-output exception is introduced. The audit performs normal
+staging and checkout in temporary Git repositories under three autocrlf settings,
+checking every source and the manifest without changing global Git configuration.

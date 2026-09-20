@@ -1,0 +1,12 @@
+[
+  {
+    "ref": "refs/tags/v2.2.0",
+    "node_id": "MDM6UmVmMjMwNTk2MzA6cmVmcy90YWdzL3YyLjIuMA==",
+    "url": "https://api.github.com/repos/pillarjs/router/git/refs/tags/v2.2.0",
+    "object": {
+      "sha": "e6d6b609fc355e558174ccd5b1db646f739fe88c",
+      "type": "commit",
+      "url": "https://api.github.com/repos/pillarjs/router/git/commits/e6d6b609fc355e558174ccd5b1db646f739fe88c"
+    }
+  }
+]

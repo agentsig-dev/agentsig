@@ -1,0 +1,36 @@
+[
+  {
+    "ref": "refs/tags/v4.13.8",
+    "node_id": "REF_kwDOGiE5WLFyZWZzL3RhZ3MvdjQuMTMuOA",
+    "url": "https://api.github.com/repos/honojs/hono/git/refs/tags/v4.13.8",
+    "object": {
+      "sha": "1513b3652a6b5ec24ed05df53ac5f87494eca140",
+      "type": "tag",
+      "url": "https://api.github.com/repos/honojs/hono/git/tags/1513b3652a6b5ec24ed05df53ac5f87494eca140"
+    }
+  },
+  {
+    "node_id": "TA_kwDOGiE5WNoAKDE1MTNiMzY1MmE2YjVlYzI0ZWQwNWRmNTNhYzVmODc0OTRlY2ExNDA",
+    "sha": "1513b3652a6b5ec24ed05df53ac5f87494eca140",
+    "url": "https://api.github.com/repos/honojs/hono/git/tags/1513b3652a6b5ec24ed05df53ac5f87494eca140",
+    "tagger": {
+      "name": "Yusuke Wada",
+      "email": "yusuke@kamawada.com",
+      "date": "2026-09-15T07:25:06Z"
+    },
+    "object": {
+      "sha": "098e11912ab244c5c33931de007f04dc8e3c2929",
+      "type": "commit",
+      "url": "https://api.github.com/repos/honojs/hono/git/commits/098e11912ab244c5c33931de007f04dc8e3c2929"
+    },
+    "tag": "v4.13.8",
+    "message": "4.13.8\n",
+    "verification": {
+      "verified": false,
+      "reason": "unsigned",
+      "signature": null,
+      "payload": null,
+      "verified_at": null
+    }
+  }
+]

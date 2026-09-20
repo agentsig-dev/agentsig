@@ -62,3 +62,5 @@ jobs:
         run: node --test tests/m3-freshness-amendment-audit.test.mjs
       - name: Audit thumbprint rotation and refresh diagnostic expectations
         run: node --test tests/m3-rotation-audit.test.mjs
+      - name: Audit pinned M4 framework and transport sources without executing upstream code
+        run: node --test tests/m4-source-audit.test.mjs
