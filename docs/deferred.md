@@ -1613,3 +1613,45 @@ No issue was posted or modified by the assistant. Future protocol changes requir
 source/version/license pinning, fixture-first review and explicit approval for
 changes affecting acceptance or trust. Discussion activity alone does not change
 0.2.0 compatibility or establish live Cloudflare acceptance.
+
+### M5 proposal after the published M4 release
+
+The [M5 plan](milestone-5-plan.md) proposes the agentsig CLI (keygen, directory,
+sign-request and inspect), mandatory Cloudflare-profile publisher-side signed
+directory responses, and a static demonstration directory for agentsig.dev.
+It is a proposal only; no CLI, publisher, deployment workflow, DNS configuration
+or demo signing key has been created.
+
+Decisions D1-D6 require maintainer approval: private-key encryption and platform
+permissions; offline-versus-explicit-send network scope; shared publisher API
+and proof-consumption boundary; signed representation and key-set coverage;
+proof lifetime/cache/renewal; and demo key custody/deployment. Recommendations
+do not authorize changes to authentication, proxy trust or SSRF admission.
+
+Windows ACL verification must not be replaced by an unsupported chmod guarantee.
+A static JWKS file is not a signed HTTP response: hosting must preserve the exact
+body and required response headers, with an explicit expiry/renewal strategy.
+Current discovery does not validate publisher proof, so it cannot be relied on
+to reject an expired proof served by a static host. Directory digest production
+does not complete the separate pre-1.0 request-body integrity obligation.
+
+The plan retains fixture-first delivery and separate error/API contract approval.
+The existing -00 profile and frozen catalogs remain unchanged. Two English
+implementation notices are prepared for maintainer review, not submitted:
+[Cloudflare discussion](announcement-cloudflare-draft.md) and
+[WG Appendix F listing](announcement-wg-implementations-draft.md).
+No push, tag, package publication or external submission is performed.
+
+### Post-release documentation delivery validation
+
+On local Windows / Node 22.23.2, the integration command passed 102 tests
+(including the two new metadata-policy checks), and the independent audit suites
+passed 291 tests, with no failures or skips in those runs. M5 plan references and
+decision sections were checked. Package/runtime sources, scripts, lockfile,
+Changesets configuration and all fixture bytes are unchanged from b8da8d8.
+
+No new full build/unit run, real Redis service run, maintainer smoke, ATTW or
+publint execution is claimed for this documentation/test-only delivery. Earlier
+maintainer CI/publication confirmations are not remote CI evidence for these
+three local commits. Neither notice was submitted. M5 decisions remain pending;
+no implementation, deployment, key generation, push, tag or publication occurred.
