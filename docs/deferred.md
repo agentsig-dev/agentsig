@@ -1539,3 +1539,77 @@ Review then-supported Node/npm and trusted-publisher requirements before impleme
 do not claim provenance until a published artifact's attestation is verified.
 Publication remains maintainer-owned. No workflow, registry setting, token,
 external comment, push, tag or npm publication is changed by this record.
+
+### WG discussion review — September 21, 2026
+
+Read the issue bodies and all available issue comments through the GitHub API:
+#128 (one comment), #133 (zero), #119 (two), #126 (zero), #109 (six),
+and #102 (three). All six issues were open at retrieval. This review covers
+those issue threads, not every linked mailing-list message or a new draft
+revision. The mutable discussion links below are research references, not new
+normative fixture sources. Existing pinned source bytes remain unchanged.
+
+- **WG discussion pending — label/member binding:**
+  [#128](https://github.com/webbotauth/draft-ietf-webbotauth-httpsig-protocol/issues/128)
+  proposes retaining only the Section 5.2.2 covered-member attribution rule
+  instead of additionally enforcing Section 5.2.1 label equality. The maintainer's
+  independent-implementation comment is present. Discussion is ongoing: a future
+  -01 profile may accept the Section 5.2.2-only reading, and agent-label-mismatch
+  might not apply in that profile. This is not an approved -01 specification or
+  implementation. The pinned ietf-wg-protocol-00 profile stays unchanged, including
+  strict matching and the E.2.1 negative fixture tracked by
+  [#135](https://github.com/webbotauth/draft-ietf-webbotauth-httpsig-protocol/issues/135).
+  No silent fallback, reinterpretation, or frozen-catalog change is authorized.
+  Some comments reference earlier individual-draft -02 versions; those labels
+  must not be confused with a published WG protocol-01 revision.
+
+- **Signature lifetime interpretation supported; editorial discussion pending:**
+  [#133](https://github.com/webbotauth/draft-ietf-webbotauth-httpsig-protocol/issues/133)
+  explains the ambiguous antecedent of "expiry" and proposes naming a signature's
+  expires relative to created. This supports our existing reading of the
+  recommended 24-hour maximum as signature lifetime, not JWK lifetime.
+  The issue has no comments and remains open: do not represent it as WG consensus
+  or a merged correction. The README compatibility matrix cites it. Local signing
+  lifetime 60 seconds and verification maximum lifetime/age 300 seconds remain
+  stricter application policy; undefined JWK nbf/exp semantics are not inferred.
+
+- **WG discussion pending — directory redirects:**
+  [#119](https://github.com/webbotauth/draft-ietf-webbotauth-httpsig-protocol/issues/119)
+  was reopened to consider redirects with TLS on every hop, bounded depth and
+  retention of the original Signature-Agent identifier rather than delegated
+  trust. This may differ from our pinned -00 no-redirect discovery contract.
+  Current discovery continues rejecting redirects; no cross-origin trust transfer
+  or SSRF exception is introduced. A future profile needs independent hop,
+  identifier-binding, destination-validation and budget fixtures. This is distinct
+  from the outgoing Fetch wrapper's manual-response behavior.
+
+- **WG discussion pending — digest representation:**
+  [#126](https://github.com/webbotauth/draft-ietf-webbotauth-httpsig-protocol/issues/126)
+  suggests Unencoded-Digest instead of Content-Digest because encoding changes
+  the representation. It is a proposal with no issue comments, not an adopted
+  replacement. M5 must explicitly pin the response byte/encoding contract before
+  implementing publisher signatures. Do not silently substitute digest fields.
+  Request-body verification remains separate mandatory pre-1.0 work.
+
+- **WG discussion pending — key format and discovery type:**
+  [#109](https://github.com/webbotauth/draft-ietf-webbotauth-httpsig-protocol/issues/109)
+  discusses JWKS-only formats, removal of type, endpoint naming and the danger of
+  inferring validation semantics from URL shape. An implementer also reports
+  permissive alg handling and bare-JWK normalization as deployment deviations;
+  those reports are not protocol requirements. agentsig keeps its pinned JWKS,
+  algorithm, thumbprint and explicit directory-type rules, with no bare-JWK repair,
+  case-insensitive algorithm widening or path-inferred discovery mechanism.
+  A format/type change needs a separately pinned profile and migration review.
+
+- **WG discussion pending — DNS-rooted identity:**
+  [#102](https://github.com/webbotauth/draft-ietf-webbotauth-httpsig-protocol/issues/102)
+  proposes DNSSEC/DANE TLSA binding and points design discussion to the mailing list.
+  It shifts the trust root and revocation/cache assumptions; it is not a validated
+  replacement for HTTPS discovery in this implementation. No TLSA, DNSSEC identity,
+  new type, DNS fallback or additional trustSource is implemented. Existing
+  directory-https identity, SSRF protection and publisher proof boundaries remain.
+
+No issue was posted or modified by the assistant. Future protocol changes require
+source/version/license pinning, fixture-first review and explicit approval for
+changes affecting acceptance or trust. Discussion activity alone does not change
+0.2.0 compatibility or establish live Cloudflare acceptance.

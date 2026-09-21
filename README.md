@@ -155,7 +155,7 @@ M2 profiles use stricter local coverage, origin, time, and replay policies.
 | Agent coverage | Corresponding Dictionary member | Entire header | [WG §5.2.1](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#section-5.2.1), [CF §4.3](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#43-construct-the-required-headers) |
 | Target coverage | At least authority or target URI | At least authority recommended | [WG §5.2](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#section-5.2), [CF §4.1](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#41-choose-a-set-of-components-to-sign) |
 | Nonce | No additional requirement | Recommended; documentation states no nonce replay tracking | [WG §5.2.3](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#section-5.2.3), [CF §4.3](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#43-construct-the-required-headers) |
-| Lifetime | At most 24 hours recommended | Short lifetime; one minute usually sufficient | [WG §5.2](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#section-5.2), [CF §4.3](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#43-construct-the-required-headers) |
+| Lifetime | Signature lifetime (expires minus created) at most 24 hours recommended, not key lifetime | Short lifetime; one minute usually sufficient | [WG §5.2](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#section-5.2), [#133 editorial clarification discussion](https://github.com/webbotauth/draft-ietf-webbotauth-httpsig-protocol/issues/133), [CF §4.3](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#43-construct-the-required-headers) |
 | Directory response signatures | Appendix B can be omitted for basic URL identity; proof covers authority and content-digest | Response signature requested for each key used | [WG Appendix B](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#appendix-B), [CF §2](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#2-host-a-key-directory) |
 | Key identity | Base64url SHA-256 JWK thumbprint | JWK thumbprint | [WG §5.2](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#section-5.2), [CF §4.2](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#42-calculate-the-jwk-thumbprint) |
 | Authorization / Verified Bot status | No authorization or operator reputation implied | Separate registration and approval required | [WG §4](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#section-4), [CF §3](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#3-register-your-bot-and-key-directory) |
@@ -175,7 +175,13 @@ are separate compatibility targets. Illustrative signatures are not treated as
 cryptographic golden vectors. No live Cloudflare acceptance test has been run.
 The E.2.1 label/member discrepancy is tracked in
 [upstream issue #135](https://github.com/webbotauth/draft-ietf-webbotauth-httpsig-protocol/issues/135);
-original fixture bytes remain unchanged.
+original fixture bytes remain unchanged. [Issue #128](https://github.com/webbotauth/draft-ietf-webbotauth-httpsig-protocol/issues/128)
+discusses whether covered-member attribution should replace strict label equality
+in a later revision; agentsig's pinned -00 profile is unchanged. The open
+[#133 discussion](https://github.com/webbotauth/draft-ietf-webbotauth-httpsig-protocol/issues/133)
+supports reading the 24-hour recommendation as signature lifetime, but is not a
+merged WG decision. See the [dated discussion review](docs/deferred.md#wg-discussion-review--september-21-2026)
+for other pending changes and their implementation boundaries.
 
 ## Development and tests
 
