@@ -1497,3 +1497,45 @@ expression and performed no validation; the corrected complete check passed.
 Runtime source, frozen catalogs, prior fixture bytes and the entire Structured
 Fields package are unchanged. This is one local release-preparation commit,
 not an assistant push, tag, publication, live acceptance test or security audit.
+
+### Published 0.2.0 and post-release metadata hygiene
+
+On September 21, 2026, the maintainer confirmed publication of core, fetch, hono,
+fastify and express 0.2.0 on npm, successful installation in a clean directory,
+push of b8da8d8, core-m4/v0.2.0 tags and green CI. M4 is accepted following the
+previously confirmed eleven-scenario adapter smoke. The maintainer also reported
+posting independent-implementation comments on WG issues #135 and #128.
+These are maintainer confirmations, not actions performed by the assistant.
+
+The root README now describes the published release and has badges for all five
+0.2.0 packages, retaining the separate Structured Fields badge. Only the CLI is
+listed as planned in the package table. No runtime or profile behavior changes.
+
+Inspection found no author field in the root manifest or any of the six project
+package manifests; there was no project author email to remove. A regression
+test now permits an absent author, a name-only string or a name-only object and
+rejects email-bearing author forms without printing their values. It is included
+in the normal integration command. Immutable third-party fixture manifests retain
+their upstream attribution and hashes; installed dependencies are not rewritten.
+This does not remove registry-owned maintainer/_npmUser metadata or alter already
+published archives. The two metadata tests and root README checks passed locally.
+
+ATTW and publint were not run in this delivery or the preceding preparation.
+No observed ATTW/publint failure or successful packaging-linter result is claimed.
+The existing build, consumer and dry-run checks are not substitutes for those tools.
+No 0.2.1 packaging-fix changeset is justified by an unobserved linter result.
+
+### Mandatory pre-1.0 trusted publishing
+
+Before 1.0, configure GitHub Actions trusted publishing with npm provenance
+(--provenance), a manually triggered workflow_dispatch release workflow, and
+no long-lived npm token. Use short-lived OIDC credentials, explicit package/
+repository/workflow identity bindings, protected release environments and approval,
+minimal permissions, pinned actions and validated release artifacts. Do not expose
+publishing authority to untrusted pull-request execution.
+
+This records required future work, not a configured or tested publishing workflow.
+Review then-supported Node/npm and trusted-publisher requirements before implementation;
+do not claim provenance until a published artifact's attestation is verified.
+Publication remains maintainer-owned. No workflow, registry setting, token,
+external comment, push, tag or npm publication is changed by this record.
