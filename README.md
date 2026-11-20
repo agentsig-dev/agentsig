@@ -1,25 +1,28 @@
 # agentsig
 
 [![npm: @agentsig/core](https://img.shields.io/npm/v/@agentsig/core.svg?label=%40agentsig%2Fcore)](https://www.npmjs.com/package/@agentsig/core)
+[![npm: @agentsig/fetch](https://img.shields.io/npm/v/@agentsig/fetch.svg?label=%40agentsig%2Ffetch)](https://www.npmjs.com/package/@agentsig/fetch)
+[![npm: @agentsig/hono](https://img.shields.io/npm/v/@agentsig/hono.svg?label=%40agentsig%2Fhono)](https://www.npmjs.com/package/@agentsig/hono)
+[![npm: @agentsig/fastify](https://img.shields.io/npm/v/@agentsig/fastify.svg?label=%40agentsig%2Ffastify)](https://www.npmjs.com/package/@agentsig/fastify)
+[![npm: @agentsig/express](https://img.shields.io/npm/v/@agentsig/express.svg?label=%40agentsig%2Fexpress)](https://www.npmjs.com/package/@agentsig/express)
 [![npm: @agentsig/structured-fields](https://img.shields.io/npm/v/@agentsig/structured-fields.svg?label=%40agentsig%2Fstructured-fields)](https://www.npmjs.com/package/@agentsig/structured-fields)
 
-> **Status: pre-release; 0.2.0 versioned locally, publication pending; M4 accepted; not security-reviewed**
+> **Status: 0.2.0 published; pre-release maturity; M4 accepted; not security-reviewed**
 
 Open-source HTTP Message Signatures and Web Bot Auth tooling for Node.js.
 
 agentsig provides a profile-independent RFC 9421 Ed25519 engine, a separate
 RFC 9651 Structured Fields package, and signing/verification for two pinned Web
-Bot Auth profiles. Published **0.1.1** supports offline verification with trusted
-local public JWKS, explicit identity bindings, time policies, and memory replay.
+Bot Auth profiles. Published **0.2.0** includes offline verification with trusted
+local public JWKS, explicit identity bindings, time policies, and memory replay,
+plus bounded HTTPS directory discovery, shared cache/admission coordination,
+an optional Redis replay adapter, owned Node HTTP/1.1 mapping with Express,
+Fastify and Hono integrations, and signed Fetch.
 
-This checkout additionally implements bounded HTTPS directory discovery, shared
-cache/admission coordination, an optional Redis replay adapter, and owned Node
-HTTP/1.1 mapping with Express, Fastify and Hono integrations, and signed Fetch.
-These additions are **not in published 0.1.1**. The coordinated Changeset has been
-consumed: core, fetch, Hono, Fastify and Express are versioned at **0.2.0** locally.
-Structured Fields remains **0.1.1**. The maintainer accepted M4 after all eleven
-adapter smoke scenarios passed and confirmed core-m4 and green CI. Publication
-of 0.2.0 remains pending; milestone acceptance is not a security audit.
+Core, fetch, Hono, Fastify and Express **0.2.0** are published on npm.
+Structured Fields remains **0.1.1**. The maintainer confirmed installation in a
+clean directory, eleven passing adapter smoke scenarios, core-m4 and v0.2.0
+tags, and green CI. Milestone acceptance and publication are not a security audit.
 
 This project is not security-reviewed and does not claim production readiness,
 IETF endorsement, or Cloudflare reference-implementation status. “Pre-release”
@@ -76,7 +79,7 @@ Node HTTP-signature engines and TypeScript Web Bot Auth packages already exist.
 agentsig is not the first. Its focus is pinned profiles, independently sourced
 golden fixtures, explicit trust boundaries, default atomic replay checks, and
 Node's built-in cryptography. Network discovery, signed Fetch and Node-only
-framework adapters are implemented in this unpublished checkout; CLI remains future work.
+framework adapters are published in 0.2.0; CLI remains future work.
 
 The [source-based comparison](docs/core-api-proposal.md) records the versions and
 documentation examined. It is not a security audit or performance comparison.
@@ -107,18 +110,18 @@ that the accepted candidate is not replay-protected.
 | Package | Checkout version / release state | Current scope |
 | --- | --- | --- |
 | @agentsig/structured-fields | 0.1.1; published, unchanged | Lossless RFC 9651 AST, semantic model, parsing/serialization and resource limits |
-| @agentsig/core | 0.2.0; publication pending | RFC 9421 engine, offline profiles, discovery, Redis and HTTP subpaths |
-| @agentsig/fetch | 0.2.0; publication pending | Signed Fetch; manual redirects, explicit transport/body policy, no wrapper retry |
-| @agentsig/hono | 0.2.0; publication pending | Node HTTP/1.1 bridge, assessment and policy integration |
-| @agentsig/fastify | 0.2.0; publication pending | Early-capture integration and policy hook |
-| @agentsig/express | 0.2.0; publication pending | Express 4/5 middleware with owned early capture |
+| @agentsig/core | 0.2.0; published | RFC 9421 engine, offline profiles, discovery, Redis and HTTP subpaths |
+| @agentsig/fetch | 0.2.0; published | Signed Fetch; manual redirects, explicit transport/body policy, no wrapper retry |
+| @agentsig/hono | 0.2.0; published | Node HTTP/1.1 bridge, assessment and policy integration |
+| @agentsig/fastify | 0.2.0; published | Early-capture integration and policy hook |
+| @agentsig/express | 0.2.0; published | Express 4/5 middleware with owned early capture |
 | agentsig (CLI) | Planned; not implemented | Future command-line tooling |
 
 - **M1:** RFC 9421 Ed25519 engine, Structured Fields package, independent fixture audit.
 - **M2:** accepted offline profile verification, time/replay integration, and dual-format consumers.
   The user confirmed green CI/fixture workflows for **core-m2** and successful
   two-profile smoke verification in commit **08592a2**.
-- **M3 checkout:** full network verification, bounded directory cache/transport,
+- **M3 accepted (included in 0.2.0):** full network verification, bounded directory cache/transport,
   shared cross-profile admission, and Redis replay/recovery. Public APIs live at
   @agentsig/core/discovery and @agentsig/core/redis; the pure and offline entries
   do not load discovery transport. The maintainer accepted M3 after its smoke
@@ -132,8 +135,8 @@ that the accepted candidate is not replay-protected.
   The [Fetch guide](packages/fetch/README.md) distinguishes one transport call from
   exactly-once network delivery. The maintainer confirmed all eleven adapter smoke
   scenarios passed, including Express forwarding-chain rejection before verification.
-  The coordinated 0.2.0 Changeset is consumed; publication remains maintainer-owned.
-- **Next:** maintainer 0.2.0 publication, CLI, and publisher-signed directory responses
+  The maintainer published the coordinated 0.2.0 release and confirmed clean installation.
+- **Next:** CLI, a static demo agent directory, and publisher-signed directory responses
   (mandatory Cloudflare-profile M5 work). See the [M3 design record](docs/milestone-3-plan.md)
   and [deferred work](docs/deferred.md).
 
@@ -152,7 +155,7 @@ M2 profiles use stricter local coverage, origin, time, and replay policies.
 | Agent coverage | Corresponding Dictionary member | Entire header | [WG §5.2.1](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#section-5.2.1), [CF §4.3](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#43-construct-the-required-headers) |
 | Target coverage | At least authority or target URI | At least authority recommended | [WG §5.2](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#section-5.2), [CF §4.1](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#41-choose-a-set-of-components-to-sign) |
 | Nonce | No additional requirement | Recommended; documentation states no nonce replay tracking | [WG §5.2.3](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#section-5.2.3), [CF §4.3](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#43-construct-the-required-headers) |
-| Lifetime | At most 24 hours recommended | Short lifetime; one minute usually sufficient | [WG §5.2](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#section-5.2), [CF §4.3](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#43-construct-the-required-headers) |
+| Lifetime | Signature lifetime (expires minus created) at most 24 hours recommended, not key lifetime | Short lifetime; one minute usually sufficient | [WG §5.2](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#section-5.2), [#133 editorial clarification discussion](https://github.com/webbotauth/draft-ietf-webbotauth-httpsig-protocol/issues/133), [CF §4.3](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#43-construct-the-required-headers) |
 | Directory response signatures | Appendix B can be omitted for basic URL identity; proof covers authority and content-digest | Response signature requested for each key used | [WG Appendix B](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#appendix-B), [CF §2](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#2-host-a-key-directory) |
 | Key identity | Base64url SHA-256 JWK thumbprint | JWK thumbprint | [WG §5.2](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#section-5.2), [CF §4.2](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#42-calculate-the-jwk-thumbprint) |
 | Authorization / Verified Bot status | No authorization or operator reputation implied | Separate registration and approval required | [WG §4](https://www.ietf.org/archive/id/draft-ietf-webbotauth-httpsig-protocol-00.html#section-4), [CF §3](https://developers.cloudflare.com/bots/reference/bot-verification/web-bot-auth/#3-register-your-bot-and-key-directory) |
@@ -172,7 +175,13 @@ are separate compatibility targets. Illustrative signatures are not treated as
 cryptographic golden vectors. No live Cloudflare acceptance test has been run.
 The E.2.1 label/member discrepancy is tracked in
 [upstream issue #135](https://github.com/webbotauth/draft-ietf-webbotauth-httpsig-protocol/issues/135);
-original fixture bytes remain unchanged.
+original fixture bytes remain unchanged. [Issue #128](https://github.com/webbotauth/draft-ietf-webbotauth-httpsig-protocol/issues/128)
+discusses whether covered-member attribution should replace strict label equality
+in a later revision; agentsig's pinned -00 profile is unchanged. The open
+[#133 discussion](https://github.com/webbotauth/draft-ietf-webbotauth-httpsig-protocol/issues/133)
+supports reading the 24-hour recommendation as signature lifetime, but is not a
+merged WG decision. See the [dated discussion review](docs/deferred.md#wg-discussion-review--september-21-2026)
+for other pending changes and their implementation boundaries.
 
 ## Development and tests
 
@@ -241,13 +250,13 @@ Past green results are not evidence that later commits passed remote CI.
 
 ## Security, release, and license
 
-The unpublished M3 discovery API defaults to origin allow-list admission. Explicit
+The discovery API defaults to origin allow-list admission. Explicit
 open mode retains destination filtering, numeric pinning, TLS, redirect rejection,
 and resource limits. Limits are shared per security context, not process-global or
 distributed. Keep compatible verifier contexts long-lived. Directory HTTPS identity
 does not establish operator reputation, authorization, or publisher-signed proof.
 Body-digest comparison, countersignatures and CLI remain outside this
-implementation. Actual body verification is mandatory before 1.0. The unpublished
+implementation. Actual body verification is mandatory before 1.0. The
 adapters default to rejecting framed bodies in enforcement, with explicit
 identity-only opt-in. Live Cloudflare acceptance is unproven.
 
